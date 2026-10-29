@@ -118,6 +118,7 @@ for (const id of fs.readdirSync(ROOT).sort()) {
     }
     fs.rmSync(remotePath, { force: true });
     fs.rmSync(regenPath, { force: true });
+    fs.rmSync(path.join(dir, 'request.json'), { force: true });
     const srcKeys = fs.readdirSync(srcDir).filter(f => /\.jpe?g$/i.test(f)).map(f => path.parse(f).name);
     const allDone = srcKeys.every(k => (status.variants[k] || []).length);
     Object.assign(status, { state: errors.length ? 'error' : allDone ? 'done' : 'manual', message: errors.join('\n'), updated: now() });

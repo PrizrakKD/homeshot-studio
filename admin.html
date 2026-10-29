@@ -79,6 +79,16 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .mini.gold{background:var(--gold);color:var(--ink);border-color:var(--gold)}
 .mini.danger:hover{color:var(--err);border-color:var(--err)}
 .mini[disabled]{opacity:.5;cursor:wait}
+.dpic{position:relative}
+.zoom{position:absolute;right:6px;bottom:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:rgba(20,17,15,.78);color:var(--fg);cursor:zoom-in}
+.zoom:hover{background:var(--gold);color:var(--ink)}
+.vbtn+.zoom{right:8px;bottom:8px}
+.lb{position:fixed;inset:0;z-index:50;background:rgba(10,8,7,.97);display:flex;flex-direction:column}
+.lb-scroll{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:16px}
+.lb-scroll img{max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in;display:block}
+.lb-scroll.full{display:block}
+.lb-scroll.full img{max-width:none;max-height:none;cursor:zoom-out;margin:auto}
+.lb-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));border-top:1px solid var(--line);color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
@@ -148,6 +158,10 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
   </div>
 </div>
 
+<div class="lb" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Просмотр фото">
+  <div class="lb-scroll" id="lbScroll"><img id="lbImg" alt=""></div>
+  <div class="lb-bar"><span id="lbCap"></span><button type="button" class="mini" id="lbClose">Закрыть</button></div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script>
 (function(){
@@ -365,7 +379,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
             top.forEach(function(f){ if (f.type === 'file') all.push(f.path); });
             src.forEach(function(f){ all.push(f.path); }); gen.forEach(function(f){ all.push(f.path); });
             return {
-              id: id, meta: j[0] || { title: id }, status: status, regen: !!find('regen.json'), files: all,
+              id: id, meta: j[0] || { title: id }, status: status, regen: !!find('regen.json'), request: !!find('request.json'), files: all,
               rows: src.map(function(f){
                 var key = f.name.replace(/\.[^.]+$/, '');
                 var vs = ((status.variants || {})[key] || []).map(function(p){ return genBy[p]; }).filter(Boolean);
@@ -380,24 +394,27 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
     }).catch(function(e){ box.innerHTML = ''; status('draftsStatus', errText(e), 'err'); });
   }
   function pill(d){
-    if (d.regen) return '<span class="pill wait">Ждёт перегенерации</span>';
+    if (d.request) return '<span class="pill wait">В очереди на обработку</span>';
+    if (d.regen) return '<span class="pill wait">В очереди на перегенерацию</span>';
     if (d.status.state === 'done') return '<span class="pill done">Готово</span>';
     if (d.status.state === 'error') return '<span class="pill err">Ошибка</span>';
-    if (d.status.state === 'manual') return '<span class="pill wait">Ждёт обработки: напишите Claude «обработай черновики»</span>';
+    if (d.status.state === 'manual') return '<span class="pill wait">Новый: нажмите «Сделать красиво»</span>';
     return '<span class="pill wait">В обработке, 2–5 минут</span>';
   }
+  var ZOOM = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M11 8v6M8 11h6"/></svg>';
+  function zoomBtn(src, label){ return '<button type="button" class="zoom" data-zoom="' + esc(src) + '" data-label="' + esc(label) + '" aria-label="Увеличить: ' + esc(label) + '">' + ZOOM + '</button>'; }
   function renderDrafts(){
     var box = $('drafts');
     if (!drafts.length){ box.innerHTML = '<p class="hint">Черновиков нет. Откройте объявление на Авито и нажмите «В Homeshot» в расширении.</p>'; return; }
     box.innerHTML = drafts.map(function(d, di){
       var m = d.meta;
       return '<div class="draft"><div class="dhead"><div><b>' + esc(m.title) + '</b><small>' + esc(m.address || '') + (m.url ? ' · <a href="' + esc(m.url) + '" target="_blank" rel="noopener">объявление</a>' : '') + '</small>' + pill(d) + '</div>' +
-        '<div class="actions"><button type="button" class="mini" data-act="regen" data-d="' + di + '">Перегенерировать всё</button><button type="button" class="mini danger" data-act="del" data-d="' + di + '">Удалить черновик</button></div></div>' +
+        '<div class="actions">' + (!d.rows.some(function(r){ return r.variants.length; }) && !d.request ? '<button type="button" class="mini gold" data-act="pretty" data-d="' + di + '">Сделать красиво</button>' : '<button type="button" class="mini" data-act="regen" data-d="' + di + '">Перегенерировать всё</button>') + '<button type="button" class="mini danger" data-act="del" data-d="' + di + '">Удалить черновик</button></div></div>' +
         (d.status.state === 'error' && d.status.message ? '<div class="errmsg">' + esc(d.status.message) + '</div>' : '') +
         d.rows.map(function(r, ri){
-          return '<div class="drow"><div class="dimg"><img src="' + esc(r.before) + '" alt="Исходное фото ' + (ri + 1) + '" loading="lazy"><div class="lbl">ДО</div></div>' +
+          return '<div class="drow"><div class="dimg"><div class="dpic"><img src="' + esc(r.before) + '" alt="Исходное фото ' + (ri + 1) + '" loading="lazy">' + zoomBtn(r.before, 'Фото ' + (ri + 1) + ', до') + '</div><div class="lbl">ДО</div></div>' +
             (r.variants.length ? r.variants.map(function(v, vi){
-              return '<div class="dimg"><button type="button" class="vbtn" data-act="pick" data-d="' + di + '" data-r="' + ri + '" data-v="' + vi + '" aria-pressed="' + (vi === r.sel) + '" aria-label="Вариант ' + (vi + 1) + '"><img src="' + esc(v) + '" alt="" loading="lazy"></button><div class="lbl">ВАРИАНТ ' + (vi + 1) + '</div></div>';
+              return '<div class="dimg"><div class="dpic"><button type="button" class="vbtn" data-act="pick" data-d="' + di + '" data-r="' + ri + '" data-v="' + vi + '" aria-pressed="' + (vi === r.sel) + '" aria-label="Выбрать вариант ' + (vi + 1) + '"><img src="' + esc(v) + '" alt="" loading="lazy"></button>' + zoomBtn(v, 'Фото ' + (ri + 1) + ', вариант ' + (vi + 1)) + '</div><div class="lbl">ВАРИАНТ ' + (vi + 1) + '</div></div>';
             }).join('') : '<div class="hint">Варианты ещё не готовы</div>') +
             '<div class="dact">' + (r.variants.length ? '<button type="button" class="mini gold" data-act="form" data-d="' + di + '" data-r="' + ri + '">В форму</button>' : '') +
             '<button type="button" class="mini" data-act="regen1" data-d="' + di + '" data-r="' + ri + '">Ещё варианты</button></div></div>';
@@ -406,9 +423,36 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
   }
   function blobOf(url){ return fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now()).then(function(r){ if (!r.ok) throw new Error('Не скачалось фото'); return r.blob(); }); }
   $('draftsReload').addEventListener('click', function(){ status('draftsStatus', ''); loadDrafts(); });
+  // ---- lightbox ----
+  var lb = $('lightbox'), lbImg = $('lbImg'), lbScroll = $('lbScroll'), lbLast = null;
+  function openLb(src, label, opener){
+    lbLast = opener; lbImg.src = src; lbImg.alt = label; $('lbCap').textContent = label + ' · нажмите на фото, чтобы увеличить до 100%';
+    lbScroll.classList.remove('full'); lb.hidden = false; document.body.style.overflow = 'hidden'; $('lbClose').focus();
+  }
+  function closeLb(){ lb.hidden = true; lbImg.removeAttribute('src'); document.body.style.overflow = ''; if (lbLast) lbLast.focus(); }
+  lbImg.addEventListener('click', function(e){
+    var full = !lbScroll.classList.contains('full');
+    var rx = e.offsetX / lbImg.clientWidth, ry = e.offsetY / lbImg.clientHeight;
+    lbScroll.classList.toggle('full', full);
+    if (full) requestAnimationFrame(function(){ lbScroll.scrollLeft = rx * lbScroll.scrollWidth - lbScroll.clientWidth / 2; lbScroll.scrollTop = ry * lbScroll.scrollHeight - lbScroll.clientHeight / 2; });
+  });
+  $('lbClose').addEventListener('click', closeLb);
+  lb.addEventListener('click', function(e){ if (e.target === lb || e.target === lbScroll) closeLb(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !lb.hidden) closeLb(); });
+
   $('drafts').addEventListener('click', function(e){
+    var z = e.target.closest('button[data-zoom]');
+    if (z){ openLb(z.dataset.zoom, z.dataset.label, z); return; }
     var b = e.target.closest('button[data-act]'); if (!b) return;
     var d = drafts[+b.dataset.d], act = b.dataset.act;
+    if (act === 'pretty'){
+      b.disabled = true; status('draftsStatus', 'Ставлю в очередь…');
+      b64FromText(JSON.stringify({ at: new Date().toISOString() }) + '\n').then(function(b64){
+        return commit([{ path: 'drafts/' + d.id + '/request.json', b64: b64 }], 'Сделать красиво: ' + (d.meta.title || d.id));
+      }).then(function(){ status('draftsStatus', 'Черновик в очереди. Claude заберёт его и сделает варианты.', 'ok'); d.request = true; renderDrafts(); })
+        .catch(function(e){ b.disabled = false; status('draftsStatus', errText(e), 'err'); });
+      return;
+    }
     if (act === 'pick'){
       var r = d.rows[+b.dataset.r]; r.sel = +b.dataset.v;
       b.closest('.drow').querySelectorAll('.vbtn').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
