@@ -80,6 +80,15 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .mini.danger:hover{color:var(--err);border-color:var(--err)}
 .mini[disabled]{opacity:.5;cursor:wait}
 .dpic{position:relative}
+.drop{border:1.5px dashed var(--gold-dim);border-radius:10px;padding:24px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;color:var(--muted);text-align:center;transition:background .2s,border-color .2s}
+.drop.over{background:rgba(214,168,112,.08);border-color:var(--gold);color:var(--fg)}
+.blist{display:grid;gap:8px}
+.bitem{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--bg);cursor:pointer;text-transform:none;letter-spacing:0;font-size:14px;color:var(--fg);font-weight:400}
+.bitem input{width:20px;height:20px;accent-color:var(--gold);flex-shrink:0}
+.bitem.bad{opacity:.55;cursor:not-allowed}
+.bt{flex:1;min-width:0}.bt b{display:block;font-weight:600;overflow-wrap:anywhere}.bt small{display:block;color:var(--dim);font-size:12px}
+.bst{font-size:12px;color:var(--gold);flex-shrink:0;max-width:40%;text-align:right}.bst.ok{color:var(--ok)}.bst.err{color:var(--err)}
+
 .draft{padding:0;gap:0;overflow:hidden}
 .dtop{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 16px}
 .collapse{width:36px;height:36px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}
@@ -165,6 +174,21 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       <div class="dhead" style="align-items:flex-start"><div><h2>Черновики с Авито</h2><p class="hint">Сюда попадают фото из расширения. Отметьте пары галочками, выберите вариант «после», при необходимости кадрируйте и нажмите «Опубликовать».</p></div><button type="button" class="mini" id="draftsReload">Обновить</button></div>
       <div class="drafts" id="drafts"><p class="hint">Загружаю…</p></div>
       <span class="status" id="draftsStatus" role="status"></span>
+    </div>
+
+    <div class="card" id="batchCard">
+      <div><h2>Пакетная загрузка папок</h2><p class="hint">Выберите общую папку с проектами или перетащите сюда папки. В каждом проекте: подпапки <b>Ish</b> (исходники) и <b>Images_From_Ai</b> (результаты), файл <b>Adress.txt</b> со ссылкой на объявление. Название черновика берётся из имени папки.</p></div>
+      <div class="drop" id="batchDrop">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 10v6M9 13l3-3 3 3"/></svg>
+        <span>Перетащите папки сюда</span>
+        <button type="button" class="btn btn-ghost" id="batchPick">или выберите папку…</button>
+        <input type="file" id="batchInput" webkitdirectory directory multiple hidden>
+      </div>
+      <div id="batchBox" hidden>
+        <div class="blist" id="batchList"></div>
+        <div class="actions"><button type="button" class="btn btn-primary" id="batchGo" hidden>Загрузить черновики</button></div>
+      </div>
+      <span class="status" id="batchStatus" role="status"></span>
     </div>
 
     <form class="card" id="addForm">
@@ -455,6 +479,132 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   $('pairQueue').addEventListener('click', function(e){
     var b = e.target.closest('[data-rm]'); if (!b) return;
     var p = pairs.splice(+b.dataset.rm, 1)[0]; URL.revokeObjectURL(p.thumb); renderPairs();
+  });
+
+  // ---- batch upload: folders with Ish / Images_From_Ai / Adress.txt -> drafts ----
+  var batch = [];
+  var IMG_RE = /\.(jpe?g|png|webp)$/i;
+  var natural = function(a, b){ return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }); };
+  function stemOf(n){ return n.replace(/\.[^.]+$/, '').toLowerCase(); }
+  function groupFiles(items){ // items: [{path, file}]
+    var projects = {};
+    items.forEach(function(it){
+      var parts = it.path.split('/').filter(Boolean), name = parts[parts.length - 1];
+      var idx = parts.findIndex(function(p){ return /^ish$/i.test(p) || /^images_from_ai$/i.test(p); });
+      var kind, projParts;
+      if (idx > 0 && IMG_RE.test(name)){ kind = /^ish$/i.test(parts[idx]) ? 'src' : 'ai'; projParts = parts.slice(0, idx); }
+      else if (/^adress\.txt$|^address\.txt$/i.test(name) && parts.length > 1){ kind = 'txt'; projParts = parts.slice(0, -1); }
+      else return;
+      var key = projParts.join('/');
+      var p = projects[key] || (projects[key] = { key: key, name: projParts[projParts.length - 1], src: [], ai: [], txt: null, on: true });
+      if (kind === 'txt') p.txt = it.file; else p[kind].push(it.file);
+    });
+    return Object.keys(projects).sort(natural).map(function(k){
+      var p = projects[k];
+      p.src.sort(function(a, b){ return natural(a.name, b.name); }); p.ai.sort(function(a, b){ return natural(a.name, b.name); });
+      p.title = p.name.replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim();
+      p.pairs = pairUp(p.src, p.ai);
+      if (!p.src.length || !p.ai.length) p.on = false;
+      return p;
+    });
+  }
+  function pairUp(src, ai){
+    // 1) by name: AI file name contains the source file name as a separate token
+    var used = {}, byName = src.map(function(s){
+      var st = stemOf(s.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      var re = new RegExp('(^|[^0-9a-zа-яё])' + st + '([^0-9a-zа-яё]|$)', 'i');
+      return ai.filter(function(a){ return !used[a.name] && re.test(stemOf(a.name)) && (used[a.name] = true); });
+    });
+    if (src.length && byName.every(function(g){ return g.length; })) return byName;
+    // 2) by order: equal counts 1:1, or k variants per source in sequence
+    var groups = src.map(function(){ return []; });
+    if (!src.length) return groups;
+    var k = ai.length % src.length === 0 ? ai.length / src.length : 0;
+    ai.forEach(function(a, i){ groups[k ? Math.floor(i / k) : Math.min(i, src.length - 1)].push(a); });
+    return groups;
+  }
+  function readText(f){ return f ? new Promise(function(res){ var r = new FileReader(); r.onload = function(){ res(String(r.result)); }; r.onerror = function(){ res(''); }; r.readAsText(f); }) : Promise.resolve(''); }
+  function renderBatch(){
+    var box = $('batchList');
+    if (!batch.length){ box.innerHTML = '<p class="hint">Не нашёл проектов. В папке проекта должны быть подпапки Ish и Images_From_Ai.</p>'; $('batchGo').hidden = true; return; }
+    var n = batch.filter(function(p){ return p.on; }).length;
+    box.innerHTML = batch.map(function(p, i){
+      var ok = p.src.length && p.ai.length, prs = p.pairs.filter(function(g){ return g.length; }).length;
+      return '<label class="bitem' + (ok ? '' : ' bad') + '"><input type="checkbox" data-bi="' + i + '"' + (p.on ? ' checked' : '') + (ok ? '' : ' disabled') + '>' +
+        '<span class="bt"><b>' + esc(p.title) + '</b><small>' + p.src.length + ' исходн. · ' + p.ai.length + ' от ИИ · ' + (ok ? prs + ' пар' : 'не хватает файлов') + ' · ' + (p.txt ? 'ссылка есть' : 'без Adress.txt') + '</small></span>' +
+        '<span class="bst" id="bst-' + i + '"></span></label>';
+    }).join('');
+    $('batchGo').hidden = !n; $('batchGo').textContent = 'Загрузить черновики (' + n + ')';
+  }
+  function setBatch(items){ batch = groupFiles(items); $('batchBox').hidden = false; renderBatch(); status('batchStatus', ''); }
+  $('batchPick').addEventListener('click', function(){ $('batchInput').click(); });
+  $('batchInput').addEventListener('change', function(){
+    var items = [].map.call(this.files, function(f){ return { path: f.webkitRelativePath || f.name, file: f }; });
+    setBatch(items); this.value = '';
+  });
+  function walk(entry, prefix){
+    return new Promise(function(res){
+      if (entry.isFile) return entry.file(function(f){ res([{ path: prefix + entry.name, file: f }]); }, function(){ res([]); });
+      if (!entry.isDirectory) return res([]);
+      var reader = entry.createReader(), all = [];
+      (function more(){ reader.readEntries(function(ents){
+        if (!ents.length) return Promise.all(all.map(function(e){ return walk(e, prefix + entry.name + '/'); })).then(function(r){ res([].concat.apply([], r)); });
+        all = all.concat([].slice.call(ents)); more();
+      }, function(){ res([]); }); })();
+    });
+  }
+  var dz = $('batchDrop');
+  ['dragenter', 'dragover'].forEach(function(t){ dz.addEventListener(t, function(e){ e.preventDefault(); dz.classList.add('over'); }); });
+  ['dragleave', 'drop'].forEach(function(t){ dz.addEventListener(t, function(){ dz.classList.remove('over'); }); });
+  dz.addEventListener('drop', function(e){
+    e.preventDefault();
+    var entries = [].map.call(e.dataTransfer.items || [], function(it){ return it.webkitGetAsEntry && it.webkitGetAsEntry(); }).filter(Boolean);
+    status('batchStatus', 'Читаю папки…');
+    Promise.all(entries.map(function(en){ return walk(en, ''); })).then(function(r){ setBatch([].concat.apply([], r)); });
+  });
+  $('batchList').addEventListener('change', function(e){ var c = e.target.closest('[data-bi]'); if (!c) return; batch[+c.dataset.bi].on = c.checked; renderBatch(); });
+  $('batchGo').addEventListener('click', function(){
+    var todo = batch.map(function(p, i){ return { p: p, i: i }; }).filter(function(x){ return x.p.on; });
+    if (!todo.length) return;
+    var go = $('batchGo'); go.disabled = true; var done = 0, failed = 0;
+    var chain = Promise.resolve();
+    todo.forEach(function(x){
+      chain = chain.then(function(){
+        var p = x.p, st = $('bst-' + x.i); st.textContent = 'готовлю…'; st.className = 'bst';
+        var d = new Date(), stamp = d.toISOString().slice(0, 10) + '-' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
+        var id = stamp + '-' + slug(p.title) + '-' + Math.random().toString(36).slice(2, 5);
+        var base = 'drafts/' + id + '/', gstamp = Date.now().toString(36);
+        var jobs = [], variants = {};
+        p.pairs.forEach(function(g, si){
+          if (!g.length) return;
+          var key = String(si + 1).padStart(2, '0');
+          jobs.push(shrink(p.src[si]).then(b64FromBlob).then(function(b){ return { path: base + 'src/' + key + '.jpg', b64: b }; }));
+          variants[key] = [];
+          g.forEach(function(a, vi){
+            var rel = 'gen/' + key + '-' + gstamp + '-' + (vi + 1) + '.jpg'; variants[key].push(rel);
+            jobs.push(shrink(a).then(b64FromBlob).then(function(b){ return { path: base + rel, b64: b }; }));
+          });
+        });
+        return readText(p.txt).then(function(t){
+          var url = (t.match(/https?:\/\/\S+/) || [''])[0].replace(/[),.;]+$/, '');
+          var addr = url ? '' : t.trim().split(/\r?\n/)[0] || '';
+          return Promise.all(jobs.concat([
+            b64FromText(JSON.stringify({ title: p.title, address: addr, url: url, created: d.toISOString(), source: 'batch' }, null, 2) + '\n').then(function(b){ return { path: base + 'meta.json', b64: b }; }),
+            b64FromText(JSON.stringify({ state: 'done', variants: variants, message: '', updated: d.toISOString() }, null, 2) + '\n').then(function(b){ return { path: base + 'status.json', b64: b }; })
+          ]));
+        }).then(function(entries){
+          st.textContent = 'загружаю…';
+          return commit(entries, 'Черновик из папки: ' + p.title);
+        }).then(function(){ done++; st.textContent = 'готово'; st.className = 'bst ok'; p.on = false; },
+          function(err){ failed++; st.textContent = err.status ? errText(err) : err.message; st.className = 'bst err'; });
+      });
+    });
+    chain.then(function(){
+      go.disabled = false;
+      status('batchStatus', 'Загружено черновиков: ' + done + (failed ? ', с ошибкой: ' + failed : '') + '. Они появились вверху, в «Черновиках с Авито».', failed ? 'err' : 'ok');
+      var n = batch.filter(function(p){ return p.on; }).length; go.hidden = !n; go.textContent = 'Загрузить черновики (' + n + ')';
+      return loadDrafts();
+    });
   });
 
   // ---- add work ----
