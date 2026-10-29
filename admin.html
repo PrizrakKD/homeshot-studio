@@ -8,6 +8,7 @@
 <link rel="icon" href="assets/icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 <style>
 :root{--bg:#14110F;--surface:#1C1815;--line:#2E2823;--fg:#F2ECE4;--muted:#B0A598;--dim:#8C8177;--gold:#D6A870;--gold-dim:#8A6A45;--ink:#14110F;--err:#E8907A;--ok:#9CC79A;--f:"Manrope","Segoe UI",system-ui,sans-serif;color-scheme:dark}
 *{box-sizing:border-box}
@@ -46,6 +47,17 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .del{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--dim);font:500 13px var(--f);cursor:pointer;flex-shrink:0}
 .del:hover{color:var(--err);border-color:var(--err)}
 [hidden]{display:none!important}
+.crops{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+@media (max-width:720px){.crops{grid-template-columns:1fr}}
+.crop{display:flex;flex-direction:column;gap:10px;min-width:0}
+.crop-area{height:340px;background:var(--bg);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.crop-area img{display:block;max-width:100%}
+.ratios{display:flex;flex-wrap:wrap;gap:6px}
+.rt{min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer}
+.rt:hover{border-color:var(--gold);color:var(--fg)}
+.rt[aria-pressed=true]{background:var(--fg);color:var(--ink);border-color:var(--fg)}
+.cropper-view-box{outline-color:var(--gold)}
+.cropper-line,.cropper-point{background-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -73,10 +85,21 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
       <div class="fields">
         <div class="field"><label for="f-title">Название</label><input type="text" id="f-title" required placeholder="Гостиная, ул. Пугачёва"></div>
         <div class="field"><label for="f-sub">Подпись</label><input type="text" id="f-sub" placeholder="1-к квартира, 46,8 м²"></div>
-        <div class="field"><label for="f-before">Фото до</label><input type="file" id="f-before" accept="image/*" required></div>
-        <div class="field"><label for="f-after">Фото после</label><input type="file" id="f-after" accept="image/*" required></div>
         <div class="field"><label for="f-video">Видео (необязательно)</label><input type="file" id="f-video" accept="video/mp4,video/webm"><span class="hint">MP4 до 50 МБ</span></div>
       </div>
+      <div class="crops">
+        <div class="crop" data-slot="before" data-def="1">
+          <label for="f-before">Фото до</label><input type="file" id="f-before" accept="image/*" required>
+          <div class="crop-area" hidden><img alt="Фото до, кадрирование"></div>
+          <div class="ratios" hidden role="group" aria-label="Пропорции фото до"></div>
+        </div>
+        <div class="crop" data-slot="after" data-def="1">
+          <label for="f-after">Фото после</label><input type="file" id="f-after" accept="image/*" required>
+          <div class="crop-area" hidden><img alt="Фото после, кадрирование"></div>
+          <div class="ratios" hidden role="group" aria-label="Пропорции фото после"></div>
+        </div>
+      </div>
+      <p class="hint">Двигайте рамку и колёсиком или щипком меняйте масштаб. Для ползунка на сайте лучше, чтобы оба фото были 1:1 и с похожим кадром: тогда «до» и «после» совпадают при сравнении.</p>
       <div class="actions"><button class="btn btn-primary" type="submit" id="addBtn">Опубликовать</button><span class="status" id="addStatus" role="status"></span></div>
     </form>
 
@@ -98,6 +121,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script>
 (function(){
   var OWNER = 'PrizrakKD', REPO = 'homeshot-studio', BRANCH = 'main';
@@ -207,6 +231,49 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
       .catch(function(e){ b.disabled = false; status('listStatus', errText(e), 'err'); });
   });
 
+  // ---- crop ----
+  var RATIOS = [['1:1', 1], ['3:4', 3/4], ['4:5', 4/5], ['16:9', 16/9], ['9:16', 9/16], ['Свободно', NaN]];
+  var croppers = {}, urls = {};
+  document.querySelectorAll('.crop').forEach(function(box){
+    var slot = box.dataset.slot, def = Number(box.dataset.def);
+    var input = box.querySelector('input'), area = box.querySelector('.crop-area'), img = area.querySelector('img'), bar = box.querySelector('.ratios');
+    bar.innerHTML = RATIOS.map(function(r){
+      return '<button type="button" class="rt" data-r="' + r[1] + '" aria-pressed="' + (r[1] === def) + '">' + r[0] + '</button>';
+    }).join('') +
+      '<button type="button" class="rt" data-rot="-90" aria-label="Повернуть влево">↺ 90°</button>' +
+      '<button type="button" class="rt" data-rot="90" aria-label="Повернуть вправо">↻ 90°</button>' +
+      '<button type="button" class="rt" data-reset="1">Сбросить</button>';
+    input.addEventListener('change', function(){
+      var f = input.files[0];
+      if (croppers[slot]){ croppers[slot].destroy(); croppers[slot] = null; }
+      if (urls[slot]){ URL.revokeObjectURL(urls[slot]); urls[slot] = null; }
+      if (!f){ area.hidden = true; bar.hidden = true; return; }
+      if (typeof Cropper === 'undefined'){ status('addStatus', 'Кадрирование не загрузилось, фото уйдёт целиком.', 'err'); return; }
+      urls[slot] = URL.createObjectURL(f);
+      img.src = urls[slot]; area.hidden = false; bar.hidden = false;
+      var pressed = bar.querySelector('[data-r][aria-pressed=true]');
+      croppers[slot] = new Cropper(img, { aspectRatio: pressed ? Number(pressed.dataset.r) : def, viewMode: 1, autoCropArea: 1, background: false, dragMode: 'move', toggleDragModeOnDblclick: false });
+    });
+    bar.addEventListener('click', function(e){
+      var b = e.target.closest('button'), c = croppers[slot]; if (!b || !c) return;
+      if (b.dataset.r !== undefined){
+        bar.querySelectorAll('[data-r]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+        c.setAspectRatio(Number(b.dataset.r));
+      } else if (b.dataset.rot){ c.rotate(Number(b.dataset.rot)); }
+      else if (b.dataset.reset){ c.reset(); }
+    });
+  });
+  function cropped(slot, file){
+    var c = croppers[slot];
+    if (!c) return shrink(file);
+    var canvas = c.getCroppedCanvas({ maxWidth: 2400, maxHeight: 2400, imageSmoothingEnabled: true, imageSmoothingQuality: 'high', fillColor: '#ffffff' });
+    return new Promise(function(res, rej){ canvas.toBlob(function(b){ b ? res(b) : rej(new Error('Не удалось обрезать фото')); }, 'image/jpeg', 0.9); });
+  }
+  function resetCrops(){
+    Object.keys(croppers).forEach(function(k){ if (croppers[k]) croppers[k].destroy(); croppers[k] = null; if (urls[k]) URL.revokeObjectURL(urls[k]); urls[k] = null; });
+    document.querySelectorAll('.crop-area, .ratios').forEach(function(el){ el.hidden = true; });
+  }
+
   // ---- add work ----
   $('addForm').addEventListener('submit', function(e){
     e.preventDefault();
@@ -216,14 +283,14 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
     if (fv && fv.size > 50 * 1024 * 1024){ status('addStatus', 'Видео больше 50 МБ, сожмите его.', 'err'); return; }
     var dir = 'works/' + today() + '-' + slug(title) + '-' + Math.random().toString(36).slice(2, 6);
     var btn = $('addBtn'); btn.disabled = true; status('addStatus', 'Готовлю файлы…');
-    Promise.all([shrink(fb).then(b64FromBlob), shrink(fa).then(b64FromBlob), fv ? b64FromBlob(fv) : null, b64FromText(title + '\n' + sub + '\n')]).then(function(r){
+    Promise.all([cropped('before', fb).then(b64FromBlob), cropped('after', fa).then(b64FromBlob), fv ? b64FromBlob(fv) : null, b64FromText(title + '\n' + sub + '\n')]).then(function(r){
       var entries = [{ path: dir + '/before.jpg', b64: r[0] }, { path: dir + '/after.jpg', b64: r[1] }, { path: dir + '/info.txt', b64: r[3] }];
       if (r[2]) entries.push({ path: dir + '/video' + (/webm$/i.test(fv.name) ? '.webm' : '.mp4'), b64: r[2] });
       status('addStatus', 'Загружаю на GitHub…');
       return commit(entries, 'Новая работа: ' + title);
     }).then(function(){
       status('addStatus', 'Опубликовано. На сайте появится через 1–2 минуты.', 'ok');
-      $('addForm').reset(); return loadList();
+      $('addForm').reset(); resetCrops(); return loadList();
     }).catch(function(e){ status('addStatus', e.status ? errText(e) : e.message, 'err'); })
       .then(function(){ btn.disabled = false; });
   });
