@@ -586,7 +586,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
           });
         });
         return readText(p.txt).then(function(t){
-          var url = (t.match(/https?:\/\/\S+/) || [''])[0].replace(/[),.;]+$/, '');
+          var url = (t.match(/https?:\/\/\S+/) || [''])[0].replace(/[),.;]+$/, '').split('#')[0].replace(/\?context=[^&]*&?/, '?').replace(/\?$/, '');
           var addr = url ? '' : t.trim().split(/\r?\n/)[0] || '';
           return Promise.all(jobs.concat([
             b64FromText(JSON.stringify({ title: p.title, address: addr, url: url, created: d.toISOString(), source: 'batch' }, null, 2) + '\n').then(function(b){ return { path: base + 'meta.json', b64: b }; }),
@@ -854,7 +854,8 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       var title = (d.title || '').trim();
       if (!title){ status('draftsStatus', 'Укажите название на сайте.', 'err'); var sec2 = b.closest('.draft'); sec2.classList.remove('coll'); sec2.querySelector('[data-field=title]').focus(); return; }
       if (!rows.length){ status('draftsStatus', 'Отметьте хотя бы одну пару.', 'err'); return; }
-      var dup = d.meta.url && works.find(function(w){ return w.source && w.source === d.meta.url; });
+      var normU = function(u){ return (u || '').trim().split(/[?#]/)[0].replace(/\/+$/, '').toLowerCase(); };
+      var dup = d.meta.url && works.find(function(w){ return w.source && normU(w.source) === normU(d.meta.url); });
       if (dup && b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = 'Всё равно опубликовать'; status('draftsStatus', 'Эта квартира уже есть на сайте: «' + dup.title + '». Нажмите ещё раз, если нужна вторая работа, или удалите этот объект.', 'err'); return; }
       b.disabled = true; status('draftsStatus', 'Готовлю фото: ' + rows.length + '…');
       var dir = 'works/' + today() + '-' + slug(title) + '-' + Math.random().toString(36).slice(2, 6);
