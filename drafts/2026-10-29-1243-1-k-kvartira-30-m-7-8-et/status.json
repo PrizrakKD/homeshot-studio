@@ -1,6 +1,18 @@
 {
-  "state": "error",
-  "variants": {},
-  "message": "Не задан ключ Higgsfield (секреты HF_KEY_ID и HF_KEY_SECRET)",
-  "updated": "2026-10-29T10:44:10.091Z"
+  "state": "done",
+  "variants": {
+    "01": [
+      "gen/01-mvtfltbd-1.jpg",
+      "gen/01-mvtfltbd-2.jpg"
+    ],
+    "02": [
+      "gen/02-mvtfltym-1.jpg",
+      "gen/02-mvtfltym-2.jpg"
+    ],
+    "03": [
+      "gen/03-mvtfluke-1.jpg"
+    ]
+  },
+  "message": "",
+  "updated": "2026-10-29T10:59:56.150Z"
 }
