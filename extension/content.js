@@ -86,10 +86,10 @@
     const urls = collect();
     const r = await chrome.runtime.sendMessage({ type: 'scan', urls });
     if (!r.ok) { say('Не удалось загрузить фото: ' + r.error, true); return; }
-    photos = r.photos.map(p => ({ ...p, on: true }));
+    photos = r.photos.map(p => ({ ...p, on: false }));
     if (!photos.length) { say('Фото не найдены. Пролистайте галерею объявления и попробуйте ещё раз.', true); return; }
-    grid.innerHTML = photos.map((p, i) => `<button type="button" class="ph" data-i="${i}" aria-pressed="true" aria-label="Фото ${i + 1}"><img src="${p.thumb}" alt=""><span class="ck"></span><span class="sz">${p.w}×${p.h}</span></button>`).join('');
-    if (settings.configured) say('Снимите галочки с лишних фото и нажмите «Отправить».');
+    grid.innerHTML = photos.map((p, i) => `<button type="button" class="ph" data-i="${i}" aria-pressed="false" aria-label="Фото ${i + 1}"><img src="${p.thumb}" alt=""><span class="ck"></span><span class="sz">${p.w}×${p.h}</span></button>`).join('');
+    if (settings.configured) say('Отметьте фото для обработки и нажмите «Отправить».');
     count();
   });
   grid.addEventListener('click', e => { const b = e.target.closest('.ph'); if (!b) return; const p = photos[+b.dataset.i]; p.on = !p.on; b.setAttribute('aria-pressed', String(p.on)); count(); });
