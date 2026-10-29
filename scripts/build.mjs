@@ -25,20 +25,36 @@ const dirs = fs.existsSync(SRC)
 for (const dir of dirs) {
   const src = path.join(SRC, dir);
   const files = fs.readdirSync(src);
-  const before = find(files, 'before', IMG) || find(files, 'до', IMG);
-  const after = find(files, 'after', IMG) || find(files, 'после', IMG);
-  if (!before || !after) { console.warn(`Пропуск ${dir}: нужны before.jpg и after.jpg`); continue; }
+  // Pairs: before.jpg/after.jpg (legacy, first) and NN-before.jpg/NN-after.jpg.
+  const raw = [];
+  const lb = find(files, 'before', IMG) || find(files, 'до', IMG);
+  const la = find(files, 'after', IMG) || find(files, 'после', IMG);
+  if (lb && la) raw.push({ key: '00', before: lb, after: la });
+  const nums = [...new Set(files.map(f => (f.match(/^(\d+)-(?:before|after)\./i) || [])[1]).filter(Boolean))].sort((a, b) => a - b);
+  for (const n of nums) {
+    const b = files.find(f => new RegExp(`^${n}-before\\.`, 'i').test(f) && IMG.test(f));
+    const a = files.find(f => new RegExp(`^${n}-after\\.`, 'i').test(f) && IMG.test(f));
+    if (b && a) raw.push({ key: n, before: b, after: a });
+  }
+  if (!raw.length) { console.warn(`Пропуск ${dir}: нужны before.jpg и after.jpg (или 01-before.jpg и 01-after.jpg)`); continue; }
 
   const slug = dir.replace(/[^\w.-]+/g, '-');
   const out = path.join(OUT, 'works', slug);
   fs.mkdirSync(out, { recursive: true });
-  for (const [name, file] of [['before', before], ['after', after]]) {
-    await sharp(path.join(src, file)).rotate()
-      .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
-      .jpeg({ quality: 82, mozjpeg: true })
-      .toFile(path.join(out, `${name}.jpg`));
+  const pairs = [];
+  for (let i = 0; i < raw.length; i++) {
+    const p = {};
+    for (const side of ['before', 'after']) {
+      const name = `${String(i + 1).padStart(2, '0')}-${side}.jpg`;
+      await sharp(path.join(src, raw[i][side])).rotate()
+        .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 82, mozjpeg: true })
+        .toFile(path.join(out, name));
+      p[side] = `works/${slug}/${name}`;
+    }
+    pairs.push(p);
   }
-  const w = { title: prettify(dir), sub: '', before: `works/${slug}/before.jpg`, after: `works/${slug}/after.jpg` };
+  const w = { title: prettify(dir), sub: '', before: pairs[0].before, after: pairs[0].after, pairs };
 
   const video = find(files, 'video', VID) || files.find(f => VID.test(f));
   if (video) {

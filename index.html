@@ -79,6 +79,12 @@ section{padding-block:72px}
 .card h3{font-size:17px;font-weight:600;letter-spacing:-.01em}
 .card .sub{font-size:13px;color:var(--dim);margin-top:2px}
 .tabs{display:flex;gap:4px;background:var(--bg);border-radius:999px;padding:3px;flex-shrink:0}
+.ctrls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
+.pager{display:flex;align-items:center;gap:6px;background:var(--bg);border-radius:999px;padding:3px}
+.pager[hidden]{display:none}
+.pg{width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:var(--fg);font:500 22px/1 var(--f);cursor:pointer;display:flex;align-items:center;justify-content:center;padding-bottom:3px}
+.pg:hover{background:var(--fg);color:var(--ink)}
+.pgn{font-size:13px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;min-width:40px;text-align:center}
 .tabs button{min-height:36px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer}
 .tabs button[aria-pressed=true]{background:var(--fg);color:var(--ink)}
 .empty{border:1.5px dashed var(--line);border-radius:8px;padding:56px 24px;text-align:center;color:var(--muted)}
@@ -236,7 +242,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
 
   function renderHero(){
     var f = $('heroFrame');
-    if (works.length) f.innerHTML = cmpHTML(works[0], 'hero', true);
+    if (works.length) f.innerHTML = cmpHTML({ before: works[0].pairs[0].before, after: works[0].pairs[0].after, title: works[0].title }, 'hero', true);
     else f.querySelector('.hero-empty div').lastChild.textContent = 'Скоро здесь появятся наши работы';
   }
 
@@ -248,10 +254,18 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     }
     g.innerHTML = '<div class="grid">' + works.map(function(w, i){
       var tabs = w.video ? '<div class="tabs" role="group" aria-label="Вид"><button type="button" aria-pressed="true" data-tab="photo" data-i="' + i + '">Фото</button><button type="button" aria-pressed="false" data-tab="video" data-i="' + i + '">Видео</button></div>' : '';
-      return '<article class="card"><div id="media-' + i + '">' + cmpHTML(w, 'w' + i) + '</div>' +
-        '<div class="meta"><div><h3>' + esc(w.title) + '</h3>' + (w.sub ? '<div class="sub">' + esc(w.sub) + '</div>' : '') + '</div>' + tabs + '</div></article>';
+      var n = w.pairs.length;
+      var pager = n > 1 ? '<div class="pager" id="pager-' + i + '">' +
+        '<button type="button" class="pg" data-go="-1" data-i="' + i + '" aria-label="Предыдущее фото">‹</button>' +
+        '<span class="pgn" aria-live="polite">' + (w.idx + 1) + ' / ' + n + '</span>' +
+        '<button type="button" class="pg" data-go="1" data-i="' + i + '" aria-label="Следующее фото">›</button></div>' : '';
+      return '<article class="card"><div id="media-' + i + '">' + cmpHTML(pairOf(w), 'w' + i) + '</div>' +
+        '<div class="meta"><div><h3>' + esc(w.title) + '</h3>' + (w.sub ? '<div class="sub">' + esc(w.sub) + '</div>' : '') + (n > 1 ? '<div class="sub">' + n + ' ' + plural(n, 'фото', 'фото', 'фото') + ' до и после</div>' : '') + '</div>' +
+        '<div class="ctrls">' + pager + tabs + '</div></div></article>';
     }).join('') + '</div>';
   }
+  function pairOf(w){ var p = w.pairs[w.idx] || w.pairs[0]; return { before: p.before, after: p.after, title: w.title + (w.pairs.length > 1 ? ', фото ' + (w.idx + 1) : '') }; }
+  function plural(n, a, b, c){ return n % 10 === 1 && n % 100 !== 11 ? a : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? b : c); }
 
   function renderContacts(){
     var items = [];
@@ -279,16 +293,31 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     if (t.dataset.tab){
       var i = +t.dataset.i, w = works[i], m = $('media-' + i);
       t.parentNode.querySelectorAll('button').forEach(function(b){ b.setAttribute('aria-pressed', String(b === t)); });
+      var pg = $('pager-' + i); if (pg) pg.hidden = t.dataset.tab === 'video';
       m.innerHTML = t.dataset.tab === 'video'
         ? '<div class="cmp"><video src="' + esc(w.video) + '" autoplay muted loop playsinline aria-label="' + esc(w.title) + ', видео"></video></div>'
-        : cmpHTML(w, 'w' + i, true);
+        : cmpHTML(pairOf(w), 'w' + i, true);
+      return;
+    }
+    if (t.dataset.go){
+      var k = +t.dataset.i, wk = works[k], n = wk.pairs.length;
+      wk.idx = (wk.idx + Number(t.dataset.go) + n) % n;
+      var old = $('media-' + k).querySelector('input[type=range]'), pos = old ? old.value : 50;
+      $('media-' + k).innerHTML = cmpHTML(pairOf(wk), 'w' + k, true);
+      var cmp = $('media-' + k).querySelector('.cmp'); cmp.style.setProperty('--pos', pos + '%'); cmp.querySelector('input').value = pos;
+      $('pager-' + k).querySelector('.pgn').textContent = (wk.idx + 1) + ' / ' + n;
+      var nx = wk.pairs[(wk.idx + 1) % n]; [nx.before, nx.after].forEach(function(s){ var im = new Image(); im.src = s; });
     }
   });
 
   Promise.all([
     fetch('works.json', {cache:'no-cache'}).then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
     fetch('config.json', {cache:'no-cache'}).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; })
-  ]).then(function(r){ works = r[0] || []; cfg = r[1] || {}; renderHero(); renderGallery(); renderContacts(); });
+  ]).then(function(r){
+    works = (r[0] || []).filter(function(w){ return (w.pairs && w.pairs.length) || (w.before && w.after); }).map(function(w){
+      w.pairs = w.pairs && w.pairs.length ? w.pairs : [{ before: w.before, after: w.after }]; w.idx = 0; return w;
+    });
+    cfg = r[1] || {}; renderHero(); renderGallery(); renderContacts(); });
 })();
 </script>
 </body>
