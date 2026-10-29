@@ -19,6 +19,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
 img{max-width:100%}
@@ -99,7 +100,9 @@ section{padding-block:72px}
 
 .groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 @media (max-width:900px){.groups{grid-template-columns:1fr}}
-.group{border:1px solid var(--line);border-radius:8px;padding:26px 24px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.group{border:1px solid var(--line);border-radius:8px;padding:26px 24px;display:flex;flex-direction:column;gap:18px;min-width:0;background:var(--bg);transition:transform .2s ease,border-color .2s,box-shadow .2s}
+.group:hover{transform:scale(1.025);border-color:var(--gold-dim);box-shadow:0 12px 36px rgba(0,0,0,.35);position:relative;z-index:1}
+@media (prefers-reduced-motion:reduce){.group:hover{transform:none}}
 .group.feat{border-color:var(--gold-dim);background:var(--surface)}
 .group h3{font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:600}
 .row{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding-bottom:16px;border-bottom:1px solid var(--line)}
@@ -125,8 +128,8 @@ section{padding-block:72px}
 .cline strong a{color:inherit;text-decoration:none}
 .copy{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer;flex-shrink:0}
 .copy:hover{color:var(--fg);border-color:var(--gold)}
-.test{border-top:1px solid var(--line)}
-.ab{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;max-width:860px}
+.test,#prices{border-top:1px solid var(--line)}
+.ab{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
 @media (max-width:640px){.ab{gap:12px}}
 .abcol{display:grid;gap:12px;min-width:0}
 .abbtn{width:100%}
@@ -159,7 +162,7 @@ section{padding-block:72px}
 .ex{border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;color:var(--muted);background:transparent;cursor:pointer}
 .ex:hover{border-color:var(--gold-dim)}
 .ex[aria-pressed=true]{border-color:var(--gold);color:var(--fg);background:rgba(214,168,112,.1)}
-.ex.free{cursor:default}
+.ex.free{border-color:var(--gold-dim);color:var(--fg)}
 .formats{display:flex;align-items:center;gap:20px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:16px 20px;margin-bottom:20px}
 .formats b{display:block;font-weight:600}
 .formats span{display:block;color:var(--muted);font-size:14px;margin-top:2px}
@@ -167,7 +170,7 @@ section{padding-block:72px}
 .fm-icons i{display:block;border:1.5px solid var(--gold);border-radius:3px}
 @media (max-width:560px){.formats{flex-direction:column;align-items:flex-start}}
 .pkg-hint{margin-top:16px;font-size:14px;color:var(--dim)}
-.order{margin-top:28px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:24px;display:grid;gap:16px;max-width:860px}
+.order{margin-top:28px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:24px;display:grid;gap:16px}
 .order-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .order h3{font-size:22px}
 .orow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
@@ -181,7 +184,7 @@ section{padding-block:72px}
 .ohint.warn{color:var(--gold)}
 .oacts{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 .ostat{font-size:14px;color:var(--gold)}
-.loss{margin:36px 0 0;max-width:860px;border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:12px;background:var(--surface)}
+.loss{margin:36px 0 0;border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:12px;background:var(--surface)}
 .loss figcaption b{display:block;font-size:18px;font-weight:600}
 .loss figcaption span{display:block;font-size:14px;color:var(--muted);margin-top:2px}
 .loss-legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--muted)}
@@ -196,7 +199,7 @@ section{padding-block:72px}
 .loss-tip{position:absolute;pointer-events:none;background:#0F0D0B;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:12px;line-height:1.5;color:var(--fg);white-space:nowrap;transform:translate(-50%,-110%);font-variant-numeric:tabular-nums}
 .loss-tip[hidden]{display:none}
 .ab-note{margin-top:12px;font-size:12px;color:var(--dim)}
-.ab-res{margin-top:28px;max-width:860px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:24px;display:grid;gap:12px;justify-items:start}
+.ab-res{margin-top:28px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:24px;display:grid;gap:12px;justify-items:start}
 .ab-res h3{font-size:24px}
 .ab-res p{color:var(--muted);max-width:62ch}
 .ab-res .ab-loss{color:var(--fg)}
@@ -260,48 +263,6 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     </div>
   </section>
 
-  <section id="prices">
-    <div class="wrap">
-      <div class="sec-head"><div><div class="eyebrow">Пакеты</div><h2 style="margin-top:12px">Выберите под свой бюджет</h2></div><p>Можно взять только фото, только видео или всё вместе со скидкой.</p></div>
-      <div class="formats">
-        <div class="fm-icons" aria-hidden="true"><i style="width:30px;height:30px"></i><i style="width:44px;height:25px"></i><i style="width:20px;height:36px"></i><i style="width:27px;height:36px"></i></div>
-        <div><b>Каждое фото во всех форматах</b><span>Квадрат 1:1, горизонталь 16:9, вертикаль 9:16 и 3:4 для Авито, Циан, сторис и постов. Всё аккуратно разложено по папкам, ничего не нужно обрезать самому.</span></div>
-      </div>
-      <div class="groups">
-        <div class="group">
-          <h3>Фото</h3>
-          <button type="button" class="row pkg" data-pkg="Старт" data-price="990 ₽" aria-pressed="false"><span class="pkg-l"><b>Старт</b><span>5 фото</span></span><span class="price">990 ₽</span></button>
-          <button type="button" class="row pkg" data-pkg="Стандарт" data-price="1 690 ₽" aria-pressed="false"><span class="pkg-l"><b>Стандарт</b><span>10 фото</span></span><span class="price">1 690 ₽</span></button>
-          <button type="button" class="row pkg" data-pkg="Максимум" data-price="2 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Максимум</b><span>15 фото и 1 круг правок</span></span><span class="price">2 490 ₽</span></button>
-        </div>
-        <div class="group">
-          <h3>Видео</h3>
-          <button type="button" class="row pkg" data-pkg="Визитка" data-price="1 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Визитка</b><span>15 сек: 3 проезда, заставка с параметрами, финал с телефоном</span></span><span class="price">1 490 ₽</span></button>
-          <button type="button" class="row pkg" data-pkg="Презентация" data-price="2 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Презентация</b><span>30 сек: 6 проездов, музыка, форматы 1:1 и 9:16</span></span><span class="price">2 490 ₽</span></button>
-        </div>
-        <div class="group feat">
-          <h3>Фото и видео</h3>
-          <button type="button" class="row pkg" data-pkg="Комплект" data-price="2 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Комплект</b><span>10 фото и видео-визитка 15 сек</span></span><span class="price">2 490 ₽<s>3 180 ₽</s></span></button>
-          <button type="button" class="row pkg" data-pkg="Премиум" data-price="3 990 ₽" aria-pressed="false"><span class="pkg-l"><b>Премиум</b><span>15 фото, видео 30 сек и 1 круг правок</span></span><span class="price">3 990 ₽<s>4 980 ₽</s></span></button>
-        </div>
-      </div>
-      <div class="extras">
-        <button type="button" class="ex" data-ex="Доп. фото (150 ₽)" aria-pressed="false">Доп. фото <b>150 ₽</b></button><button type="button" class="ex" data-ex="Доп. шот в видео (300 ₽)" aria-pressed="false">Доп. шот в видео <b>300 ₽</b></button><button type="button" class="ex" data-ex="Доп. круг правок (300 ₽)" aria-pressed="false">Доп. круг правок <b>300 ₽</b></button><button type="button" class="ex" data-ex="Срочно за 3 часа (+50%)" aria-pressed="false">Срочно за 3 часа <b>+50%</b></button><span class="ex free">Первое фото на пробу <b>бесплатно</b></span>
-      </div>
-      <p class="pkg-hint">Нажмите на пакет, чтобы оформить заявку. Допы можно отметить кнопками выше.</p>
-      <form class="order" id="order" hidden>
-        <div class="order-head"><div><div class="eyebrow">Заявка</div><h3 id="ordPkg" style="margin-top:8px"></h3></div><button type="button" class="copy" id="ordClose">Убрать</button></div>
-        <div class="ofield"><label for="ordUrl">Ссылка на ваше объявление</label><input type="url" id="ordUrl" placeholder="https://www.avito.ru/…" autocomplete="off"><span class="ohint">Вставьте ссылку с Авито или Циан: по ней мы посмотрим фото и сразу скажем, что можно улучшить.</span></div>
-        <div class="orow">
-          <div class="ofield"><label for="ordName">Как к вам обращаться</label><input type="text" id="ordName" autocomplete="name"></div>
-          <div class="ofield"><label for="ordNote">Комментарий</label><input type="text" id="ordNote" placeholder="Например: нужно к выходным"></div>
-        </div>
-        <div class="ofield"><label for="ordText">Сообщение</label><textarea id="ordText" rows="6" readonly></textarea></div>
-        <div class="oacts"><button type="submit" class="btn btn-primary" id="ordTg">Отправить в Telegram</button><button type="button" class="btn btn-ghost" id="ordWa" hidden>Отправить в WhatsApp</button><button type="button" class="btn btn-ghost" id="ordMax" hidden>Отправить в MAX</button><span class="ostat" id="ordStat" role="status"></span></div>
-      </form>
-    </div>
-  </section>
-
   <section id="test" class="test">
     <div class="wrap">
       <div class="sec-head"><div><div class="eyebrow">Простой тест</div><h2 style="margin-top:12px">Какое объявление вы бы открыли?</h2></div><p>Одна и та же квартира по одной цене. Проведите мышкой по фото, чтобы полистать, как в выдаче.</p></div>
@@ -333,6 +294,48 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
         <h3 id="abHead"></h3>
         <p id="abText"></p>
       </div>
+    </div>
+  </section>
+
+  <section id="prices">
+    <div class="wrap">
+      <div class="sec-head"><div><div class="eyebrow">Пакеты</div><h2 style="margin-top:12px">Выберите под свой бюджет</h2></div><p>Можно взять только фото, только видео или всё вместе со скидкой.</p></div>
+      <div class="formats">
+        <div class="fm-icons" aria-hidden="true"><i style="width:30px;height:30px"></i><i style="width:44px;height:25px"></i><i style="width:20px;height:36px"></i><i style="width:27px;height:36px"></i></div>
+        <div><b>Каждое фото во всех форматах</b><span>Квадрат 1:1, горизонталь 16:9, вертикаль 9:16 и 3:4 для Авито, Циан, сторис и постов. Всё аккуратно разложено по папкам, ничего не нужно обрезать самому.</span></div>
+      </div>
+      <div class="groups">
+        <div class="group">
+          <h3>Фото</h3>
+          <button type="button" class="row pkg" data-pkg="Старт" data-price="990 ₽" aria-pressed="false"><span class="pkg-l"><b>Старт</b><span>5 фото</span></span><span class="price">990 ₽</span></button>
+          <button type="button" class="row pkg" data-pkg="Стандарт" data-price="1 690 ₽" aria-pressed="false"><span class="pkg-l"><b>Стандарт</b><span>10 фото</span></span><span class="price">1 690 ₽</span></button>
+          <button type="button" class="row pkg" data-pkg="Максимум" data-price="2 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Максимум</b><span>15 фото и 1 круг правок</span></span><span class="price">2 490 ₽</span></button>
+        </div>
+        <div class="group">
+          <h3>Видео</h3>
+          <button type="button" class="row pkg" data-pkg="Визитка" data-price="1 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Визитка</b><span>15 сек: 3 проезда, заставка с параметрами, финал с телефоном</span></span><span class="price">1 490 ₽</span></button>
+          <button type="button" class="row pkg" data-pkg="Презентация" data-price="2 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Презентация</b><span>30 сек: 6 проездов, музыка, форматы 1:1 и 9:16</span></span><span class="price">2 490 ₽</span></button>
+        </div>
+        <div class="group">
+          <h3>Фото и видео</h3>
+          <button type="button" class="row pkg" data-pkg="Комплект" data-price="2 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Комплект</b><span>10 фото и видео-визитка 15 сек</span></span><span class="price">2 490 ₽<s>3 180 ₽</s></span></button>
+          <button type="button" class="row pkg" data-pkg="Премиум" data-price="3 990 ₽" aria-pressed="false"><span class="pkg-l"><b>Премиум</b><span>15 фото, видео 30 сек и 1 круг правок</span></span><span class="price">3 990 ₽<s>4 980 ₽</s></span></button>
+        </div>
+      </div>
+      <div class="extras">
+        <button type="button" class="ex" data-ex="Доп. фото (150 ₽)" aria-pressed="false">Доп. фото <b>150 ₽</b></button><button type="button" class="ex" data-ex="Доп. шот в видео (300 ₽)" aria-pressed="false">Доп. шот в видео <b>300 ₽</b></button><button type="button" class="ex" data-ex="Доп. круг правок (300 ₽)" aria-pressed="false">Доп. круг правок <b>300 ₽</b></button><button type="button" class="ex" data-ex="Срочно за 3 часа (+50%)" aria-pressed="false">Срочно за 3 часа <b>+50%</b></button><button type="button" class="ex free" id="trial" aria-pressed="false">Первое фото на пробу <b>бесплатно</b></button>
+      </div>
+      <p class="pkg-hint">Нажмите на пакет, чтобы оформить заявку. Допы можно отметить кнопками выше.</p>
+      <form class="order" id="order" hidden>
+        <div class="order-head"><div><div class="eyebrow">Заявка</div><h3 id="ordPkg" style="margin-top:8px"></h3></div><button type="button" class="copy" id="ordClose">Убрать</button></div>
+        <div class="ofield"><label for="ordUrl">Ссылка на ваше объявление</label><input type="url" id="ordUrl" placeholder="https://www.avito.ru/…" autocomplete="off"><span class="ohint">Вставьте ссылку с Авито или Циан: по ней мы посмотрим фото и сразу скажем, что можно улучшить.</span></div>
+        <div class="orow">
+          <div class="ofield"><label for="ordName">Как к вам обращаться</label><input type="text" id="ordName" autocomplete="name"></div>
+          <div class="ofield"><label for="ordNote">Комментарий</label><input type="text" id="ordNote" placeholder="Например: нужно к выходным"></div>
+        </div>
+        <div class="ofield"><label for="ordText">Сообщение</label><textarea id="ordText" rows="6" readonly></textarea></div>
+        <div class="oacts"><button type="submit" class="btn btn-primary" id="ordTg">Отправить в Telegram</button><button type="button" class="btn btn-ghost" id="ordWa" hidden>Отправить в WhatsApp</button><button type="button" class="btn btn-ghost" id="ordMax" hidden>Отправить в MAX</button><span class="ostat" id="ordStat" role="status"></span></div>
+      </form>
     </div>
   </section>
 
@@ -449,8 +452,8 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     var plot = $('lossPlot'); if (!plot) return;
     var lastW = 0;
     function draw(){
-    var W = Math.round(Math.max(320, Math.min(640, plot.clientWidth || 640))); if (W === lastW) return; lastW = W;
-    var DAY = 1067, PRICE = 2490, DAYS = 10, H = W < 480 ? 220 : 250, L = W < 480 ? 40 : 56, R = 8, T = 34, B = 30;
+    var W = Math.round(Math.max(320, Math.min(1140, plot.clientWidth || 640))); if (W === lastW) return; lastW = W;
+    var DAY = 1067, PRICE = 2490, DAYS = 10, H = W < 480 ? 220 : W > 800 ? 290 : 250, L = W < 480 ? 40 : 56, R = 8, T = 34, B = 30;
     var ymax = 12000, step = (W - L - R) / DAYS, bw = step - 8;
     var ys = function(v){ return T + (1 - v / ymax) * (H - T - B); }, base = ys(0);
     var fmt = function(v){ return Math.round(v).toLocaleString('ru-RU').replace(/\u00a0/g, ' ') + ' ₽'; };
@@ -485,10 +488,12 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
   })();
 
   // ---- packages & order ----
-  var order = { pkg: '', price: '', extras: [] };
+  var order = { pkg: '', price: '', extras: [], trial: false };
   function orderText(){
-    var lines = ['Здравствуйте! Хочу заказать пакет «' + order.pkg + '» (' + order.price + ').'];
-    if (order.extras.length) lines.push('Дополнительно: ' + order.extras.join(', ') + '.');
+    var lines = order.trial
+      ? ['Здравствуйте! Хочу попробовать: обработайте, пожалуйста, бесплатно одно фото из моего объявления, чтобы я увидел результат.']
+      : ['Здравствуйте! Хочу заказать пакет «' + order.pkg + '» (' + order.price + ').'];
+    if (!order.trial && order.extras.length) lines.push('Дополнительно: ' + order.extras.join(', ') + '.');
     var u = $('ordUrl').value.trim(), n = $('ordName').value.trim(), c = $('ordNote').value.trim();
     lines.push('Объявление: ' + (u || 'пришлю ссылку отдельно'));
     if (n) lines.push('Меня зовут ' + n + '.');
@@ -496,7 +501,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     return lines.join('\n');
   }
   function syncOrder(){
-    $('ordPkg').textContent = order.pkg + ' · ' + order.price;
+    $('ordPkg').textContent = order.trial ? 'Бесплатная проба · 1 фото' : order.pkg + ' · ' + order.price;
     $('ordText').value = orderText();
     var hasTg = !!(cfg.telegram), hasWa = !!(cfg.whatsapp), hasMax = !!(cfg.max && /^https:\/\/(www\.)?max\.ru\//i.test(cfg.max));
     $('ordTg').hidden = !hasTg; $('ordWa').hidden = !hasWa; $('ordMax').hidden = !hasMax;
@@ -506,9 +511,17 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     var pk = e.target.closest('.pkg');
     if (pk){
       document.querySelectorAll('.pkg').forEach(function(x){ x.setAttribute('aria-pressed', String(x === pk)); });
-      order.pkg = pk.dataset.pkg; order.price = pk.dataset.price;
+      order.pkg = pk.dataset.pkg; order.price = pk.dataset.price; order.trial = false; $('trial').setAttribute('aria-pressed', 'false');
       var f = $('order'), wasHidden = f.hidden; f.hidden = false; syncOrder();
       if (wasHidden || !$('ordUrl').value) { f.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(function(){ $('ordUrl').focus({ preventScroll: true }); }, 400); }
+      return;
+    }
+    if (e.target.closest('#trial')){
+      order.trial = true; order.extras = [];
+      document.querySelectorAll('.pkg, .ex[data-ex]').forEach(function(x){ x.setAttribute('aria-pressed', 'false'); });
+      $('trial').setAttribute('aria-pressed', 'true');
+      var tf = $('order'); tf.hidden = false; syncOrder();
+      tf.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(function(){ $('ordUrl').focus({ preventScroll: true }); }, 400);
       return;
     }
     var ex = e.target.closest('.ex[data-ex]');
@@ -518,7 +531,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
       if (!$('order').hidden) syncOrder();
     }
   });
-  $('ordClose').addEventListener('click', function(){ $('order').hidden = true; document.querySelectorAll('.pkg').forEach(function(x){ x.setAttribute('aria-pressed', 'false'); }); });
+  $('ordClose').addEventListener('click', function(){ $('order').hidden = true; order.trial = false; document.querySelectorAll('.pkg, #trial').forEach(function(x){ x.setAttribute('aria-pressed', 'false'); }); });
   $('order').addEventListener('input', function(){ $('ordText').value = orderText(); var u = $('ordUrl').value.trim(); var h = $('ordUrl').nextElementSibling; if (u){ h.textContent = /^https?:\/\//i.test(u) ? 'Отлично, по ссылке посмотрим фото и сразу скажем, что можно улучшить.' : 'Ссылка должна начинаться с https://'; h.classList.toggle('warn', !/^https?:\/\//i.test(u)); } });
   function send(kind){
     var u = $('ordUrl').value.trim();
