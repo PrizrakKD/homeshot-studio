@@ -73,6 +73,8 @@ p{margin:0}
 .cmp .handle::after{content:"";position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:var(--fg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314110F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l-6 6 6 6M15 6l6 6-6 6'/%3E%3C/svg%3E") center/22px no-repeat;box-shadow:0 2px 12px rgba(0,0,0,.4)}
 .cmp input[type=range]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
 .chip{position:absolute;top:14px;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.2em;pointer-events:none;background:rgba(20,17,15,.75);color:var(--fg)}
+.cmp .clay{position:absolute;inset:0;pointer-events:none}
+.cmp .cl{clip-path:inset(0 calc(100% - var(--pos)) 0 0)}.cmp .cr{clip-path:inset(0 0 0 var(--pos))}
 .chip.l{left:14px}.chip.r{right:14px;background:var(--gold);color:var(--ink)}
 
 section{padding-block:72px}
@@ -425,7 +427,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     return '<div class="cmp">' +
       '<img class="after" src="' + esc(w.after) + '"' + lz + ' alt="' + esc(w.title) + ', после обработки">' +
       '<img class="before" src="' + esc(w.before) + '"' + lz + ' alt="' + esc(w.title) + ', исходное фото">' +
-      '<span class="chip l">ДО</span><span class="chip r">ПОСЛЕ</span><div class="handle"></div>' +
+      '<div class="clay cl"><span class="chip l">ДО</span></div><div class="clay cr"><span class="chip r">ПОСЛЕ</span></div><div class="handle"></div>' +
       '<input type="range" min="0" max="100" value="50" id="rng-' + key + '" aria-label="Сравнить до и после: ' + esc(w.title) + '">' +
     '</div>';
   }
