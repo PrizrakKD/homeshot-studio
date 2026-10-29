@@ -208,6 +208,19 @@ section{padding-block:72px}
 .loss-legend i.lg-b{border-top-color:#BF8530}
 .loss-plot{position:relative}
 .loss-plot svg{display:block;width:100%;height:auto;overflow:visible;font-family:var(--f)}
+.loss-pk{display:flex;flex-wrap:wrap;gap:8px}
+.loss-pk button{border:1px solid var(--line);border-radius:999px;padding:7px 13px;background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer;font-variant-numeric:tabular-nums}
+.loss-pk button:hover{border-color:var(--gold-dim);color:var(--fg)}
+.loss-pk button[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.loss-body{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:24px;align-items:center}
+@media (max-width:760px){.loss-body{grid-template-columns:1fr}}
+.loss-save{display:flex;flex-direction:column;gap:6px;border-left:1px solid var(--line);padding-left:24px}
+@media (max-width:760px){.loss-save{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:16px}}
+.loss-save .ls-k{font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.loss-save b{font-size:clamp(34px,3.6vw,48px);white-space:nowrap;line-height:1;font-weight:700;letter-spacing:-.03em;color:#fff;font-variant-numeric:tabular-nums}
+.loss-save b.neg{color:var(--muted)}
+.loss-save .ls-c{font-size:14px;color:var(--muted)}
+.loss-save .ls-h{font-size:12px;color:var(--dim);margin-top:6px}
 .loss-cta{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding-top:4px}
 .loss-cta span{font-size:13px;color:var(--dim)}
 .loss-tip{position:absolute;pointer-events:none;background:#0F0D0B;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:12px;line-height:1.5;color:var(--fg);white-space:nowrap;transform:translate(-50%,-110%);font-variant-numeric:tabular-nums}
@@ -298,17 +311,32 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
         </div>
       </div>
       <p class="ab-note">Схематичный пример карточек в выдаче. Цена условная.</p>
-      <figure class="loss" id="loss">
-        <figcaption><b>Сколько стоит ожидание</b><span>Деньги, которые квартира не приносит, пока ищется арендатор, и разовая цена обработки</span></figcaption>
-        <div class="loss-legend"><span><i class="lg-a"></i>Потери от простоя, по дням</span><span><i class="lg-b"></i>Homeshot, пакет «Комплект»: 2 490 ₽ разово</span></div>
-        <div class="loss-plot" id="lossPlot"></div>
-        <p class="ab-note">Расчёт: аренда 32 000 ₽ в месяц, это около 1 067 ₽ за каждый день простоя. Пакет «Комплект» стоит 2 490 ₽ один раз.</p>
-        <div class="loss-cta"><a class="btn btn-primary" href="#prices" id="abCta">Не теряйте деньги: напишите нам</a><span>Выберите пакет, и заявка соберётся сама</span></div>
-      </figure>
       <div class="ab-res" id="abRes" hidden aria-live="polite">
         <h3 id="abHead"></h3>
         <p id="abText"></p>
       </div>
+      <figure class="loss" id="loss">
+        <figcaption><b>Сколько стоит ожидание</b><span>Деньги, которые квартира не приносит, пока ищется арендатор, и разовая цена обработки</span></figcaption>
+        <div class="loss-pk" role="group" aria-label="Пакет для сравнения">
+          <button type="button" data-lp="990" data-ln="Старт" aria-pressed="false">Старт · 990 ₽</button>
+          <button type="button" data-lp="1490" data-ln="Визитка" aria-pressed="false">Визитка · 1 490 ₽</button>
+          <button type="button" data-lp="1690" data-ln="Стандарт" aria-pressed="false">Стандарт · 1 690 ₽</button>
+          <button type="button" data-lp="2490" data-ln="Комплект" aria-pressed="true">Комплект · 2 490 ₽</button>
+          <button type="button" data-lp="3990" data-ln="Премиум" aria-pressed="false">Премиум · 3 990 ₽</button>
+        </div>
+        <div class="loss-legend"><span><i class="lg-a"></i>Потери от простоя, по дням</span><span><i class="lg-b"></i><span id="lossLg">Homeshot, пакет «Комплект»: 2 490 ₽ разово</span></span></div>
+        <div class="loss-body">
+          <div class="loss-plot" id="lossPlot"></div>
+          <div class="loss-save" aria-live="polite">
+            <span class="ls-k" id="lsK">Ваша экономия</span>
+            <b id="lsV">+4 979 ₽</b>
+            <span class="ls-c" id="lsC">если квартира сдастся на неделю раньше</span>
+            <span class="ls-h">Наведите на столбец, чтобы посчитать для другого срока</span>
+          </div>
+        </div>
+        <p class="ab-note" id="lossNote">Расчёт: аренда 32 000 ₽ в месяц, это около 1 067 ₽ за каждый день простоя. Экономия: потери за эти дни минус разовая цена пакета.</p>
+        <div class="loss-cta"><a class="btn btn-primary" href="#prices" id="abCta">Не теряйте деньги: напишите нам</a><span>Выберите пакет, и заявка соберётся сама</span></div>
+      </figure>
     </div>
   </section>
 
@@ -471,41 +499,71 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
   // ---- loss chart (bars) ----
   (function(){
     var plot = $('lossPlot'); if (!plot) return;
-    var lastW = 0;
-    function draw(){
-    var W = Math.round(Math.max(320, Math.min(1140, plot.clientWidth || 640))); if (W === lastW) return; lastW = W;
-    var DAY = 1067, PRICE = 2490, DAYS = 10, H = W < 480 ? 220 : W > 800 ? 290 : 250, L = W < 480 ? 40 : 56, R = 8, T = 34, B = 30;
-    var ymax = 12000, step = (W - L - R) / DAYS, bw = step - 8;
-    var ys = function(v){ return T + (1 - v / ymax) * (H - T - B); }, base = ys(0);
+    var DAY = 1067, DAYS = 10, DEF_D = 7, price = 2490, pname = 'Комплект', lastW = 0, hover = 0;
     var fmt = function(v){ return Math.round(v).toLocaleString('ru-RU').replace(/\u00a0/g, ' ') + ' ₽'; };
-    var out = '', i;
-    for (i = 0; i <= 12000; i += 4000) out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + ys(i) + '" y2="' + ys(i) + '" stroke="#2E2823" stroke-width="1"/><text x="' + (L - 8) + '" y="' + (ys(i) + 4) + '" text-anchor="end" fill="#8C8177" font-size="11">' + (i ? (i / 1000) + ' тыс' : '0') + '</text>';
-    for (i = 1; i <= DAYS; i++){
-      var v = DAY * i, x = L + (i - 1) * step + 4, y = ys(v), h = base - y, r = Math.min(4, h);
-      var over = v > PRICE;
-      out += '<path d="M' + x + ',' + base + 'V' + (y + r) + 'Q' + x + ',' + y + ' ' + (x + r) + ',' + y + 'H' + (x + bw - r) + 'Q' + (x + bw) + ',' + y + ' ' + (x + bw) + ',' + (y + r) + 'V' + base + 'Z" fill="#4F8FE0" opacity="' + (over ? 1 : .45) + '"/>';
-      out += '<text x="' + (x + bw / 2) + '" y="' + (H - 10) + '" text-anchor="middle" fill="#8C8177" font-size="11">' + i + '</text>';
-      if (i === DAYS || ((i === 3 || i === 7) && W >= 480)) out += '<text x="' + (x + bw / 2) + '" y="' + (y - 7) + '" text-anchor="middle" fill="#F2ECE4" font-size="11" font-weight="600">−' + (Math.round(v / 100) / 10).toString().replace('.', ',') + ' тыс</text>';
-      out += '<rect x="' + (x - 4) + '" y="' + T + '" width="' + step + '" height="' + (base - T) + '" fill="transparent" data-day="' + i + '"/>';
+    var daysW = function(d){ return d === 1 ? 'день' : d < 5 ? 'дня' : 'дней'; };
+    var geo = {};
+    function draw(force){
+      var W = Math.round(Math.max(300, Math.min(900, plot.clientWidth || 640))); if (W === lastW && !force) return; lastW = W;
+      var H = W < 480 ? 220 : 260, L = W < 480 ? 40 : 52, R = 8, T = 34, B = 30;
+      var ymax = 12000, step = (W - L - R) / DAYS, bw = step - 8;
+      var ys = function(v){ return T + (1 - v / ymax) * (H - T - B); }, base = ys(0);
+      var pay = Math.ceil(price / DAY);
+      geo = { W: W, step: step, ys: ys, L: L };
+      var out = '', lab = '', i;
+      for (i = 0; i <= 12000; i += 4000) out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + ys(i) + '" y2="' + ys(i) + '" stroke="#2E2823" stroke-width="1"/><text x="' + (L - 8) + '" y="' + (ys(i) + 4) + '" text-anchor="end" fill="#8C8177" font-size="11">' + (i ? (i / 1000) + ' тыс' : '0') + '</text>';
+      for (i = 1; i <= DAYS; i++){
+        var v = DAY * i, x = L + (i - 1) * step + 4, y = ys(v), h = base - y, r = Math.min(4, h);
+        out += '<path class="lbar" data-bar="' + i + '" d="M' + x + ',' + base + 'V' + (y + r) + 'Q' + x + ',' + y + ' ' + (x + r) + ',' + y + 'H' + (x + bw - r) + 'Q' + (x + bw) + ',' + y + ' ' + (x + bw) + ',' + (y + r) + 'V' + base + 'Z" fill="#4F8FE0" opacity="' + (v > price ? 1 : .45) + '"/>';
+        out += '<text x="' + (x + bw / 2) + '" y="' + (H - 10) + '" text-anchor="middle" fill="#8C8177" font-size="11">' + i + '</text>';
+        if (i === DAYS || (i === pay && W >= 480)) lab += '<text x="' + (x + bw / 2) + '" y="' + (y - 7) + '" text-anchor="middle" fill="#F2ECE4" font-size="11" font-weight="600">−' + (Math.round(v / 100) / 10).toString().replace('.', ',') + ' тыс</text>';
+        if (i === pay) lab += '<text x="' + Math.max(x + bw / 2, L + 26) + '" y="' + (y - (W >= 480 ? 21 : 7)) + '" text-anchor="middle" fill="#D6A870" font-size="11" font-weight="600">окупается</text>';
+      }
+      out += lab;
+      out += '<line class="pline" x1="' + L + '" x2="' + (W - R) + '" y1="' + ys(price) + '" y2="' + ys(price) + '" stroke="#BF8530" stroke-width="2" stroke-linecap="round"/>';
+      for (i = 1; i <= DAYS; i++) out += '<rect x="' + (L + (i - 1) * step) + '" y="' + T + '" width="' + step + '" height="' + (base - T) + '" fill="transparent" data-day="' + i + '"/>';
+      out += '<text x="' + (W - R) + '" y="' + (H + 2) + '" text-anchor="end" fill="#8C8177" font-size="11">дней простоя</text>';
+      plot.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + (H + 6) + '" role="img" aria-label="Столбцы: потери от простоя по дням, около 1 067 рублей в день. Линия: разовая цена пакета ' + pname + ', ' + price + ' рублей. Окупается на ' + pay + '-й день.">' + out + '</svg><div class="loss-tip" id="lossTip" hidden></div>';
+      var svg = plot.querySelector('svg');
+      svg.addEventListener('mousemove', function(e){ var r = e.target.closest('[data-day]'); if (r) setHover(+r.dataset.day); });
+      svg.addEventListener('mouseleave', function(){ setHover(0); });
+      svg.addEventListener('touchstart', function(e){ var t = e.touches[0], el = t && document.elementFromPoint(t.clientX, t.clientY); if (el && el.dataset.day) setHover(+el.dataset.day); }, { passive: true });
+      setHover(hover);
     }
-    var py = ys(PRICE);
-    out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + py + '" y2="' + py + '" stroke="#BF8530" stroke-width="2" stroke-linecap="round"/>' +
-      '<text x="' + (L + 2 * step + 4 + bw / 2) + '" y="' + (ys(DAY * 3) - 21) + '" text-anchor="middle" fill="#D6A870" font-size="11" font-weight="600">окупается</text>' +
-      '<text x="' + (W - R) + '" y="' + (H + 2) + '" text-anchor="end" fill="#8C8177" font-size="11">дней простоя</text>';
-    plot.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + (H + 6) + '" role="img" aria-label="Столбцы показывают потери от простоя по дням: около 1 067 рублей в день, к десятому дню 10 670 рублей. Линия показывает разовую цену Homeshot 2 490 рублей. С третьего дня потери больше цены обработки.">' + out + '</svg><div class="loss-tip" id="lossTip" hidden></div>';
-    var tip = $('lossTip'), svg = plot.querySelector('svg');
-    var k0 = 1;
-    function show(rect){
-      var d = +rect.dataset.day, k = svg.getBoundingClientRect().width / W, x = (+rect.getAttribute('x') + step / 2) * k;
-      tip.hidden = false; tip.style.left = x + 'px'; tip.style.top = (ys(Math.max(DAY * d, PRICE)) * k) + 'px';
-      tip.innerHTML = '<b>' + d + ' ' + (d === 1 ? 'день' : d < 5 ? 'дня' : 'дней') + ' простоя</b><br>Потери: ' + fmt(DAY * d) + '<br>Homeshot: ' + fmt(PRICE) + ' разово';
+    function setHover(d){
+      hover = d;
+      var svg = plot.querySelector('svg'), tip = $('lossTip');
+      svg.querySelectorAll('.lbar').forEach(function(p){
+        var i = +p.dataset.bar, on = i === d;
+        p.setAttribute('fill', on ? '#7DB0F2' : '#4F8FE0');
+        p.setAttribute('opacity', on ? 1 : (DAY * i > price ? (d ? .8 : 1) : .45));
+        p.setAttribute('stroke', on ? '#F2ECE4' : 'none'); p.setAttribute('stroke-width', on ? 1.5 : 0);
+      });
+      if (d){
+        var k = svg.getBoundingClientRect().width / geo.W, x = (geo.L + (d - .5) * geo.step) * k;
+        tip.hidden = false; tip.style.left = x + 'px'; tip.style.top = (geo.ys(Math.max(DAY * d, price)) * k) + 'px';
+        tip.innerHTML = '<b>' + d + ' ' + daysW(d) + ' простоя</b><br>Потери: ' + fmt(DAY * d) + '<br>Пакет: ' + fmt(price) + ' разово';
+      } else tip.hidden = true;
+      var dd = d || DEF_D, save = DAY * dd - price, v = $('lsV');
+      v.textContent = (save > 0 ? '+' : '−') + fmt(Math.abs(save));
+      v.classList.toggle('neg', save <= 0);
+      $('lsK').textContent = save > 0 ? 'Ваша экономия' : 'Пока не окупилось';
+      $('lsC').textContent = dd === 7 && !d ? 'если квартира сдастся на неделю раньше' : 'если квартира сдастся на ' + dd + ' ' + daysW(dd) + ' раньше';
     }
-    svg.addEventListener('mousemove', function(e){ var r = e.target.closest('[data-day]'); if (r) show(r); });
-    svg.addEventListener('mouseleave', function(){ tip.hidden = true; });
-    svg.addEventListener('touchstart', function(e){ var t = e.touches[0], el = t && document.elementFromPoint(t.clientX, t.clientY); if (el && el.dataset.day) show(el); }, { passive: true });
-    }
-    draw();
-    var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(draw, 150); });
+    document.querySelector('.loss-pk').addEventListener('click', function(e){
+      var b = e.target.closest('[data-lp]'); if (!b) return;
+      document.querySelectorAll('.loss-pk [data-lp]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+      var oldY = geo.ys(price); price = +b.dataset.lp; pname = b.dataset.ln;
+      $('lossLg').textContent = 'Homeshot, пакет «' + pname + '»: ' + fmt(price) + ' разово';
+      draw(true);
+      var ln = plot.querySelector('.pline'), dy = oldY - geo.ys(price);
+      if (ln && dy && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+        ln.style.transform = 'translateY(' + dy + 'px)';
+        requestAnimationFrame(function(){ requestAnimationFrame(function(){ ln.style.transition = 'transform .55s cubic-bezier(.22,1,.36,1)'; ln.style.transform = 'translateY(0)'; }); });
+      }
+    });
+    draw(true);
+    var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(function(){ draw(false); }, 150); });
   })();
 
   document.querySelectorAll('.formats').forEach(function(f){ f.addEventListener('click', function(){ f.classList.toggle('open'); }); });
