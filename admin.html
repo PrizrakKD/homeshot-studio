@@ -171,7 +171,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
 
   <div id="app" hidden>
     <div class="card">
-      <div class="dhead" style="align-items:flex-start"><div><h2>Черновики с Авито</h2><p class="hint">Сюда попадают фото из расширения. Отметьте пары галочками, выберите вариант «после», при необходимости кадрируйте и нажмите «Опубликовать».</p></div><button type="button" class="mini" id="draftsReload">Обновить</button></div>
+      <div class="dhead" style="align-items:flex-start"><div><h2>Подготовка к публикации</h2><p class="hint">Сюда попадают объекты из расширения и пакетной загрузки. Отметьте пары галочками, выберите вариант «после», при необходимости кадрируйте и нажмите «Опубликовать». После публикации объект уходит в «Работы на сайте».</p></div><button type="button" class="mini" id="draftsReload">Обновить</button></div>
       <div class="drafts" id="drafts"><p class="hint">Загружаю…</p></div>
       <span class="status" id="draftsStatus" role="status"></span>
     </div>
@@ -601,7 +601,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     });
     chain.then(function(){
       go.disabled = false;
-      status('batchStatus', 'Загружено черновиков: ' + done + (failed ? ', с ошибкой: ' + failed : '') + '. Они появились вверху, в «Черновиках с Авито».', failed ? 'err' : 'ok');
+      status('batchStatus', 'Загружено черновиков: ' + done + (failed ? ', с ошибкой: ' + failed : '') + '. Они появились вверху, в «Подготовке к публикации».', failed ? 'err' : 'ok');
       var n = batch.filter(function(p){ return p.on; }).length; go.hidden = !n; go.textContent = 'Загрузить черновики (' + n + ')';
       return loadDrafts();
     });
@@ -701,7 +701,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
         });
       }));
     }).then(function(ds){
-      drafts = ds; renderDrafts();
+      drafts = ds.filter(function(d){ return !d.published; }); renderDrafts();
     }).catch(function(e){ box.innerHTML = ''; status('draftsStatus', errText(e), 'err'); });
   }
   function pill(d){
@@ -724,7 +724,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   }
   function renderDrafts(){
     var box = $('drafts');
-    if (!drafts.length){ box.innerHTML = '<p class="hint">Черновиков нет. Откройте объявление на Авито и нажмите «В Homeshot» в расширении.</p>'; return; }
+    if (!drafts.length){ box.innerHTML = '<p class="hint">Пока пусто. Откройте объявление на Авито и нажмите «В Homeshot» в расширении или загрузите папки ниже.</p>'; return; }
     var coll = getColl();
     box.innerHTML = drafts.map(function(d, di){
       var m = d.meta, hasVars = d.rows.some(function(r){ return r.variants.length; });
@@ -760,7 +760,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
           }).join('') +
           '<div class="dfoot">' +
             (hasVars ? '<button type="button" class="mini" data-act="regen" data-d="' + di + '">Перегенерировать всё</button>' : '') +
-            '<button type="button" class="mini danger" data-act="del" data-d="' + di + '">Удалить черновик</button>' +
+            '<button type="button" class="mini danger" data-act="del" data-d="' + di + '">Удалить</button>' +
           '</div>' +
         '</div></section>';
     }).join('');
@@ -854,19 +854,21 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       var title = (d.title || '').trim();
       if (!title){ status('draftsStatus', 'Укажите название на сайте.', 'err'); var sec2 = b.closest('.draft'); sec2.classList.remove('coll'); sec2.querySelector('[data-field=title]').focus(); return; }
       if (!rows.length){ status('draftsStatus', 'Отметьте хотя бы одну пару.', 'err'); return; }
+      var dup = d.meta.url && works.find(function(w){ return w.source && w.source === d.meta.url; });
+      if (dup && b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = 'Всё равно опубликовать'; status('draftsStatus', 'Эта квартира уже есть на сайте: «' + dup.title + '». Нажмите ещё раз, если нужна вторая работа, или удалите этот объект.', 'err'); return; }
       b.disabled = true; status('draftsStatus', 'Готовлю фото: ' + rows.length + '…');
       var dir = 'works/' + today() + '-' + slug(title) + '-' + Math.random().toString(36).slice(2, 6);
       Promise.all(rows.map(function(x){ return Promise.all([blobOf(x.before).then(b64FromBlob), blobOf(x.variants[x.sel]).then(b64FromBlob)]); })).then(function(pairsB64){
         return Promise.all([b64FromText(title + '\n' + (d.sub || '').trim() + '\n'), b64FromText(JSON.stringify({ at: new Date().toISOString(), work: dir, pairs: rows.map(function(x){ return x.key; }) }) + '\n')]).then(function(t){
-          var entries = [{ path: dir + '/info.txt', b64: t[0] }, { path: 'drafts/' + d.id + '/published.json', b64: t[1] }];
+          var entries = [{ path: dir + '/info.txt', b64: t[0] }].concat(d.files.map(function(fp){ return { path: fp, del: true }; }));
           pairsB64.forEach(function(p, i){ var n = String(i + 1).padStart(2, '0'); entries.push({ path: dir + '/' + n + '-before.jpg', b64: p[0] }, { path: dir + '/' + n + '-after.jpg', b64: p[1] }); });
           if (d.meta.url) entries.push({ path: dir + '/source.txt', b64: btoa(unescape(encodeURIComponent(d.meta.url + '\n'))) });
           status('draftsStatus', 'Загружаю на GitHub…');
           return commit(entries, 'Опубликовать: ' + title);
         });
       }).then(function(){
-        status('draftsStatus', 'Опубликовано, пар фото: ' + rows.length + '. На сайте через 1–2 минуты.', 'ok');
-        setColl(d.id, true); return Promise.all([loadDrafts(), loadList()]);
+        status('draftsStatus', '«' + title + '» опубликовано, пар фото: ' + rows.length + '. Объект перенесён в «Работы на сайте», на сайте через 1–2 минуты.', 'ok');
+        drafts = drafts.filter(function(x){ return x !== d; }); renderDrafts(); return loadList();
       }).catch(function(err){ b.disabled = false; status('draftsStatus', err.status ? errText(err) : err.message, 'err'); });
       return;
     }
@@ -888,7 +890,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       return;
     }
     if (act === 'del'){
-      if (b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = 'Точно удалить?'; setTimeout(function(){ if (b.isConnected){ b.dataset.confirm = ''; b.textContent = 'Удалить черновик'; } }, 3000); return; }
+      if (b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = 'Точно удалить?'; setTimeout(function(){ if (b.isConnected){ b.dataset.confirm = ''; b.textContent = 'Удалить'; } }, 3000); return; }
       b.disabled = true; status('draftsStatus', 'Удаляю…');
       commit(d.files.map(function(p){ return { path: p, del: true }; }), 'Удалить черновик: ' + (d.meta.title || d.id))
         .then(function(){ status('draftsStatus', 'Черновик удалён.', 'ok'); return loadDrafts(); })
