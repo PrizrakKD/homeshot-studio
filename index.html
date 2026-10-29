@@ -125,6 +125,26 @@ section{padding-block:72px}
 .cline strong a{color:inherit;text-decoration:none}
 .copy{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer;flex-shrink:0}
 .copy:hover{color:var(--fg);border-color:var(--gold)}
+.test{border-top:1px solid var(--line)}
+.ab{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;max-width:860px}
+@media (max-width:640px){.ab{gap:12px}}
+.lst{display:flex;flex-direction:column;text-align:left;padding:0;border:2px solid transparent;border-radius:10px;background:#F7F5F2;color:#1E1E1E;cursor:pointer;overflow:hidden;font-family:"Segoe UI",Arial,sans-serif;min-width:0;transition:transform .2s,border-color .2s,box-shadow .2s}
+.lst:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.lst[aria-pressed=true]{border-color:var(--gold)}
+.lst-ph{position:relative;display:block;aspect-ratio:4/3;background:#DDD8D2;overflow:hidden}
+.lst-ph img{width:100%;height:100%;object-fit:cover;display:block}
+.lst-tag{position:absolute;left:10px;top:10px;width:30px;height:30px;border-radius:50%;background:rgba(20,17,15,.8);color:#F2ECE4;font:700 14px/30px var(--f);text-align:center}
+.lst-tx{display:flex;flex-direction:column;gap:4px;padding:12px 14px 14px;min-width:0}
+.lst-pr{font-size:19px;font-weight:700}
+.lst-pr small{font-size:13px;font-weight:400;color:#6B6B6B}
+.lst-tt{font-size:15px;color:#2B5BA8;overflow-wrap:anywhere}
+.lst-ad,.lst-dt{font-size:13px;color:#7A7A7A}
+@media (max-width:480px){.lst-pr{font-size:16px}.lst-tt{font-size:13px}.lst-tx{padding:10px}}
+.ab-note{margin-top:12px;font-size:12px;color:var(--dim)}
+.ab-res{margin-top:28px;max-width:860px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:24px;display:grid;gap:12px;justify-items:start}
+.ab-res h3{font-size:24px}
+.ab-res p{color:var(--muted);max-width:62ch}
+.ab-res .ab-loss{color:var(--fg)}
 footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var(--dim);font-size:13px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}html{scroll-behavior:auto}}
 </style>
@@ -208,6 +228,29 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
       </div>
       <div class="extras">
         <span>Доп. фото <b>150 ₽</b></span><span>Доп. шот в видео <b>300 ₽</b></span><span>Вертикальная версия <b>300 ₽</b></span><span>Доп. круг правок <b>300 ₽</b></span><span>Срочно за 3 часа <b>+50%</b></span><span>Первое фото на пробу <b>бесплатно</b></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="test" class="test">
+    <div class="wrap">
+      <div class="sec-head"><div><div class="eyebrow">Простой тест</div><h2 style="margin-top:12px">На какое объявление вам хочется кликнуть?</h2></div><p>Одна и та же квартира, одна и та же цена. Представьте, что листаете выдачу, и выберите не задумываясь.</p></div>
+      <div class="ab" role="group" aria-label="Выберите объявление">
+        <button type="button" class="lst" data-ab="a" aria-pressed="false">
+          <span class="lst-ph"><img id="abA" alt="Объявление с исходным фото" loading="lazy"><span class="lst-tag">А</span></span>
+          <span class="lst-tx"><span class="lst-pr">32 000 ₽ <small>в месяц</small></span><span class="lst-tt" id="abTitleA">1-к. квартира, 38 м², 4/5 эт.</span><span class="lst-ad">Калининград, Центральный р-н</span><span class="lst-dt">Сегодня в 12:40</span></span>
+        </button>
+        <button type="button" class="lst" data-ab="b" aria-pressed="false">
+          <span class="lst-ph"><img id="abB" alt="То же объявление после обработки Homeshot" loading="lazy"><span class="lst-tag">Б</span></span>
+          <span class="lst-tx"><span class="lst-pr">32 000 ₽ <small>в месяц</small></span><span class="lst-tt" id="abTitleB">1-к. квартира, 38 м², 4/5 эт.</span><span class="lst-ad">Калининград, Центральный р-н</span><span class="lst-dt">Сегодня в 12:40</span></span>
+        </button>
+      </div>
+      <p class="ab-note">Схематичный пример карточек в выдаче. Цена условная.</p>
+      <div class="ab-res" id="abRes" hidden aria-live="polite">
+        <h3 id="abHead"></h3>
+        <p id="abText"></p>
+        <p class="ab-loss">Пока объявление выглядит как вариант&nbsp;А, люди пролистывают его, а квартира простаивает. Каждый день простоя это деньги, которые вы уже не вернёте.</p>
+        <a class="btn btn-primary" href="#contact">Не теряйте деньги: напишите нам</a>
       </div>
     </div>
   </section>
@@ -317,7 +360,24 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     works = (r[0] || []).filter(function(w){ return (w.pairs && w.pairs.length) || (w.before && w.after); }).map(function(w){
       w.pairs = w.pairs && w.pairs.length ? w.pairs : [{ before: w.before, after: w.after }]; w.idx = 0; return w;
     });
-    cfg = r[1] || {}; renderHero(); renderGallery(); renderContacts(); });
+    cfg = r[1] || {}; renderHero(); renderGallery(); renderContacts(); renderTest(); });
+
+  function renderTest(){
+    var sec = $('test');
+    if (!works.length){ sec.hidden = true; return; }
+    var w = works[0], p = w.pairs[0];
+    $('abA').src = p.before; $('abB').src = p.after;
+  }
+  $('test').addEventListener('click', function(e){
+    var c = e.target.closest('[data-ab]'); if (!c) return;
+    $('test').querySelectorAll('[data-ab]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === c)); });
+    var b = c.dataset.ab === 'b';
+    $('abHead').textContent = b ? 'Вы выбрали Б.' : 'Вы выбрали А.';
+    $('abText').textContent = b
+      ? 'Это одна и та же квартира по той же цене. Разница только в фото: свет, ракурс и чистота кадра. Ваши арендаторы и покупатели выбирают так же: за секунду и по первой картинке.'
+      : 'Это одна и та же квартира по той же цене. Теперь посмотрите глазами арендатора, который листает сотню объявлений: светлое аккуратное фото выглядит как ухоженная квартира, и взгляд цепляется за него первым.';
+    $('abRes').hidden = false;
+  });
 })();
 </script>
 </body>
