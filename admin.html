@@ -80,6 +80,19 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .mini.danger:hover{color:var(--err);border-color:var(--err)}
 .mini[disabled]{opacity:.5;cursor:wait}
 .dpic{position:relative}
+.phs{width:120px;height:120px;border:1.5px dashed var(--gold-dim);border-radius:8px;background:repeating-linear-gradient(45deg,rgba(214,168,112,.03) 0 8px,transparent 8px 16px),var(--surface);color:var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:6px;font:inherit;transition:border-color .2s,background-color .2s,transform .2s;position:relative;overflow:hidden}
+.phs b{font-size:12px;letter-spacing:.2em;font-weight:700}
+.phs span{font-size:10px;line-height:1.3;color:var(--dim);text-align:center}
+.phs:hover,.phs.over{border-color:var(--gold);border-style:solid;background-color:rgba(214,168,112,.08);transform:translateY(-2px)}
+.phs.over{box-shadow:0 0 0 3px rgba(214,168,112,.2)}
+.phs.filled{padding:0;border-style:solid;border-color:var(--gold)}
+.phs.filled img{width:100%;height:100%;object-fit:cover;display:block}
+.phs-x{position:absolute;left:0;right:0;bottom:0;background:rgba(20,17,15,.75);color:var(--fg)!important;font-size:11px!important;padding:4px;opacity:0;transition:opacity .2s}
+.phs.filled:hover .phs-x{opacity:1}
+.newrow{border-style:dashed;border-color:var(--gold-dim);background:transparent}
+.newrow .pnum{color:var(--gold);font-size:18px}
+.newhint{font-size:13px;color:var(--dim);max-width:200px}
+
 [data-slot]{cursor:grab}
 [data-slot].dragging{opacity:.4}
 [data-slot].dropover{outline:2px dashed var(--gold);outline-offset:3px;border-radius:6px}
@@ -208,21 +221,9 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
         <div class="field"><label for="f-sub">Подпись</label><input type="text" id="f-sub" placeholder="1-к квартира, 46,8 м²"></div>
         <div class="field"><label for="f-video">Видео (необязательно)</label><input type="file" id="f-video" accept="video/mp4,video/webm"><span class="hint">MP4 до 50 МБ</span></div>
       </div>
-      <div class="crops">
-        <div class="crop" data-slot="before" data-def="1">
-          <label for="f-before">Фото до</label><input type="file" id="f-before" accept="image/*">
-          <div class="crop-area" hidden><img alt="Фото до, кадрирование"></div>
-          <div class="ratios" hidden role="group" aria-label="Пропорции фото до"></div>
-        </div>
-        <div class="crop" data-slot="after" data-def="1">
-          <label for="f-after">Фото после</label><input type="file" id="f-after" accept="image/*">
-          <div class="crop-area" hidden><img alt="Фото после, кадрирование"></div>
-          <div class="ratios" hidden role="group" aria-label="Пропорции фото после"></div>
-        </div>
-      </div>
-      <p class="hint">Двигайте рамку и колёсиком или щипком меняйте масштаб. Для ползунка на сайте лучше, чтобы оба фото были 1:1 и с похожим кадром: тогда «до» и «после» совпадают при сравнении.</p>
-      <div id="pairQueue" hidden></div>
-      <div class="actions"><button class="btn btn-ghost" type="button" id="addPair">+ Добавить ещё пару в объект</button></div>
+      <div class="field"><label for="f-src">Ссылка на объявление клиента (необязательно)</label><input type="text" id="f-src" placeholder="https://www.avito.ru/…"></div>
+      <div class="pedit-h"><b>Пары фото</b><span class="hint">Перетащите фото в квадраты или нажмите на них. Можно бросить сразу два файла на «ДО»: первый станет «до», второй «после».</span></div>
+      <div class="pedit" id="mPairs"></div>
       <div class="actions"><button class="btn btn-primary" type="submit" id="addBtn">Опубликовать</button><span class="status" id="addStatus" role="status"></span></div>
     </form>
 
@@ -385,22 +386,11 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       }).join('');
   }
 
-  function wtools(url, label, i){
-    return '<button type="button" class="tool crop" data-wcrop="' + esc(url) + '" data-wi="' + i + '" data-label="' + esc(label) + '" aria-label="Кадрировать: ' + esc(label) + '" title="Кадрировать">' + CROP + '</button>' +
-      '<button type="button" class="tool zoom" data-wzoom="' + esc(url) + '" data-label="' + esc(label) + '" aria-label="Увеличить: ' + esc(label) + '" title="Увеличить">' + ZOOM + '</button>' +
-      (crops[url] ? '<span class="cropped">кадрировано</span>' : '');
-  }
   function renderPairEditor(i){
-    var w = works[i], box = $('pe-' + i); if (!box) return;
-    var ps = w.editPairs || [];
-    box.innerHTML = ps.length ? ps.map(function(p, k){
-      return '<div class="prow"><span class="pnum">' + (k + 1) + '</span>' +
-        '<div class="dimg"><div class="dpic" draggable="true" data-slot="w|' + i + '|' + k + '|before"><img src="' + esc(shown(p.before)) + '" alt="Пара ' + (k + 1) + ', до" draggable="false">' + wtools(p.before, 'Пара ' + (k + 1) + ', до', i) + '</div><div class="lbl">ДО</div></div>' +
-        '<div class="dimg"><div class="dpic" draggable="true" data-slot="w|' + i + '|' + k + '|after"><img src="' + esc(shown(p.after)) + '" alt="Пара ' + (k + 1) + ', после" draggable="false">' + wtools(p.after, 'Пара ' + (k + 1) + ', после', i) + '</div><div class="lbl">ПОСЛЕ</div></div>' +
-        '<div class="pmove"><button type="button" class="mini" data-pmv="-1" data-wi="' + i + '" data-k="' + k + '"' + (k ? '' : ' disabled') + ' aria-label="Выше">↑</button>' +
-        '<button type="button" class="mini" data-pmv="1" data-wi="' + i + '" data-k="' + k + '"' + (k < ps.length - 1 ? '' : ' disabled') + ' aria-label="Ниже">↓</button>' +
-        '<button type="button" class="mini danger" data-prm="' + k + '" data-wi="' + i + '"' + (ps.length > 1 ? '' : ' disabled title="Должна остаться хотя бы одна пара"') + '>Убрать</button></div></div>';
-    }).join('') : '<p class="hint">Пар нет.</p>';
+    var box = $('pe-' + i); if (!box) return;
+    var key = 'w|' + i;
+    if (!PCTX[key]) PCTX[key] = { get: function(){ return works[i].editPairs || []; }, pend: {}, render: function(){ renderPairEditor(i); }, complete: function(p){ works[i].editPairs.push(p); } };
+    box.innerHTML = pairRowsHtml(key, true);
   }
 
   $('list').addEventListener('submit', function(e){
@@ -439,16 +429,9 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
         .catch(function(err){ cfgData[key] = prev; renderWorks(); status('listStatus', errText(err), 'err'); });
       return;
     }
-    var wz = e.target.closest('[data-wzoom]');
-    if (wz){ openLb(shown(wz.dataset.wzoom), wz.dataset.label, wz); return; }
-    var wc = e.target.closest('[data-wcrop]');
-    if (wc){ var wi = +wc.dataset.wi; openCrop(wc.dataset.wcrop, wc.dataset.label, wc, function(){ renderPairEditor(wi); }); return; }
-    var mv = e.target.closest('[data-pmv]');
-    if (mv){ var mw = works[+mv.dataset.wi], k = +mv.dataset.k, k2 = k + Number(mv.dataset.pmv); var t = mw.editPairs[k]; mw.editPairs[k] = mw.editPairs[k2]; mw.editPairs[k2] = t; renderPairEditor(+mv.dataset.wi); return; }
-    var rm = e.target.closest('[data-prm]');
-    if (rm){ var rw = works[+rm.dataset.wi]; rw.editPairs.splice(+rm.dataset.prm, 1); renderPairEditor(+rm.dataset.wi); return; }
+    if (e.target.closest('[data-pzoom],[data-pcrop],[data-pmv],[data-prm],[data-ph]')) return;
     var ed = e.target.closest('[data-edit]'), cn = e.target.closest('[data-cancel]');
-    if (ed){ var ew = works[+ed.dataset.edit]; ew.editPairs = ew.pairs.map(function(p){ return { before: p.before, after: p.after }; }); renderPairEditor(+ed.dataset.edit); }
+    if (ed){ var ew = works[+ed.dataset.edit]; ew.editPairs = ew.pairs.map(function(p){ return { before: p.before, after: p.after }; }); if (PCTX['w|' + ed.dataset.edit]) PCTX['w|' + ed.dataset.edit].pend = {}; renderPairEditor(+ed.dataset.edit); }
     if (ed || cn){
       var form = $('list').querySelector('.wedit[data-i="' + (ed ? ed.dataset.edit : cn.dataset.cancel) + '"]');
       form.hidden = !!cn; if (ed){ form.hidden = false; form.querySelector('input').focus(); }
@@ -462,79 +445,80 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       .catch(function(e){ b.disabled = false; status('listStatus', errText(e), 'err'); });
   });
 
-  // ---- crop ----
+  // ---- pair slots: shared by manual upload, published works editor and drafts ----
   var RATIOS = [['1:1', 1], ['3:4', 3/4], ['4:5', 4/5], ['16:9', 16/9], ['9:16', 9/16], ['Свободно', NaN]];
-  var croppers = {}, urls = {}, picked = {}, loaders = {}, formSource = '';
-  function loadSlot(slot, blob){ picked[slot] = blob || null; loaders[slot](blob); }
-  document.querySelectorAll('.crop').forEach(function(box){
-    var slot = box.dataset.slot, def = Number(box.dataset.def);
-    var input = box.querySelector('input'), area = box.querySelector('.crop-area'), img = area.querySelector('img'), bar = box.querySelector('.ratios');
-    bar.innerHTML = RATIOS.map(function(r){
-      return '<button type="button" class="rt" data-r="' + r[1] + '" aria-pressed="' + (r[1] === def) + '">' + r[0] + '</button>';
-    }).join('') +
-      '<button type="button" class="rt" data-rot="-90" aria-label="Повернуть влево">↺ 90°</button>' +
-      '<button type="button" class="rt" data-rot="90" aria-label="Повернуть вправо">↻ 90°</button>' +
-      '<button type="button" class="rt" data-reset="1">Сбросить</button>';
-    input.addEventListener('change', function(){ loadSlot(slot, input.files[0]); });
-    loaders[slot] = function(f){
-      if (croppers[slot]){ croppers[slot].destroy(); croppers[slot] = null; }
-      if (urls[slot]){ URL.revokeObjectURL(urls[slot]); urls[slot] = null; }
-      if (!f){ area.hidden = true; bar.hidden = true; return; }
-      if (typeof Cropper === 'undefined'){ status('addStatus', 'Кадрирование не загрузилось, фото уйдёт целиком.', 'err'); return; }
-      urls[slot] = URL.createObjectURL(f);
-      img.src = urls[slot]; area.hidden = false; bar.hidden = false;
-      var pressed = bar.querySelector('[data-r][aria-pressed=true]');
-      croppers[slot] = new Cropper(img, { aspectRatio: pressed ? Number(pressed.dataset.r) : def, viewMode: 1, autoCropArea: 1, background: false, dragMode: 'move', toggleDragModeOnDblclick: false });
-    };
-    bar.addEventListener('click', function(e){
-      var b = e.target.closest('button'), c = croppers[slot]; if (!b || !c) return;
-      if (b.dataset.r !== undefined){
-        bar.querySelectorAll('[data-r]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
-        c.setAspectRatio(Number(b.dataset.r));
-      } else if (b.dataset.rot){ c.rotate(Number(b.dataset.rot)); }
-      else if (b.dataset.reset){ c.reset(); }
-    });
-  });
-  function cropped(slot, file){
-    var c = croppers[slot];
-    if (!c) return shrink(file);
-    var canvas = c.getCroppedCanvas({ maxWidth: 2400, maxHeight: 2400, imageSmoothingEnabled: true, imageSmoothingQuality: 'high', fillColor: '#ffffff' });
-    return new Promise(function(res, rej){ canvas.toBlob(function(b){ b ? res(b) : rej(new Error('Не удалось обрезать фото')); }, 'image/jpeg', 0.9); });
+  var blobStore = {}; // object URL -> File picked from disk
+  function fileUrl(f){ var u = URL.createObjectURL(f); blobStore[u] = f; return u; }
+  function bust(url){ return /^blob:/.test(url) ? url : url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now(); }
+  var PCTX = {}; // ctx key -> { get(): pairs[], pend: {before, after}, render(), complete(pair) }
+  var manual = { pairs: [] };
+  PCTX['m|0'] = { get: function(){ return manual.pairs; }, pend: {}, render: function(){ renderManual(); }, complete: function(p){ manual.pairs.push(p); } };
+  var PH_ICON = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.6"/><path d="M21 15.5l-5-5L5 21"/><path d="M18 3.5v5M15.5 6h5"/></svg>';
+  function phSlot(ph, label, url){
+    if (url) return '<div class="dimg"><button type="button" class="phs filled" data-ph="' + ph + '" aria-label="Заменить фото: ' + label + '"><img src="' + esc(url) + '" alt="" draggable="false"><span class="phs-x">Заменить</span></button><div class="lbl">' + label + '</div></div>';
+    return '<div class="dimg"><button type="button" class="phs" data-ph="' + ph + '" aria-label="Добавить фото: ' + label + '">' + PH_ICON + '<b>' + label + '</b><span>Перетащите<br>или выберите</span></button><div class="lbl">&nbsp;</div></div>';
   }
-  function clearCrops(){
-    Object.keys(croppers).forEach(function(k){ if (croppers[k]) croppers[k].destroy(); croppers[k] = null; if (urls[k]) URL.revokeObjectURL(urls[k]); urls[k] = null; });
-    picked = {}; $('f-before').value = ''; $('f-after').value = '';
-    document.querySelectorAll('.crop-area, .ratios').forEach(function(el){ el.hidden = true; });
+  function newRowHtml(ctxKey, afterLabel){
+    var pend = PCTX[ctxKey].pend;
+    return '<div class="prow newrow"><span class="pnum">+</span>' + phSlot(ctxKey + '|before', 'ДО', pend.before) + phSlot(ctxKey + '|after', afterLabel || 'ПОСЛЕ', pend.after) +
+      '<div class="pmove newhint">' + (pend.before || pend.after ? 'Добавьте второе фото, и пара появится в списке' : 'Новая пара') + '</div></div>';
   }
-  function resetCrops(){
-    clearCrops(); formSource = '';
-    pairs.forEach(function(p){ URL.revokeObjectURL(p.thumb); }); pairs = []; renderPairs();
+  function ptools(ctxKey, url, label){
+    return '<button type="button" class="tool crop" data-pcrop="' + esc(url) + '" data-ctx="' + ctxKey + '" data-label="' + esc(label) + '" aria-label="Кадрировать: ' + esc(label) + '" title="Кадрировать">' + CROP + '</button>' +
+      '<button type="button" class="tool zoom" data-pzoom="' + esc(url) + '" data-label="' + esc(label) + '" aria-label="Увеличить: ' + esc(label) + '" title="Увеличить">' + ZOOM + '</button>' +
+      (crops[url] ? '<span class="cropped">кадрировано</span>' : '');
   }
+  function pairRowsHtml(ctxKey, minOne){
+    var ps = PCTX[ctxKey].get();
+    return ps.map(function(p, k){
+      return '<div class="prow"><span class="pnum">' + (k + 1) + '</span>' +
+        '<div class="dimg"><div class="dpic" draggable="true" data-slot="' + ctxKey + '|' + k + '|before"><img src="' + esc(shown(p.before)) + '" alt="Пара ' + (k + 1) + ', до" draggable="false">' + ptools(ctxKey, p.before, 'Пара ' + (k + 1) + ', до') + '</div><div class="lbl">ДО</div></div>' +
+        '<div class="dimg"><div class="dpic" draggable="true" data-slot="' + ctxKey + '|' + k + '|after"><img src="' + esc(shown(p.after)) + '" alt="Пара ' + (k + 1) + ', после" draggable="false">' + ptools(ctxKey, p.after, 'Пара ' + (k + 1) + ', после') + '</div><div class="lbl">ПОСЛЕ</div></div>' +
+        '<div class="pmove"><button type="button" class="mini" data-pmv="-1" data-ctx="' + ctxKey + '" data-k="' + k + '"' + (k ? '' : ' disabled') + ' aria-label="Выше">↑</button>' +
+        '<button type="button" class="mini" data-pmv="1" data-ctx="' + ctxKey + '" data-k="' + k + '"' + (k < ps.length - 1 ? '' : ' disabled') + ' aria-label="Ниже">↓</button>' +
+        '<button type="button" class="mini danger" data-prm="' + k + '" data-ctx="' + ctxKey + '"' + (!minOne || ps.length > 1 ? '' : ' disabled title="Должна остаться хотя бы одна пара"') + '>Убрать</button></div></div>';
+    }).join('') + newRowHtml(ctxKey);
+  }
+  function renderManual(){ $('mPairs').innerHTML = pairRowsHtml('m|0', false); }
 
-  // ---- pairs queue (one object = several before/after pairs) ----
-  var pairs = [];
-  function renderPairs(){
-    var box = $('pairQueue');
-    if (!pairs.length){ box.innerHTML = ''; box.hidden = true; return; }
-    box.hidden = false;
-    box.innerHTML = '<div class="hint">В объекте уже ' + pairs.length + ' ' + (pairs.length === 1 ? 'пара' : pairs.length < 5 ? 'пары' : 'пар') + '. Текущая пара в рамках выше добавится при публикации.</div><div class="pq">' +
-      pairs.map(function(p, i){ return '<div class="pqi"><img src="' + p.thumb + '" alt="Пара ' + (i + 1) + '"><span>' + (i + 1) + '</span><button type="button" class="pqx" data-rm="' + i + '" aria-label="Убрать пару ' + (i + 1) + '">×</button></div>'; }).join('') + '</div>';
+  var phInput = document.createElement('input'); phInput.type = 'file'; phInput.accept = 'image/*'; phInput.hidden = true; document.body.appendChild(phInput);
+  var phTarget = null;
+  function fillPh(ph, file){
+    if (!file || !/^image\//.test(file.type || 'image/')) return;
+    var a = ph.split('|'), side = a.pop(), ctxKey = a.join('|'), c = PCTX[ctxKey]; if (!c) return;
+    c.pend[side] = fileUrl(file);
+    if (c.pend.before && c.pend.after){ var p = { before: c.pend.before, after: c.pend.after }; c.pend = {}; c.complete(p); }
+    c.render();
   }
-  function addCurrentPair(){
-    if (!picked.before || !picked.after) return Promise.resolve(false);
-    return Promise.all([cropped('before', picked.before), cropped('after', picked.after)]).then(function(b){
-      pairs.push({ before: b[0], after: b[1], thumb: URL.createObjectURL(b[1]) });
-      clearCrops(); renderPairs(); return true;
-    });
-  }
-  $('addPair').addEventListener('click', function(){
-    if (!picked.before || !picked.after){ status('addStatus', 'Сначала загрузите фото до и после для этой пары.', 'err'); return; }
-    addCurrentPair().then(function(){ status('addStatus', 'Пара добавлена. Загрузите следующую или нажмите «Опубликовать».', 'ok'); });
+  phInput.addEventListener('change', function(){ if (phTarget && phInput.files[0]) fillPh(phTarget, phInput.files[0]); phInput.value = ''; });
+  document.addEventListener('click', function(e){
+    var ph = e.target.closest && e.target.closest('[data-ph]');
+    if (ph){ e.preventDefault(); phTarget = ph.dataset.ph; phInput.click(); return; }
+    var z = e.target.closest && e.target.closest('[data-pzoom]');
+    if (z){ openLb(shown(z.dataset.pzoom), z.dataset.label, z); return; }
+    var c = e.target.closest && e.target.closest('[data-pcrop]');
+    if (c){ var cx = PCTX[c.dataset.ctx]; openCrop(c.dataset.pcrop, c.dataset.label, c, function(){ cx.render(); }); return; }
+    var mv = e.target.closest && e.target.closest('[data-pmv]');
+    if (mv){ var mc = PCTX[mv.dataset.ctx], arr = mc.get(), k = +mv.dataset.k, k2 = k + Number(mv.dataset.pmv); var t = arr[k]; arr[k] = arr[k2]; arr[k2] = t; mc.render(); return; }
+    var rm = e.target.closest && e.target.closest('[data-prm]');
+    if (rm){ var rc = PCTX[rm.dataset.ctx]; rc.get().splice(+rm.dataset.prm, 1); rc.render(); }
   });
-  $('pairQueue').addEventListener('click', function(e){
-    var b = e.target.closest('[data-rm]'); if (!b) return;
-    var p = pairs.splice(+b.dataset.rm, 1)[0]; URL.revokeObjectURL(p.thumb); renderPairs();
+  document.addEventListener('dragover', function(e){
+    var ph = e.target.closest && e.target.closest('[data-ph]'); if (!ph) return;
+    if (e.dataTransfer && [].indexOf.call(e.dataTransfer.types || [], 'Files') >= 0){ e.preventDefault(); ph.classList.add('over'); }
   });
+  document.addEventListener('dragleave', function(e){ var ph = e.target.closest && e.target.closest('[data-ph]'); if (ph && !ph.contains(e.relatedTarget)) ph.classList.remove('over'); });
+  document.addEventListener('drop', function(e){
+    var ph = e.target.closest && e.target.closest('[data-ph]'); if (!ph) return;
+    e.preventDefault(); ph.classList.remove('over');
+    var fs = [].filter.call(e.dataTransfer.files || [], function(f){ return /^image\//.test(f.type); });
+    if (!fs.length) return;
+    fillPh(ph.dataset.ph, fs[0]);
+    if (fs[1]){ var side = ph.dataset.ph.split('|').pop(); if (side === 'before') fillPh(ph.dataset.ph.replace(/\|before$/, '|after'), fs[1]); }
+  });
+  var formSource = '';
+  function resetCrops(){ manual.pairs = []; PCTX['m|0'].pend = {}; formSource = ''; renderManual(); }
+  renderManual();
 
   // ---- batch upload: folders with Ish / Images_From_Ai / Adress.txt -> drafts ----
   var batch = [];
@@ -665,23 +649,20 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   // ---- add work ----
   $('addForm').addEventListener('submit', function(e){
     e.preventDefault();
-    var title = $('f-title').value.trim(), sub = $('f-sub').value.trim(), fv = $('f-video').files[0];
-    var hasCurrent = !!(picked.before && picked.after);
+    var title = $('f-title').value.trim(), sub = $('f-sub').value.trim(), fv = $('f-video').files[0], src = $('f-src').value.trim() || formSource;
+    var pend = PCTX['m|0'].pend;
     if (!title){ status('addStatus', 'Укажите название.', 'err'); return; }
-    if (!pairs.length && !hasCurrent){ status('addStatus', 'Нужна хотя бы одна пара: фото до и фото после.', 'err'); return; }
-    if ((picked.before || picked.after) && !hasCurrent){ status('addStatus', 'В текущей паре не хватает второго фото. Загрузите его или уберите.', 'err'); return; }
+    if (!manual.pairs.length){ status('addStatus', pend.before || pend.after ? 'В новой паре не хватает второго фото.' : 'Добавьте хотя бы одну пару: фото до и фото после.', 'err'); return; }
+    if (src && !/^https?:\/\//i.test(src)){ status('addStatus', 'Ссылка должна начинаться с https://', 'err'); return; }
     if (fv && fv.size > 50 * 1024 * 1024){ status('addStatus', 'Видео больше 50 МБ, сожмите его.', 'err'); return; }
     var dir = 'works/' + today() + '-' + slug(title) + '-' + Math.random().toString(36).slice(2, 6);
     var btn = $('addBtn'); btn.disabled = true; status('addStatus', 'Готовлю файлы…');
-    addCurrentPair().then(function(){
-      return Promise.all(pairs.map(function(p){ return Promise.all([b64FromBlob(p.before), b64FromBlob(p.after)]); }).concat([fv ? b64FromBlob(fv) : null, b64FromText(title + '\n' + sub + '\n')]));
-    }).then(function(all){
+    Promise.all(manual.pairs.map(function(p){ return Promise.all([blobOf(p.before).then(b64FromBlob), blobOf(p.after).then(b64FromBlob)]); }).concat([fv ? b64FromBlob(fv) : null, b64FromText(title + '\n' + sub + '\n')])).then(function(all){
       var info = all.pop(), vid = all.pop();
       var entries = [{ path: dir + '/info.txt', b64: info }];
       all.forEach(function(p, i){ var n = String(i + 1).padStart(2, '0'); entries.push({ path: dir + '/' + n + '-before.jpg', b64: p[0] }, { path: dir + '/' + n + '-after.jpg', b64: p[1] }); });
-      var r = [null, null, vid];
-      if (r[2]) entries.push({ path: dir + '/video' + (/webm$/i.test(fv.name) ? '.webm' : '.mp4'), b64: r[2] });
-      if (formSource) entries.push({ path: dir + '/source.txt', b64: btoa(unescape(encodeURIComponent(formSource + '\n'))) });
+      if (vid) entries.push({ path: dir + '/video' + (/webm$/i.test(fv.name) ? '.webm' : '.mp4'), b64: vid });
+      if (src) entries.push({ path: dir + '/source.txt', b64: btoa(unescape(encodeURIComponent(src + '\n'))) });
       status('addStatus', 'Загружаю на GitHub…');
       return commit(entries, 'Новая работа: ' + title);
     }).then(function(){
@@ -814,6 +795,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
               }).join('') : '<div class="hint">Вариантов пока нет</div>') +
               '<div class="dact"><button type="button" class="mini" data-act="regen1" data-d="' + di + '" data-r="' + ri + '">Ещё варианты</button></div></div>';
           }).join('') +
+          (function(){ var key = 'dn|' + di; if (!PCTX[key] || PCTX[key].id !== d.id) PCTX[key] = { id: d.id, get: function(){ return []; }, pend: {}, render: renderDrafts, complete: function(p){ addDraftPair(d, p); } }; return newRowHtml(key, 'ПОСЛЕ'); })() +
           '<div class="dfoot">' +
             (hasVars ? '<button type="button" class="mini" data-act="regen" data-d="' + di + '">Перегенерировать всё</button>' : '') +
             '<button type="button" class="mini danger" data-act="del" data-d="' + di + '">Удалить</button>' +
@@ -821,9 +803,20 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
         '</div></section>';
     }).join('');
   }
+  function addDraftPair(d, p){
+    var keys = d.rows.map(function(r){ return parseInt(r.key, 10) || 0; }), n = String((keys.length ? Math.max.apply(null, keys) : 0) + 1).padStart(2, '0');
+    var rel = 'gen/' + n + '-' + Date.now().toString(36) + '-1.jpg', base = 'drafts/' + d.id + '/';
+    var st = JSON.parse(JSON.stringify(d.status || {})); st.variants = st.variants || {}; st.variants[n] = [rel]; st.state = 'done'; st.updated = new Date().toISOString();
+    status('draftsStatus', 'Добавляю пару…');
+    Promise.all([blobOf(p.before).then(b64FromBlob), blobOf(p.after).then(b64FromBlob), b64FromText(JSON.stringify(st, null, 2) + '\n')]).then(function(b){
+      return commit([{ path: base + 'src/' + n + '.jpg', b64: b[0] }, { path: base + rel, b64: b[1] }, { path: base + 'status.json', b64: b[2] }], 'Новая пара в черновике: ' + (d.meta.title || d.id));
+    }).then(function(){ status('draftsStatus', 'Пара добавлена.', 'ok'); return loadDrafts(); })
+      .catch(function(err){ status('draftsStatus', err.status ? errText(err) : err.message, 'err'); });
+  }
   function blobOf(url){
     if (crops[url]) return Promise.resolve(crops[url].blob);
-    return fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now()).then(function(r){ if (!r.ok) throw new Error('Не скачалось фото'); return r.blob(); });
+    if (blobStore[url]) return shrink(blobStore[url]);
+    return fetch(bust(url)).then(function(r){ if (!r.ok) throw new Error('Не скачалось фото'); return r.blob(); });
   }
   $('draftsReload').addEventListener('click', function(){ status('draftsStatus', ''); loadDrafts(); });
 
@@ -840,12 +833,12 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   function slotGet(sl){
     var a = sl.split('|');
     if (a[0] === 'd'){ var r = drafts[+a[1]].rows[+a[2]]; return a[3] === 'b' ? r.before : r.variants[+a[4]]; }
-    return works[+a[1]].editPairs[+a[2]][a[3]];
+    return PCTX[a[0] + '|' + a[1]].get()[+a[2]][a[3]];
   }
   function slotSet(sl, v){
     var a = sl.split('|');
     if (a[0] === 'd'){ var r = drafts[+a[1]].rows[+a[2]]; if (a[3] === 'b') r.before = v; else r.variants[+a[4]] = v; return; }
-    works[+a[1]].editPairs[+a[2]][a[3]] = v;
+    PCTX[a[0] + '|' + a[1]].get()[+a[2]][a[3]] = v;
   }
   var dragSlot = null;
   document.addEventListener('dragstart', function(e){
@@ -867,7 +860,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     var a = dragSlot, b = el.dataset.slot, va = slotGet(a), vb = slotGet(b);
     slotSet(a, vb); slotSet(b, va); dragSlot = null;
     if (a[0] === 'd'){ var d = drafts[+a.split('|')[1]]; saveLayout(d); renderDrafts(); status('draftsStatus', 'Фото поменяны местами.', 'ok'); }
-    else renderPairEditor(+a.split('|')[1]);
+    else PCTX[a.split('|').slice(0, 2).join('|')].render();
   });
 
   // ---- lightbox ----
@@ -895,7 +888,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     if (typeof Cropper === 'undefined'){ status('draftsStatus', 'Кадрирование не загрузилось, обновите страницу.', 'err'); return; }
     cmLast = opener; cmUrl = url; $('cmTitle').textContent = 'Кадрирование: ' + label;
     cm.hidden = false; document.body.style.overflow = 'hidden';
-    fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now()).then(function(r){ return r.blob(); }).then(function(b){
+    fetch(bust(url)).then(function(r){ return r.blob(); }).then(function(b){
       if (cmObj) URL.revokeObjectURL(cmObj); cmObj = URL.createObjectURL(b); cmImg.src = cmObj;
       if (cmCropper) cmCropper.destroy();
       var pressed = $('cmRatios').querySelector('[data-r][aria-pressed=true]');
