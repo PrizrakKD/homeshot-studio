@@ -154,7 +154,12 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .pqx:hover{background:var(--err);color:var(--ink)}
 .item .t a{color:var(--fg);text-decoration:none}
 .item .t a:hover{color:var(--gold);text-decoration:underline}
-.witem{display:grid;gap:10px}
+.witem{display:grid;gap:10px;position:relative}
+.grip{flex-shrink:0;width:22px;align-self:stretch;display:flex;align-items:center;justify-content:center;color:var(--dim);cursor:grab;border-radius:4px;font-size:16px;letter-spacing:-3px;user-select:none}
+.grip:hover{color:var(--gold);background:var(--surface)}
+.witem.wdragging{opacity:.4}
+.witem.drop-before::before,.witem.drop-after::after{content:"";position:absolute;left:0;right:0;height:3px;border-radius:2px;background:var(--gold)}
+.witem.drop-before::before{top:-7px}.witem.drop-after::after{bottom:-7px}
 .pedit-h{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
 .pedit{display:grid;gap:10px}
 .prow{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);overflow-x:auto}
@@ -237,7 +242,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     </form>
 
     <div class="card">
-      <div><h2>Работы на сайте</h2><p class="hint">Сверху самые новые. Первая показывается в шапке сайта.</p></div>
+      <div><h2>Работы на сайте</h2><p class="hint">Порядок как на сайте. Перетащите работу за ⋮⋮, чтобы поменять порядок. Новые работы появляются сверху.</p></div>
       <div class="list" id="list"><p class="hint">Загружаю…</p></div>
       <span class="status" id="listStatus" role="status"></span>
     </div>
@@ -376,13 +381,20 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       works = ws; renderWorks();
     }).catch(function(e){ list.innerHTML = ''; status('listStatus', errText(e), 'err'); });
   }
+  function applyOrder(){
+    var ord = cfgData.order || [], pos = function(w){ var k = ord.indexOf(w.dir); return k < 0 ? -1 : k; };
+    var before = works.map(function(w){ return w.dir; }).join('|');
+    works = works.map(function(w, k){ return { w: w, k: k }; }).sort(function(a, b){ return (pos(a.w) - pos(b.w)) || (a.k - b.k); }).map(function(x){ return x.w; });
+    if (works.map(function(w){ return w.dir; }).join('|') !== before) Object.keys(PCTX).forEach(function(k){ if (/^w\|/.test(k)) delete PCTX[k]; });
+  }
   function renderWorks(){
+    applyOrder();
     var list = $('list'), ws = works;
       if (!ws.length){ list.innerHTML = '<p class="hint">Пока нет ни одной работы. Добавьте первую выше.</p>'; return; }
       var heroDir = cfgData.hero && ws.some(function(w){ return w.dir === cfgData.hero; }) ? cfgData.hero : ws[0].dir;
       var testDir = cfgData.test && ws.some(function(w){ return w.dir === cfgData.test; }) ? cfgData.test : ws.slice().sort(function(x, y){ return (y.count || 1) - (x.count || 1); })[0].dir;
       list.innerHTML = ws.map(function(w, i){
-        return '<div class="witem"><div class="item">' + (w.thumb ? '<img src="' + esc(w.thumb) + '" alt="" loading="lazy">' : '<img alt="">') +
+        return '<div class="witem" data-wi="' + i + '"><div class="item"><span class="grip" draggable="true" data-wdrag="' + i + '" title="Перетащите, чтобы поменять порядок на сайте" aria-hidden="true">⋮⋮</span>' + (w.thumb ? '<img src="' + esc(w.thumb) + '" alt="" loading="lazy">' : '<img alt="">') +
           '<div class="t"><b>' + (w.source ? '<a href="' + esc(w.source) + '" target="_blank" rel="noopener" title="Открыть объявление клиента">' + esc(w.title) + ' ↗</a>' : esc(w.title)) + '</b><small>' + esc(w.sub || 'Без подписи') + (w.count > 1 ? ' · ' + w.count + ' пары фото' : '') + '</small></div>' +
           '<div class="feat-btns"><button type="button" class="del feat" data-feat="hero" data-i="' + i + '" aria-pressed="' + (w.dir === heroDir) + '" title="Показывать в шапке сайта">' + (w.dir === heroDir ? '★ ' : '') + 'В шапке</button>' +
           '<button type="button" class="del feat" data-feat="test" data-i="' + i + '" aria-pressed="' + (w.dir === testDir) + '" title="Показывать в блоке «Простой тест»">' + (w.dir === testDir ? '★ ' : '') + 'В тесте</button></div>' +
@@ -919,6 +931,39 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     slotSet(a, vb); slotSet(b, va); dragSlot = null;
     if (a[0] === 'd'){ var d = drafts[+a.split('|')[1]]; saveLayout(d); renderDrafts(); status('draftsStatus', 'Фото поменяны местами.', 'ok'); }
     else PCTX[a.split('|').slice(0, 2).join('|')].render();
+  });
+
+  // ---- reorder works on the site ----
+  var wDrag = null;
+  function clearWdrop(){ document.querySelectorAll('.drop-before,.drop-after').forEach(function(x){ x.classList.remove('drop-before', 'drop-after'); }); }
+  $('list').addEventListener('dragstart', function(e){
+    var g = e.target.closest && e.target.closest('[data-wdrag]'); if (!g) return;
+    wDrag = +g.dataset.wdrag; var row = g.closest('.witem'); row.classList.add('wdragging');
+    e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', 'w' + wDrag); e.dataTransfer.setDragImage(row, 20, 20); } catch(_){}
+  });
+  $('list').addEventListener('dragend', function(){ wDrag = null; clearWdrop(); document.querySelectorAll('.wdragging').forEach(function(x){ x.classList.remove('wdragging'); }); });
+  $('list').addEventListener('dragover', function(e){
+    if (wDrag === null) return;
+    var row = e.target.closest && e.target.closest('.witem'); if (!row) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    var r = row.getBoundingClientRect(), top = e.clientY < r.top + Math.min(r.height, 80) / 2;
+    clearWdrop(); if (+row.dataset.wi !== wDrag) row.classList.add(top ? 'drop-before' : 'drop-after');
+  });
+  $('list').addEventListener('drop', function(e){
+    if (wDrag === null) return;
+    var row = e.target.closest && e.target.closest('.witem'); if (!row) return;
+    e.preventDefault();
+    var to = +row.dataset.wi + (row.classList.contains('drop-after') ? 1 : 0), from = wDrag;
+    clearWdrop(); wDrag = null;
+    if (!row.classList.contains('drop-before') && !row.classList.contains('drop-after') && +row.dataset.wi === from) return;
+    if (to > from) to--;
+    if (to === from) return;
+    var prevOrder = cfgData.order, arr = works.slice(), m = arr.splice(from, 1)[0]; arr.splice(to, 0, m);
+    cfgData.order = arr.map(function(w){ return w.dir; });
+    renderWorks(); status('listStatus', 'Сохраняю порядок…');
+    saveConfig('Порядок работ на сайте')
+      .then(function(){ status('listStatus', 'Порядок сохранён. На сайте обновится через 1–2 минуты.', 'ok'); })
+      .catch(function(err){ cfgData.order = prevOrder; renderWorks(); status('listStatus', errText(err), 'err'); });
   });
 
   // ---- lightbox ----

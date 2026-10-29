@@ -542,7 +542,10 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     works = (r[0] || []).filter(function(w){ return (w.pairs && w.pairs.length) || (w.before && w.after); }).map(function(w){
       w.pairs = w.pairs && w.pairs.length ? w.pairs : [{ before: w.before, after: w.after }]; w.idx = 0; w.videos = w.videos && w.videos.length ? w.videos : (w.video ? [w.video] : []); w.vidx = 0; w.mode = 'photo'; return w;
     });
-    cfg = r[1] || {}; renderHero(); renderGallery(); renderContacts(); renderTest(); });
+    cfg = r[1] || {};
+    var ord = cfg.order || [], pos = function(w){ var k = ord.indexOf(w.id); return k < 0 ? -1 : k; };
+    works = works.map(function(w, k){ return { w: w, k: k }; }).sort(function(a, b){ return (pos(a.w) - pos(b.w)) || (a.k - b.k); }).map(function(x){ return x.w; });
+    renderHero(); renderGallery(); renderContacts(); renderTest(); });
 
   // ---- loss chart (bars) ----
   (function(){
