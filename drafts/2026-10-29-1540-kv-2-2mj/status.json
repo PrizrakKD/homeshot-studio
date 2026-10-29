@@ -1,0 +1,16 @@
+{
+  "state": "done",
+  "variants": {
+    "01": [
+      "gen/01-mvtlcgru-1.jpg"
+    ],
+    "02": [
+      "gen/02-mvtlcgru-1.jpg"
+    ],
+    "03": [
+      "gen/03-mvtlcgru-1.jpg"
+    ]
+  },
+  "message": "",
+  "updated": "2026-10-29T13:40:35.178Z"
+}
