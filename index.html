@@ -128,12 +128,19 @@ section{padding-block:72px}
 .test{border-top:1px solid var(--line)}
 .ab{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;max-width:860px}
 @media (max-width:640px){.ab{gap:12px}}
+.abcol{display:grid;gap:12px;min-width:0}
+.abbtn{width:100%}
+.abbtn[aria-pressed=true]{outline:2px solid var(--gold);outline-offset:3px}
 .lst{display:flex;flex-direction:column;text-align:left;padding:0;border:2px solid transparent;border-radius:10px;background:#F7F5F2;color:#1E1E1E;cursor:pointer;overflow:hidden;font-family:"Segoe UI",Arial,sans-serif;min-width:0;transition:transform .2s,border-color .2s,box-shadow .2s}
 .lst:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
-.lst[aria-pressed=true]{border-color:var(--gold)}
+.lst.sel{border-color:var(--gold)}
 .lst-ph{position:relative;display:block;aspect-ratio:4/3;background:#DDD8D2;overflow:hidden}
-.lst-ph img{width:100%;height:100%;object-fit:cover;display:block}
-.lst-tag{position:absolute;left:10px;top:10px;width:30px;height:30px;border-radius:50%;background:rgba(20,17,15,.8);color:#F2ECE4;font:700 14px/30px var(--f);text-align:center}
+.lst-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0}
+.lst-ph img.on{opacity:1}
+.lst-dots{position:absolute;left:10px;bottom:10px;display:flex;gap:5px;z-index:1}
+.lst-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 2px rgba(0,0,0,.5)}
+.lst-dots i.on{background:#fff;width:9px;height:9px;margin-top:-1px}
+.lst-tag{display:none;position:absolute;left:10px;top:10px;width:30px;height:30px;border-radius:50%;background:rgba(20,17,15,.8);color:#F2ECE4;font:700 14px/30px var(--f);text-align:center}
 .lst-tx{display:flex;flex-direction:column;gap:4px;padding:12px 14px 14px;min-width:0}
 .lst-pr{font-size:19px;font-weight:700}
 .lst-pr small{font-size:13px;font-weight:400;color:#6B6B6B}
@@ -234,23 +241,28 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
 
   <section id="test" class="test">
     <div class="wrap">
-      <div class="sec-head"><div><div class="eyebrow">Простой тест</div><h2 style="margin-top:12px">На какое объявление вам хочется кликнуть?</h2></div><p>Одна и та же квартира, одна и та же цена. Представьте, что листаете выдачу, и выберите не задумываясь.</p></div>
-      <div class="ab" role="group" aria-label="Выберите объявление">
-        <button type="button" class="lst" data-ab="a" aria-pressed="false">
-          <span class="lst-ph"><img id="abA" alt="Объявление с исходным фото" loading="lazy"><span class="lst-tag">А</span></span>
-          <span class="lst-tx"><span class="lst-pr">32 000 ₽ <small>в месяц</small></span><span class="lst-tt" id="abTitleA">1-к. квартира, 38 м², 4/5 эт.</span><span class="lst-ad">Калининград, Центральный р-н</span><span class="lst-dt">Сегодня в 12:40</span></span>
-        </button>
-        <button type="button" class="lst" data-ab="b" aria-pressed="false">
-          <span class="lst-ph"><img id="abB" alt="То же объявление после обработки Homeshot" loading="lazy"><span class="lst-tag">Б</span></span>
-          <span class="lst-tx"><span class="lst-pr">32 000 ₽ <small>в месяц</small></span><span class="lst-tt" id="abTitleB">1-к. квартира, 38 м², 4/5 эт.</span><span class="lst-ad">Калининград, Центральный р-н</span><span class="lst-dt">Сегодня в 12:40</span></span>
-        </button>
+      <div class="sec-head"><div><div class="eyebrow">Простой тест</div><h2 style="margin-top:12px">Какое объявление вы бы открыли?</h2></div><p>Одна и та же квартира по одной цене. Проведите мышкой по фото, чтобы полистать, как в выдаче.</p></div>
+      <div class="ab">
+        <div class="abcol">
+          <div class="lst" data-ab="a">
+            <div class="lst-ph" data-car="a"><span class="lst-dots"></span></div>
+            <div class="lst-tx"><span class="lst-pr">32 000 ₽ <small>в месяц</small></span><span class="lst-tt">1-к. квартира, 38 м², 4/5 эт.</span><span class="lst-ad">Калининград, Центральный р-н</span><span class="lst-dt">Сегодня в 12:40</span></div>
+          </div>
+          <button type="button" class="btn btn-ghost abbtn" data-pick="a" aria-pressed="false">Оставить как есть</button>
+        </div>
+        <div class="abcol">
+          <div class="lst" data-ab="b">
+            <div class="lst-ph" data-car="b"><span class="lst-dots"></span></div>
+            <div class="lst-tx"><span class="lst-pr">32 000 ₽ <small>в месяц</small></span><span class="lst-tt">1-к. квартира, 38 м², 4/5 эт.</span><span class="lst-ad">Калининград, Центральный р-н</span><span class="lst-dt">Сегодня в 12:40</span></div>
+          </div>
+          <button type="button" class="btn btn-primary abbtn" data-pick="b" aria-pressed="false">Обратиться к Homeshot</button>
+        </div>
       </div>
       <p class="ab-note">Схематичный пример карточек в выдаче. Цена условная.</p>
       <div class="ab-res" id="abRes" hidden aria-live="polite">
         <h3 id="abHead"></h3>
         <p id="abText"></p>
-        <p class="ab-loss">Пока объявление выглядит как вариант&nbsp;А, люди пролистывают его, а квартира простаивает. Каждый день простоя это деньги, которые вы уже не вернёте.</p>
-        <a class="btn btn-primary" href="#contact">Не теряйте деньги: напишите нам</a>
+        <a class="btn btn-primary" href="#contact" id="abCta">Не теряйте деньги: напишите нам</a>
       </div>
     </div>
   </section>
@@ -365,17 +377,31 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
   function renderTest(){
     var sec = $('test');
     if (!works.length){ sec.hidden = true; return; }
-    var w = works[0], p = w.pairs[0];
-    $('abA').src = p.before; $('abB').src = p.after;
+    var w = works.slice().sort(function(x, y){ return y.pairs.length - x.pairs.length; })[0];
+    ['a', 'b'].forEach(function(side){
+      var ph = sec.querySelector('[data-car="' + side + '"]');
+      var imgs = w.pairs.map(function(p, i){ return '<img src="' + esc(side === 'a' ? p.before : p.after) + '" alt="' + (side === 'a' ? 'Как есть' : 'После Homeshot') + ', фото ' + (i + 1) + '"' + (i ? ' loading="lazy"' : '') + ' class="' + (i ? '' : 'on') + '">'; }).join('');
+      ph.insertAdjacentHTML('afterbegin', imgs);
+      ph.querySelector('.lst-dots').innerHTML = w.pairs.length > 1 ? w.pairs.map(function(_, i){ return '<i class="' + (i ? '' : 'on') + '"></i>'; }).join('') : '';
+      var n = w.pairs.length, cur = 0;
+      function show(i){ if (i === cur || i < 0 || i >= n) return; var im = ph.querySelectorAll('img'), d = ph.querySelectorAll('.lst-dots i'); im[cur].classList.remove('on'); if (d[cur]) d[cur].classList.remove('on'); cur = i; im[cur].classList.add('on'); if (d[cur]) d[cur].classList.add('on'); }
+      function at(x){ var r = ph.getBoundingClientRect(); return Math.min(n - 1, Math.max(0, Math.floor((x - r.left) / r.width * n))); }
+      ph.addEventListener('mousemove', function(e){ show(at(e.clientX)); });
+      ph.addEventListener('mouseleave', function(){ show(0); });
+      ph.addEventListener('touchmove', function(e){ if (e.touches[0]) show(at(e.touches[0].clientX)); }, { passive: true });
+    });
   }
   $('test').addEventListener('click', function(e){
-    var c = e.target.closest('[data-ab]'); if (!c) return;
-    $('test').querySelectorAll('[data-ab]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === c)); });
-    var b = c.dataset.ab === 'b';
-    $('abHead').textContent = b ? 'Вы выбрали Б.' : 'Вы выбрали А.';
+    var c = e.target.closest('[data-pick],[data-ab]'); if (!c) return;
+    var side = c.dataset.pick || c.dataset.ab;
+    $('test').querySelectorAll('[data-pick]').forEach(function(x){ x.setAttribute('aria-pressed', String(x.dataset.pick === side)); });
+    $('test').querySelectorAll('.lst').forEach(function(x){ x.classList.toggle('sel', x.dataset.ab === side); });
+    var b = side === 'b';
+    $('abHead').textContent = b ? 'Хороший выбор.' : 'Оставить как есть стоит денег.';
     $('abText').textContent = b
-      ? 'Это одна и та же квартира по той же цене. Разница только в фото: свет, ракурс и чистота кадра. Ваши арендаторы и покупатели выбирают так же: за секунду и по первой картинке.'
-      : 'Это одна и та же квартира по той же цене. Теперь посмотрите глазами арендатора, который листает сотню объявлений: светлое аккуратное фото выглядит как ухоженная квартира, и взгляд цепляется за него первым.';
+      ? 'Объявление с хорошими фото охотнее открывают, и клиент находится быстрее. При аренде 32 000 ₽ в месяц день простоя стоит около 1 000 ₽. Если квартира сдастся хотя бы на пару дней раньше, это уже около 2 000 ₽, а наши пакеты стоят от 990 ₽. Услуга окупается за 1–2 дня.'
+      : 'При аренде 32 000 ₽ в месяц каждый день простоя стоит около 1 000 ₽. Неделя без звонков: минус 7 000 ₽ и потерянное время, пока объявление пролистывают. Обработка фото стоит от 990 ₽ и окупается за 1–2 дня.';
+    $('abCta').textContent = b ? 'Написать в Homeshot' : 'Не теряйте деньги: напишите нам';
     $('abRes').hidden = false;
   });
 })();
