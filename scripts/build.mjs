@@ -56,12 +56,17 @@ for (const dir of dirs) {
   }
   const w = { id: dir, title: prettify(dir), sub: '', before: pairs[0].before, after: pairs[0].after, pairs };
 
-  const video = find(files, 'video', VID) || files.find(f => VID.test(f));
-  if (video) {
-    const ext = path.extname(video).toLowerCase();
-    fs.copyFileSync(path.join(src, video), path.join(out, `video${ext}`));
-    w.video = `works/${slug}/video${ext}`;
-  }
+  // Videos: video.mp4 (legacy, first) and NN-video.mp4
+  const vids = [];
+  const lv = find(files, 'video', VID); if (lv) vids.push(lv);
+  files.filter(f => /^\d+-video\.(mp4|webm)$/i.test(f)).sort((a, b) => parseInt(a) - parseInt(b)).forEach(f => vids.push(f));
+  if (!vids.length) { const any = files.find(f => VID.test(f)); if (any) vids.push(any); }
+  w.videos = vids.map((v, i) => {
+    const name = `${String(i + 1).padStart(2, '0')}-video${path.extname(v).toLowerCase()}`;
+    fs.copyFileSync(path.join(src, v), path.join(out, name));
+    return `works/${slug}/${name}`;
+  });
+  if (w.videos.length) w.video = w.videos[0];
   const info = files.find(f => /^info\.txt$/i.test(f));
   if (info) {
     const lines = fs.readFileSync(path.join(src, info), 'utf8').replace(/^﻿/, '').split(/\r?\n/).map(s => s.trim());

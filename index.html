@@ -441,9 +441,9 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
       return;
     }
     g.innerHTML = '<div class="wcar"><button type="button" class="wnav prev" id="wPrev" aria-label="Предыдущая работа">‹</button><div class="wtrack" id="wTrack">' + works.map(function(w, i){
-      var tabs = w.video ? '<div class="tabs" role="group" aria-label="Вид"><button type="button" aria-pressed="true" data-tab="photo" data-i="' + i + '">Фото</button><button type="button" aria-pressed="false" data-tab="video" data-i="' + i + '">Видео</button></div>' : '';
+      var tabs = w.videos.length ? '<div class="tabs" role="group" aria-label="Вид"><button type="button" aria-pressed="true" data-tab="photo" data-i="' + i + '">Фото</button><button type="button" aria-pressed="false" data-tab="video" data-i="' + i + '">Видео</button></div>' : '';
       var n = w.pairs.length;
-      var pager = n > 1 ? '<div class="pager" id="pager-' + i + '">' +
+      var pager = (n > 1 || w.videos.length > 1) ? '<div class="pager" id="pager-' + i + '"' + (n > 1 ? '' : ' hidden') + '>' +
         '<button type="button" class="pg" data-go="-1" data-i="' + i + '" aria-label="Предыдущее фото">‹</button>' +
         '<span class="pgn" aria-live="polite">' + (w.idx + 1) + ' / ' + n + '</span>' +
         '<button type="button" class="pg" data-go="1" data-i="' + i + '" aria-label="Следующее фото">›</button></div>' : '';
@@ -460,6 +460,18 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     pv.addEventListener('click', function(){ step(-1); }); nx.addEventListener('click', function(){ step(1); });
     tr.addEventListener('scroll', function(){ requestAnimationFrame(upd); }, { passive: true });
     window.addEventListener('resize', upd); upd();
+  }
+  function renderMedia(i){
+    var w = works[i], m = $('media-' + i), pg = $('pager-' + i), video = w.mode === 'video';
+    m.innerHTML = video
+      ? '<div class="cmp"><video src="' + esc(w.videos[w.vidx]) + '" autoplay muted loop playsinline aria-label="' + esc(w.title) + ', видео ' + (w.vidx + 1) + '"></video></div>'
+      : cmpHTML(pairOf(w), 'w' + i, true);
+    if (pg){
+      var n = video ? w.videos.length : w.pairs.length;
+      pg.hidden = n < 2;
+      pg.querySelector('.pgn').textContent = ((video ? w.vidx : w.idx) + 1) + ' / ' + n;
+      pg.querySelectorAll('.pg').forEach(function(b, j){ b.setAttribute('aria-label', (j ? 'Следующее ' : 'Предыдущее ') + (video ? 'видео' : 'фото')); });
+    }
   }
   function pairOf(w){ var p = w.pairs[w.idx] || w.pairs[0]; return { before: p.before, after: p.after, title: w.title + (w.pairs.length > 1 ? ', фото ' + (w.idx + 1) : '') }; }
   function plural(n, a, b, c){ return n % 10 === 1 && n % 100 !== 11 ? a : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? b : c); }
@@ -491,11 +503,13 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     if (t.dataset.tab){
       var i = +t.dataset.i, w = works[i], m = $('media-' + i);
       t.parentNode.querySelectorAll('button').forEach(function(b){ b.setAttribute('aria-pressed', String(b === t)); });
-      var pg = $('pager-' + i); if (pg) pg.hidden = t.dataset.tab === 'video';
-      m.innerHTML = t.dataset.tab === 'video'
-        ? '<div class="cmp"><video src="' + esc(w.video) + '" autoplay muted loop playsinline aria-label="' + esc(w.title) + ', видео"></video></div>'
-        : cmpHTML(pairOf(w), 'w' + i, true);
+      w.mode = t.dataset.tab;
+      renderMedia(i);
       return;
+    }
+    if (t.dataset.go && works[+t.dataset.i].mode === 'video'){
+      var kv = +t.dataset.i, wv = works[kv], nv = wv.videos.length;
+      wv.vidx = (wv.vidx + Number(t.dataset.go) + nv) % nv; renderMedia(kv); return;
     }
     if (t.dataset.go){
       var k = +t.dataset.i, wk = works[k], n = wk.pairs.length;
@@ -513,7 +527,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     fetch('config.json', {cache:'no-cache'}).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; })
   ]).then(function(r){
     works = (r[0] || []).filter(function(w){ return (w.pairs && w.pairs.length) || (w.before && w.after); }).map(function(w){
-      w.pairs = w.pairs && w.pairs.length ? w.pairs : [{ before: w.before, after: w.after }]; w.idx = 0; return w;
+      w.pairs = w.pairs && w.pairs.length ? w.pairs : [{ before: w.before, after: w.after }]; w.idx = 0; w.videos = w.videos && w.videos.length ? w.videos : (w.video ? [w.video] : []); w.vidx = 0; w.mode = 'photo'; return w;
     });
     cfg = r[1] || {}; renderHero(); renderGallery(); renderContacts(); renderTest(); });
 

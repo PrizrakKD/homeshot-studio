@@ -80,6 +80,14 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .mini.danger:hover{color:var(--err);border-color:var(--err)}
 .mini[disabled]{opacity:.5;cursor:wait}
 .dpic{position:relative}
+.vslots{display:flex;flex-wrap:wrap;gap:12px}
+.vtile{position:relative;width:200px;height:120px;border-radius:8px;overflow:hidden;border:1px solid var(--gold-dim);background:#000}
+.vtile video{width:100%;height:100%;object-fit:cover;display:block}
+.vname{position:absolute;left:0;right:0;bottom:0;padding:4px 8px;font-size:11px;background:linear-gradient(transparent,rgba(0,0,0,.8));color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vx{position:absolute;top:6px;right:6px;width:28px;height:28px;border:0;border-radius:50%;background:rgba(20,17,15,.85);color:var(--fg);font-size:17px;line-height:1;cursor:pointer}
+.vx:hover{background:var(--err);color:var(--ink)}
+.phs.vph{width:200px;height:120px}
+
 .phs{width:120px;height:120px;border:1.5px dashed var(--gold-dim);border-radius:8px;background:repeating-linear-gradient(45deg,rgba(214,168,112,.03) 0 8px,transparent 8px 16px),var(--surface);color:var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:6px;font:inherit;transition:border-color .2s,background-color .2s,transform .2s;position:relative;overflow:hidden}
 .phs b{font-size:12px;letter-spacing:.2em;font-weight:700}
 .phs span{font-size:10px;line-height:1.3;color:var(--dim);text-align:center}
@@ -219,11 +227,12 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       <div class="fields">
         <div class="field"><label for="f-title">Название</label><input type="text" id="f-title" required placeholder="Гостиная, ул. Пугачёва"></div>
         <div class="field"><label for="f-sub">Подпись</label><input type="text" id="f-sub" placeholder="1-к квартира, 46,8 м²"></div>
-        <div class="field"><label for="f-video">Видео (необязательно)</label><input type="file" id="f-video" accept="video/mp4,video/webm"><span class="hint">MP4 до 50 МБ</span></div>
       </div>
       <div class="field"><label for="f-src">Ссылка на объявление клиента (необязательно)</label><input type="text" id="f-src" placeholder="https://www.avito.ru/…"></div>
       <div class="pedit-h"><b>Пары фото</b><span class="hint">Перетащите фото в квадраты или нажмите на них. Можно бросить сразу два файла на «ДО»: первый станет «до», второй «после».</span></div>
       <div class="pedit" id="mPairs"></div>
+      <div class="pedit-h"><b>Видео</b><span class="hint">MP4 или WEBM до 50 МБ каждое. Можно несколько: на сайте они листаются стрелками во вкладке «Видео».</span></div>
+      <div class="vslots" id="mVids"></div>
       <div class="actions"><button class="btn btn-primary" type="submit" id="addBtn">Опубликовать</button><span class="status" id="addStatus" role="status"></span></div>
     </form>
 
@@ -341,6 +350,8 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
           var w = { dir: d, files: files.map(function(f){ return f.path; }), title: d, sub: '', thumb: '' };
           var fBy = function(re){ return files.find(function(f){ return re.test(f.name); }); };
           w.pairs = []; w.pairFiles = [];
+          var vf = files.filter(function(f){ return /^(\d+-)?video\.(mp4|webm)$/i.test(f.name); }).sort(function(a, b){ return (parseInt(a.name) || 0) - (parseInt(b.name) || 0); });
+          w.videos = vf.map(function(f){ return { url: f.download_url, path: f.path, name: f.name }; });
           var lb = fBy(/^before\./i), la = fBy(/^after\./i);
           if (lb && la){ w.pairs.push({ before: lb.download_url, after: la.download_url }); w.pairFiles.push(lb.path, la.path); }
           files.map(function(f){ var m = f.name.match(/^(\d+)-before\./i); return m && m[1]; }).filter(Boolean).sort(function(a, b){ return a - b; }).forEach(function(n){
@@ -382,6 +393,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
             '<div class="field"><label for="e-sub-' + i + '">Подпись</label><input type="text" id="e-sub-' + i + '" value="' + esc(w.sub) + '" placeholder="1-к квартира, 46,8 м²"></div>' +
             '<div class="field" style="grid-column:1/-1"><label for="e-src-' + i + '">Ссылка на объявление клиента</label><input type="text" id="e-src-' + i + '" value="' + esc(w.source) + '" placeholder="https://www.avito.ru/…"><span class="hint">На сайте не показывается</span></div>' +
           '</div><div class="pedit-h"><b>Пары фото</b><span class="hint">Кадрирование, порядок и удаление пар. Первая пара показывается первой.</span></div><div class="pedit" id="pe-' + i + '"></div>' +
+          '<div class="pedit-h"><b>Видео</b><span class="hint">Новые видео загрузятся по «Сохранить».</span></div><div class="vslots" id="ve-' + i + '"></div>' +
           '<div class="actions"><button type="submit" class="btn btn-primary">Сохранить</button><button type="button" class="btn btn-ghost" data-cancel="' + i + '">Отмена</button></div></form></div>';
       }).join('');
   }
@@ -404,7 +416,11 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     var ep = w.editPairs || w.pairs;
     var pairsChanged = ep.length !== w.pairs.length || ep.some(function(p, k){ return p.before !== w.pairs[k].before || p.after !== w.pairs[k].after || crops[p.before] || crops[p.after]; });
     var pairJob = pairsChanged ? Promise.all(ep.map(function(p){ return Promise.all([blobOf(p.before).then(b64FromBlob), blobOf(p.after).then(b64FromBlob)]); })) : Promise.resolve(null);
-    Promise.all([b64FromText(title + '\n' + sub + '\n'), srcUrl ? b64FromText(srcUrl + '\n') : null, pairJob]).then(function(b){
+    var ev = w.editVideos || w.videos || [];
+    var newV = ev.filter(function(v){ return v.file; });
+    var maxN = (w.videos || []).reduce(function(m, v){ return Math.max(m, parseInt(v.name, 10) || 0); }, 0);
+    var vidJob = Promise.all(newV.map(function(v){ return b64FromBlob(v.file); }));
+    Promise.all([b64FromText(title + '\n' + sub + '\n'), srcUrl ? b64FromText(srcUrl + '\n') : null, pairJob, vidJob]).then(function(b){
       var entries = [{ path: 'works/' + w.dir + '/info.txt', b64: b[0] }];
       if (srcUrl) entries.push({ path: 'works/' + w.dir + '/source.txt', b64: b[1] });
       else if (w.source) entries.push({ path: 'works/' + w.dir + '/source.txt', del: true });
@@ -414,6 +430,9 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
         w.pairFiles.forEach(function(fp){ if (!keep[fp]) entries.push({ path: fp, del: true }); });
         status('listStatus', 'Загружаю фото…');
       }
+      (w.videos || []).forEach(function(v){ if (ev.indexOf(v) < 0) entries.push({ path: v.path, del: true }); });
+      b[3].forEach(function(vb, k){ entries.push({ path: 'works/' + w.dir + '/' + String(maxN + k + 1).padStart(2, '0') + '-video' + (/webm$/i.test(newV[k].file.name) ? '.webm' : '.mp4'), b64: vb }); });
+      if (b[3].length) status('listStatus', 'Загружаю видео: ' + b[3].length + '…');
       return commit(entries, 'Изменить работу: ' + title);
     }).then(function(){ status('listStatus', 'Сохранено. На сайте обновится через 1–2 минуты.', 'ok'); return loadList(); })
       .catch(function(err){ btn.disabled = false; status('listStatus', errText(err), 'err'); });
@@ -431,7 +450,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     }
     if (e.target.closest('[data-pzoom],[data-pcrop],[data-pmv],[data-prm],[data-ph]')) return;
     var ed = e.target.closest('[data-edit]'), cn = e.target.closest('[data-cancel]');
-    if (ed){ var ew = works[+ed.dataset.edit]; ew.editPairs = ew.pairs.map(function(p){ return { before: p.before, after: p.after }; }); if (PCTX['w|' + ed.dataset.edit]) PCTX['w|' + ed.dataset.edit].pend = {}; renderPairEditor(+ed.dataset.edit); }
+    if (ed){ var ew = works[+ed.dataset.edit]; ew.editPairs = ew.pairs.map(function(p){ return { before: p.before, after: p.after }; }); if (PCTX['w|' + ed.dataset.edit]) PCTX['w|' + ed.dataset.edit].pend = {}; renderPairEditor(+ed.dataset.edit); (function(i){ works[i].editVideos = (works[i].videos || []).slice(); VCTX['w|' + i] = { get: function(){ return works[i].editVideos; }, render: function(){ renderVids('w|' + i); } }; renderVids('w|' + i); })(+ed.dataset.edit); }
     if (ed || cn){
       var form = $('list').querySelector('.wedit[data-i="' + (ed ? ed.dataset.edit : cn.dataset.cancel) + '"]');
       form.hidden = !!cn; if (ed){ form.hidden = false; form.querySelector('input').focus(); }
@@ -517,7 +536,46 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     if (fs[1]){ var side = ph.dataset.ph.split('|').pop(); if (side === 'before') fillPh(ph.dataset.ph.replace(/\|before$/, '|after'), fs[1]); }
   });
   var formSource = '';
-  function resetCrops(){ manual.pairs = []; PCTX['m|0'].pend = {}; formSource = ''; renderManual(); }
+  function resetCrops(){ manual.pairs = []; PCTX['m|0'].pend = {}; formSource = ''; renderManual(); manual.videos.forEach(function(v){ URL.revokeObjectURL(v.url); }); manual.videos.length = 0; if (VCTX.m) renderVids('m'); }
+  // ---- video slots ----
+  var VCTX = {};
+  manual.videos = [];
+  VCTX['m'] = { get: function(){ return manual.videos; }, render: function(){ renderVids('m'); } };
+  var V_ICON = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="14" height="14" rx="3"/><path d="M16.5 10l5-3v10l-5-3"/><path d="M9.5 9v6M6.5 12h6"/></svg>';
+  function mb(n){ return (n / 1048576).toFixed(n < 10485760 ? 1 : 0).replace('.', ',') + ' МБ'; }
+  function vidsHtml(ctx){
+    var list = VCTX[ctx].get();
+    return list.map(function(v, k){
+      return '<div class="vtile"><video src="' + esc(v.url) + '#t=0.5" muted playsinline preload="metadata" aria-label="Видео ' + (k + 1) + '"></video>' +
+        '<span class="vname">' + (k + 1) + ' · ' + esc(v.file ? mb(v.file.size) : v.name || 'видео') + (v.file ? ' · новое' : '') + '</span>' +
+        '<button type="button" class="vx" data-vrm="' + k + '" data-vctx="' + ctx + '" aria-label="Убрать видео ' + (k + 1) + '">×</button></div>';
+    }).join('') + '<button type="button" class="phs vph" data-vph="' + ctx + '" aria-label="Добавить видео">' + V_ICON + '<b>ВИДЕО</b><span>Перетащите<br>или выберите</span></button>';
+  }
+  function renderVids(ctx){ var box = $(ctx === 'm' ? 'mVids' : 've-' + ctx.split('|')[1]); if (box) box.innerHTML = vidsHtml(ctx); }
+  var vInput = document.createElement('input'); vInput.type = 'file'; vInput.accept = 'video/mp4,video/webm'; vInput.multiple = true; vInput.hidden = true; document.body.appendChild(vInput);
+  var vTarget = null;
+  function addVids(ctx, files){
+    var c = VCTX[ctx]; if (!c) return; var big = [];
+    [].forEach.call(files, function(f){
+      if (!/^video\/(mp4|webm)$/.test(f.type) && !/\.(mp4|webm)$/i.test(f.name)) return;
+      if (f.size > 50 * 1048576){ big.push(f.name); return; }
+      c.get().push({ url: URL.createObjectURL(f), file: f, name: f.name });
+    });
+    c.render();
+    if (big.length) status(ctx === 'm' ? 'addStatus' : 'listStatus', 'Больше 50 МБ, сожмите: ' + big.join(', '), 'err');
+  }
+  vInput.addEventListener('change', function(){ if (vTarget) addVids(vTarget, vInput.files); vInput.value = ''; });
+  document.addEventListener('click', function(e){
+    var ph = e.target.closest && e.target.closest('[data-vph]');
+    if (ph){ e.preventDefault(); vTarget = ph.dataset.vph; vInput.click(); return; }
+    var x = e.target.closest && e.target.closest('[data-vrm]');
+    if (x){ var c = VCTX[x.dataset.vctx]; var it = c.get().splice(+x.dataset.vrm, 1)[0]; if (it && it.file) URL.revokeObjectURL(it.url); c.render(); }
+  });
+  document.addEventListener('dragover', function(e){ var ph = e.target.closest && e.target.closest('[data-vph]'); if (ph && [].indexOf.call(e.dataTransfer.types || [], 'Files') >= 0){ e.preventDefault(); ph.classList.add('over'); } });
+  document.addEventListener('dragleave', function(e){ var ph = e.target.closest && e.target.closest('[data-vph]'); if (ph && !ph.contains(e.relatedTarget)) ph.classList.remove('over'); });
+  document.addEventListener('drop', function(e){ var ph = e.target.closest && e.target.closest('[data-vph]'); if (!ph) return; e.preventDefault(); ph.classList.remove('over'); addVids(ph.dataset.vph, e.dataTransfer.files); });
+  renderVids('m');
+
   renderManual();
 
   // ---- batch upload: folders with Ish / Images_From_Ai / Adress.txt -> drafts ----
@@ -649,19 +707,19 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   // ---- add work ----
   $('addForm').addEventListener('submit', function(e){
     e.preventDefault();
-    var title = $('f-title').value.trim(), sub = $('f-sub').value.trim(), fv = $('f-video').files[0], src = $('f-src').value.trim() || formSource;
+    var title = $('f-title').value.trim(), sub = $('f-sub').value.trim(), src = $('f-src').value.trim() || formSource;
     var pend = PCTX['m|0'].pend;
     if (!title){ status('addStatus', 'Укажите название.', 'err'); return; }
     if (!manual.pairs.length){ status('addStatus', pend.before || pend.after ? 'В новой паре не хватает второго фото.' : 'Добавьте хотя бы одну пару: фото до и фото после.', 'err'); return; }
     if (src && !/^https?:\/\//i.test(src)){ status('addStatus', 'Ссылка должна начинаться с https://', 'err'); return; }
-    if (fv && fv.size > 50 * 1024 * 1024){ status('addStatus', 'Видео больше 50 МБ, сожмите его.', 'err'); return; }
     var dir = 'works/' + today() + '-' + slug(title) + '-' + Math.random().toString(36).slice(2, 6);
     var btn = $('addBtn'); btn.disabled = true; status('addStatus', 'Готовлю файлы…');
-    Promise.all(manual.pairs.map(function(p){ return Promise.all([blobOf(p.before).then(b64FromBlob), blobOf(p.after).then(b64FromBlob)]); }).concat([fv ? b64FromBlob(fv) : null, b64FromText(title + '\n' + sub + '\n')])).then(function(all){
-      var info = all.pop(), vid = all.pop();
+    Promise.all(manual.pairs.map(function(p){ return Promise.all([blobOf(p.before).then(b64FromBlob), blobOf(p.after).then(b64FromBlob)]); }).concat([Promise.all(manual.videos.map(function(v){ return b64FromBlob(v.file); })), b64FromText(title + '\n' + sub + '\n')])).then(function(all){
+      var info = all.pop(), vids = all.pop();
       var entries = [{ path: dir + '/info.txt', b64: info }];
       all.forEach(function(p, i){ var n = String(i + 1).padStart(2, '0'); entries.push({ path: dir + '/' + n + '-before.jpg', b64: p[0] }, { path: dir + '/' + n + '-after.jpg', b64: p[1] }); });
-      if (vid) entries.push({ path: dir + '/video' + (/webm$/i.test(fv.name) ? '.webm' : '.mp4'), b64: vid });
+      vids.forEach(function(vb, k){ entries.push({ path: dir + '/' + String(k + 1).padStart(2, '0') + '-video' + (/webm$/i.test(manual.videos[k].file.name) ? '.webm' : '.mp4'), b64: vb }); });
+      if (vids.length) status('addStatus', 'Загружаю видео: ' + vids.length + '…');
       if (src) entries.push({ path: dir + '/source.txt', b64: btoa(unescape(encodeURIComponent(src + '\n'))) });
       status('addStatus', 'Загружаю на GitHub…');
       return commit(entries, 'Новая работа: ' + title);
