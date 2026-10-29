@@ -1,0 +1,42 @@
+name: Обработать черновики
+
+on:
+  push:
+    branches: [main]
+    paths: ['drafts/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generate
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Генерация через Higgsfield
+        env:
+          HF_KEY_ID: ${{ secrets.HF_KEY_ID }}
+          HF_KEY_SECRET: ${{ secrets.HF_KEY_SECRET }}
+          HF_MODEL_PATH: ${{ vars.HF_MODEL_PATH }}
+          HF_BODY: ${{ vars.HF_BODY }}
+          HF_PROMPT: ${{ vars.HF_PROMPT }}
+          HF_VARIANTS: ${{ vars.HF_VARIANTS }}
+        run: node scripts/generate.mjs
+      - name: Сохранить результаты
+        run: |
+          git config user.name "homeshot-bot"
+          git config user.email "homeshot-bot@users.noreply.github.com"
+          git add -A drafts
+          if git diff --cached --quiet; then echo "Нечего сохранять"; exit 0; fi
+          git commit -m "Черновики: результаты генерации"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin main && exit 0; sleep 5; done
+          exit 1

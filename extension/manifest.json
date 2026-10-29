@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Homeshot: фото с Авито",
+  "version": "1.0.0",
+  "description": "Забирает фото из объявления на Авито в черновики Homeshot Studio.",
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" },
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://*.avito.ru/*",
+    "https://*.img.avito.st/*",
+    "https://api.github.com/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://www.avito.ru/*", "https://m.avito.ru/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options.html",
+  "action": { "default_title": "Homeshot: настройки", "default_icon": { "16": "icon16.png", "48": "icon48.png" } }
+}

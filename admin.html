@@ -58,6 +58,27 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .rt[aria-pressed=true]{background:var(--fg);color:var(--ink);border-color:var(--fg)}
 .cropper-view-box{outline-color:var(--gold)}
 .cropper-line,.cropper-point{background-color:var(--gold)}
+.drafts{display:grid;gap:16px}
+.draft{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:16px;display:grid;gap:14px;min-width:0}
+.dhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px}
+.dhead b{display:block;font-weight:600;overflow-wrap:anywhere}
+.dhead small{display:block;color:var(--dim);font-size:12px}
+.dhead small a{color:var(--gold)}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;margin-top:4px}
+.pill.wait{background:#2a241f;color:var(--gold)}.pill.done{background:#1f2a1f;color:var(--ok)}.pill.err{background:#2e1f1b;color:var(--err)}
+.errmsg{font-size:12px;color:var(--err);white-space:pre-wrap;overflow-wrap:anywhere}
+.drow{display:flex;gap:10px;align-items:center;overflow-x:auto;padding-bottom:4px}
+.drow .lbl{font-size:10px;letter-spacing:.16em;color:var(--dim);font-weight:600;text-align:center;margin-top:4px}
+.dimg{flex-shrink:0;display:flex;flex-direction:column}
+.dimg img{width:120px;height:120px;object-fit:cover;border-radius:4px;display:block;background:var(--surface)}
+.vbtn{padding:0;border:2px solid transparent;border-radius:6px;background:none;cursor:pointer}
+.vbtn[aria-pressed=true]{border-color:var(--gold)}
+.dact{display:flex;flex-direction:column;gap:6px;flex-shrink:0;margin-left:auto}
+.mini{min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);font:600 12px var(--f);cursor:pointer;white-space:nowrap}
+.mini:hover{color:var(--fg);border-color:var(--gold)}
+.mini.gold{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.mini.danger:hover{color:var(--err);border-color:var(--err)}
+.mini[disabled]{opacity:.5;cursor:wait}
 </style>
 </head>
 <body>
@@ -80,6 +101,12 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
   </form>
 
   <div id="app" hidden>
+    <div class="card">
+      <div class="dhead" style="align-items:flex-start"><div><h2>Черновики с Авито</h2><p class="hint">Сюда попадают фото из расширения. Выберите лучший вариант и нажмите «В форму», чтобы кадрировать и опубликовать.</p></div><button type="button" class="mini" id="draftsReload">Обновить</button></div>
+      <div class="drafts" id="drafts"><p class="hint">Загружаю…</p></div>
+      <span class="status" id="draftsStatus" role="status"></span>
+    </div>
+
     <form class="card" id="addForm">
       <div><h2>Новая работа</h2><p class="hint">Фото сжимаются автоматически. На сайте работа появится через 1–2 минуты после публикации.</p></div>
       <div class="fields">
@@ -89,12 +116,12 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
       </div>
       <div class="crops">
         <div class="crop" data-slot="before" data-def="1">
-          <label for="f-before">Фото до</label><input type="file" id="f-before" accept="image/*" required>
+          <label for="f-before">Фото до</label><input type="file" id="f-before" accept="image/*">
           <div class="crop-area" hidden><img alt="Фото до, кадрирование"></div>
           <div class="ratios" hidden role="group" aria-label="Пропорции фото до"></div>
         </div>
         <div class="crop" data-slot="after" data-def="1">
-          <label for="f-after">Фото после</label><input type="file" id="f-after" accept="image/*" required>
+          <label for="f-after">Фото после</label><input type="file" id="f-after" accept="image/*">
           <div class="crop-area" hidden><img alt="Фото после, кадрирование"></div>
           <div class="ratios" hidden role="group" aria-label="Пропорции фото после"></div>
         </div>
@@ -233,7 +260,8 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 
   // ---- crop ----
   var RATIOS = [['1:1', 1], ['3:4', 3/4], ['4:5', 4/5], ['16:9', 16/9], ['9:16', 9/16], ['Свободно', NaN]];
-  var croppers = {}, urls = {};
+  var croppers = {}, urls = {}, picked = {}, loaders = {};
+  function loadSlot(slot, blob){ picked[slot] = blob || null; loaders[slot](blob); }
   document.querySelectorAll('.crop').forEach(function(box){
     var slot = box.dataset.slot, def = Number(box.dataset.def);
     var input = box.querySelector('input'), area = box.querySelector('.crop-area'), img = area.querySelector('img'), bar = box.querySelector('.ratios');
@@ -243,8 +271,8 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
       '<button type="button" class="rt" data-rot="-90" aria-label="Повернуть влево">↺ 90°</button>' +
       '<button type="button" class="rt" data-rot="90" aria-label="Повернуть вправо">↻ 90°</button>' +
       '<button type="button" class="rt" data-reset="1">Сбросить</button>';
-    input.addEventListener('change', function(){
-      var f = input.files[0];
+    input.addEventListener('change', function(){ loadSlot(slot, input.files[0]); });
+    loaders[slot] = function(f){
       if (croppers[slot]){ croppers[slot].destroy(); croppers[slot] = null; }
       if (urls[slot]){ URL.revokeObjectURL(urls[slot]); urls[slot] = null; }
       if (!f){ area.hidden = true; bar.hidden = true; return; }
@@ -253,7 +281,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
       img.src = urls[slot]; area.hidden = false; bar.hidden = false;
       var pressed = bar.querySelector('[data-r][aria-pressed=true]');
       croppers[slot] = new Cropper(img, { aspectRatio: pressed ? Number(pressed.dataset.r) : def, viewMode: 1, autoCropArea: 1, background: false, dragMode: 'move', toggleDragModeOnDblclick: false });
-    });
+    };
     bar.addEventListener('click', function(e){
       var b = e.target.closest('button'), c = croppers[slot]; if (!b || !c) return;
       if (b.dataset.r !== undefined){
@@ -271,6 +299,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
   }
   function resetCrops(){
     Object.keys(croppers).forEach(function(k){ if (croppers[k]) croppers[k].destroy(); croppers[k] = null; if (urls[k]) URL.revokeObjectURL(urls[k]); urls[k] = null; });
+    picked = {};
     document.querySelectorAll('.crop-area, .ratios').forEach(function(el){ el.hidden = true; });
   }
 
@@ -278,7 +307,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
   $('addForm').addEventListener('submit', function(e){
     e.preventDefault();
     var title = $('f-title').value.trim(), sub = $('f-sub').value.trim();
-    var fb = $('f-before').files[0], fa = $('f-after').files[0], fv = $('f-video').files[0];
+    var fb = picked.before, fa = picked.after, fv = $('f-video').files[0];
     if (!title || !fb || !fa){ status('addStatus', 'Нужны название, фото до и фото после.', 'err'); return; }
     if (fv && fv.size > 50 * 1024 * 1024){ status('addStatus', 'Видео больше 50 МБ, сожмите его.', 'err'); return; }
     var dir = 'works/' + today() + '-' + slug(title) + '-' + Math.random().toString(36).slice(2, 6);
@@ -317,10 +346,106 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
       .then(function(){ btn.disabled = false; });
   });
 
+  // ---- drafts ----
+  var drafts = [];
+  function rawJson(file){ return file ? fetch(file.download_url + '?t=' + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }) : Promise.resolve(null); }
+  function loadDrafts(){
+    var box = $('drafts');
+    return gh('/contents/drafts?ref=' + BRANCH, { allow404: true }).then(function(items){
+      var dirs = (items || []).filter(function(i){ return i.type === 'dir'; }).map(function(i){ return i.name; }).sort().reverse();
+      return Promise.all(dirs.map(function(id){
+        var base = '/contents/drafts/' + encodeURIComponent(id);
+        return Promise.all([gh(base + '?ref=' + BRANCH), gh(base + '/src?ref=' + BRANCH, { allow404: true }), gh(base + '/gen?ref=' + BRANCH, { allow404: true })]).then(function(r){
+          var top = r[0], src = (r[1] || []).filter(function(f){ return /\.jpe?g$/i.test(f.name); }), gen = r[2] || [];
+          var find = function(n){ return top.find(function(f){ return f.name === n; }); };
+          return Promise.all([rawJson(find('meta.json')), rawJson(find('status.json'))]).then(function(j){
+            var genBy = {}; gen.forEach(function(f){ genBy['gen/' + f.name] = f.download_url; });
+            var status = j[1] || { state: 'queued', variants: {} };
+            var all = [];
+            top.forEach(function(f){ if (f.type === 'file') all.push(f.path); });
+            src.forEach(function(f){ all.push(f.path); }); gen.forEach(function(f){ all.push(f.path); });
+            return {
+              id: id, meta: j[0] || { title: id }, status: status, regen: !!find('regen.json'), files: all,
+              rows: src.map(function(f){
+                var key = f.name.replace(/\.[^.]+$/, '');
+                var vs = ((status.variants || {})[key] || []).map(function(p){ return genBy[p]; }).filter(Boolean);
+                return { key: key, before: f.download_url, variants: vs, sel: 0 };
+              })
+            };
+          });
+        });
+      }));
+    }).then(function(ds){
+      drafts = ds; renderDrafts();
+    }).catch(function(e){ box.innerHTML = ''; status('draftsStatus', errText(e), 'err'); });
+  }
+  function pill(d){
+    if (d.regen) return '<span class="pill wait">Перегенерируется…</span>';
+    if (d.status.state === 'done') return '<span class="pill done">Готово</span>';
+    if (d.status.state === 'error') return '<span class="pill err">Ошибка</span>';
+    return '<span class="pill wait">В обработке, 2–5 минут</span>';
+  }
+  function renderDrafts(){
+    var box = $('drafts');
+    if (!drafts.length){ box.innerHTML = '<p class="hint">Черновиков нет. Откройте объявление на Авито и нажмите «В Homeshot» в расширении.</p>'; return; }
+    box.innerHTML = drafts.map(function(d, di){
+      var m = d.meta;
+      return '<div class="draft"><div class="dhead"><div><b>' + esc(m.title) + '</b><small>' + esc(m.address || '') + (m.url ? ' · <a href="' + esc(m.url) + '" target="_blank" rel="noopener">объявление</a>' : '') + '</small>' + pill(d) + '</div>' +
+        '<div class="actions"><button type="button" class="mini" data-act="regen" data-d="' + di + '">Перегенерировать всё</button><button type="button" class="mini danger" data-act="del" data-d="' + di + '">Удалить черновик</button></div></div>' +
+        (d.status.state === 'error' && d.status.message ? '<div class="errmsg">' + esc(d.status.message) + '</div>' : '') +
+        d.rows.map(function(r, ri){
+          return '<div class="drow"><div class="dimg"><img src="' + esc(r.before) + '" alt="Исходное фото ' + (ri + 1) + '" loading="lazy"><div class="lbl">ДО</div></div>' +
+            (r.variants.length ? r.variants.map(function(v, vi){
+              return '<div class="dimg"><button type="button" class="vbtn" data-act="pick" data-d="' + di + '" data-r="' + ri + '" data-v="' + vi + '" aria-pressed="' + (vi === r.sel) + '" aria-label="Вариант ' + (vi + 1) + '"><img src="' + esc(v) + '" alt="" loading="lazy"></button><div class="lbl">ВАРИАНТ ' + (vi + 1) + '</div></div>';
+            }).join('') : '<div class="hint">Варианты ещё не готовы</div>') +
+            '<div class="dact">' + (r.variants.length ? '<button type="button" class="mini gold" data-act="form" data-d="' + di + '" data-r="' + ri + '">В форму</button>' : '') +
+            '<button type="button" class="mini" data-act="regen1" data-d="' + di + '" data-r="' + ri + '">Ещё варианты</button></div></div>';
+        }).join('') + '</div>';
+    }).join('');
+  }
+  function blobOf(url){ return fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now()).then(function(r){ if (!r.ok) throw new Error('Не скачалось фото'); return r.blob(); }); }
+  $('draftsReload').addEventListener('click', function(){ status('draftsStatus', ''); loadDrafts(); });
+  $('drafts').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-act]'); if (!b) return;
+    var d = drafts[+b.dataset.d], act = b.dataset.act;
+    if (act === 'pick'){
+      var r = d.rows[+b.dataset.r]; r.sel = +b.dataset.v;
+      b.closest('.drow').querySelectorAll('.vbtn').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+      return;
+    }
+    if (act === 'form'){
+      var row = d.rows[+b.dataset.r]; b.disabled = true; status('draftsStatus', 'Загружаю фото в форму…');
+      Promise.all([blobOf(row.before), blobOf(row.variants[row.sel])]).then(function(bl){
+        $('f-before').value = ''; $('f-after').value = '';
+        loadSlot('before', bl[0]); loadSlot('after', bl[1]);
+        if (!$('f-title').value) $('f-title').value = d.meta.title || '';
+        if (!$('f-sub').value && d.meta.address) $('f-sub').value = d.meta.address;
+        status('draftsStatus', ''); $('addForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }).catch(function(e){ status('draftsStatus', e.message, 'err'); }).then(function(){ b.disabled = false; });
+      return;
+    }
+    if (act === 'regen' || act === 'regen1'){
+      var items = act === 'regen1' ? [d.rows[+b.dataset.r].key] : [];
+      b.disabled = true; status('draftsStatus', 'Отправляю на перегенерацию…');
+      b64FromText(JSON.stringify({ at: new Date().toISOString(), items: items }) + '\n').then(function(b64){
+        return commit([{ path: 'drafts/' + d.id + '/regen.json', b64: b64 }], 'Перегенерировать: ' + (d.meta.title || d.id));
+      }).then(function(){ status('draftsStatus', 'Запущено. Новые варианты через 2–5 минут, нажмите «Обновить».', 'ok'); d.regen = true; renderDrafts(); })
+        .catch(function(e){ b.disabled = false; status('draftsStatus', errText(e), 'err'); });
+      return;
+    }
+    if (act === 'del'){
+      if (b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = 'Точно удалить?'; setTimeout(function(){ if (b.isConnected){ b.dataset.confirm = ''; b.textContent = 'Удалить черновик'; } }, 3000); return; }
+      b.disabled = true; status('draftsStatus', 'Удаляю…');
+      commit(d.files.map(function(p){ return { path: p, del: true }; }), 'Удалить черновик: ' + (d.meta.title || d.id))
+        .then(function(){ status('draftsStatus', 'Черновик удалён.', 'ok'); return loadDrafts(); })
+        .catch(function(e){ b.disabled = false; status('draftsStatus', errText(e), 'err'); });
+    }
+  });
+
   // ---- login ----
   function enter(){
     $('login').hidden = true; $('app').hidden = false; $('logout').hidden = false;
-    loadList(); loadContacts();
+    loadDrafts(); loadList(); loadContacts();
   }
   $('login').addEventListener('submit', function(e){
     e.preventDefault();
