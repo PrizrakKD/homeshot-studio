@@ -80,6 +80,10 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .mini.danger:hover{color:var(--err);border-color:var(--err)}
 .mini[disabled]{opacity:.5;cursor:wait}
 .dpic{position:relative}
+[data-slot]{cursor:grab}
+[data-slot].dragging{opacity:.4}
+[data-slot].dropover{outline:2px dashed var(--gold);outline-offset:3px;border-radius:6px}
+[data-slot] img{-webkit-user-drag:none;user-select:none}
 .drop{border:1.5px dashed var(--gold-dim);border-radius:10px;padding:24px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;color:var(--muted);text-align:center;transition:background .2s,border-color .2s}
 .drop.over{background:rgba(214,168,112,.08);border-color:var(--gold);color:var(--fg)}
 .blist{display:grid;gap:8px}
@@ -177,7 +181,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
 
   <div id="app" hidden>
     <div class="card">
-      <div class="dhead" style="align-items:flex-start"><div><h2>Подготовка к публикации</h2><p class="hint">Сюда попадают объекты из расширения и пакетной загрузки. Отметьте пары галочками, выберите вариант «после», при необходимости кадрируйте и нажмите «Опубликовать». После публикации объект уходит в «Работы на сайте».</p></div><button type="button" class="mini" id="draftsReload">Обновить</button></div>
+      <div class="dhead" style="align-items:flex-start"><div><h2>Подготовка к публикации</h2><p class="hint">Сюда попадают объекты из расширения и пакетной загрузки. Отметьте пары галочками, выберите вариант «после», при необходимости кадрируйте и нажмите «Опубликовать». Если фото перепутались, перетащите их мышкой между парами. После публикации объект уходит в «Работы на сайте».</p></div><button type="button" class="mini" id="draftsReload">Обновить</button></div>
       <div class="drafts" id="drafts"><p class="hint">Загружаю…</p></div>
       <span class="status" id="draftsStatus" role="status"></span>
     </div>
@@ -391,8 +395,8 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     var ps = w.editPairs || [];
     box.innerHTML = ps.length ? ps.map(function(p, k){
       return '<div class="prow"><span class="pnum">' + (k + 1) + '</span>' +
-        '<div class="dimg"><div class="dpic"><img src="' + esc(shown(p.before)) + '" alt="Пара ' + (k + 1) + ', до">' + wtools(p.before, 'Пара ' + (k + 1) + ', до', i) + '</div><div class="lbl">ДО</div></div>' +
-        '<div class="dimg"><div class="dpic"><img src="' + esc(shown(p.after)) + '" alt="Пара ' + (k + 1) + ', после">' + wtools(p.after, 'Пара ' + (k + 1) + ', после', i) + '</div><div class="lbl">ПОСЛЕ</div></div>' +
+        '<div class="dimg"><div class="dpic" draggable="true" data-slot="w|' + i + '|' + k + '|before"><img src="' + esc(shown(p.before)) + '" alt="Пара ' + (k + 1) + ', до" draggable="false">' + wtools(p.before, 'Пара ' + (k + 1) + ', до', i) + '</div><div class="lbl">ДО</div></div>' +
+        '<div class="dimg"><div class="dpic" draggable="true" data-slot="w|' + i + '|' + k + '|after"><img src="' + esc(shown(p.after)) + '" alt="Пара ' + (k + 1) + ', после" draggable="false">' + wtools(p.after, 'Пара ' + (k + 1) + ', после', i) + '</div><div class="lbl">ПОСЛЕ</div></div>' +
         '<div class="pmove"><button type="button" class="mini" data-pmv="-1" data-wi="' + i + '" data-k="' + k + '"' + (k ? '' : ' disabled') + ' aria-label="Выше">↑</button>' +
         '<button type="button" class="mini" data-pmv="1" data-wi="' + i + '" data-k="' + k + '"' + (k < ps.length - 1 ? '' : ' disabled') + ' aria-label="Ниже">↓</button>' +
         '<button type="button" class="mini danger" data-prm="' + k + '" data-wi="' + i + '"' + (ps.length > 1 ? '' : ' disabled title="Должна остаться хотя бы одна пара"') + '>Убрать</button></div></div>';
@@ -408,7 +412,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     var srcUrl = $('e-src-' + i).value.trim();
     if (srcUrl && !/^https?:\/\//i.test(srcUrl)){ btn.disabled = false; status('listStatus', 'Ссылка должна начинаться с https://', 'err'); return; }
     var ep = w.editPairs || w.pairs;
-    var pairsChanged = ep.length !== w.pairs.length || ep.some(function(p, k){ return p !== w.pairs[k] || crops[p.before] || crops[p.after]; });
+    var pairsChanged = ep.length !== w.pairs.length || ep.some(function(p, k){ return p.before !== w.pairs[k].before || p.after !== w.pairs[k].after || crops[p.before] || crops[p.after]; });
     var pairJob = pairsChanged ? Promise.all(ep.map(function(p){ return Promise.all([blobOf(p.before).then(b64FromBlob), blobOf(p.after).then(b64FromBlob)]); })) : Promise.resolve(null);
     Promise.all([b64FromText(title + '\n' + sub + '\n'), srcUrl ? b64FromText(srcUrl + '\n') : null, pairJob]).then(function(b){
       var entries = [{ path: 'works/' + w.dir + '/info.txt', b64: b[0] }];
@@ -444,7 +448,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     var rm = e.target.closest('[data-prm]');
     if (rm){ var rw = works[+rm.dataset.wi]; rw.editPairs.splice(+rm.dataset.prm, 1); renderPairEditor(+rm.dataset.wi); return; }
     var ed = e.target.closest('[data-edit]'), cn = e.target.closest('[data-cancel]');
-    if (ed){ var ew = works[+ed.dataset.edit]; ew.editPairs = ew.pairs.slice(); renderPairEditor(+ed.dataset.edit); }
+    if (ed){ var ew = works[+ed.dataset.edit]; ew.editPairs = ew.pairs.map(function(p){ return { before: p.before, after: p.after }; }); renderPairEditor(+ed.dataset.edit); }
     if (ed || cn){
       var form = $('list').querySelector('.wedit[data-i="' + (ed ? ed.dataset.edit : cn.dataset.cancel) + '"]');
       form.hidden = !!cn; if (ed){ form.hidden = false; form.querySelector('input').focus(); }
@@ -752,7 +756,8 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
         });
       }));
     }).then(function(ds){
-      drafts = ds.filter(function(d){ return !d.published; }); renderDrafts();
+      drafts = ds.filter(function(d){ return !d.published; });
+      drafts.forEach(applyLayout); renderDrafts();
     }).catch(function(e){ box.innerHTML = ''; status('draftsStatus', errText(e), 'err'); });
   }
   function pill(d){
@@ -803,9 +808,9 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
             var label = 'Фото ' + (ri + 1);
             return '<div class="drow' + (r.on ? ' on' : '') + '">' +
               '<label class="chk"><input type="checkbox" data-act="check" data-d="' + di + '" data-r="' + ri + '"' + (r.on ? ' checked' : '') + (r.variants.length ? '' : ' disabled') + ' aria-label="Публиковать пару ' + (ri + 1) + '"><span>' + (ri + 1) + '</span></label>' +
-              '<div class="dimg"><div class="dpic"><img src="' + esc(shown(r.before)) + '" alt="' + label + ', до" loading="lazy">' + tools(r.before, label + ', до') + '</div><div class="lbl">ДО</div></div>' +
+              '<div class="dimg"><div class="dpic" draggable="true" data-slot="d|' + di + '|' + ri + '|b"><img src="' + esc(shown(r.before)) + '" alt="' + label + ', до" loading="lazy" draggable="false">' + tools(r.before, label + ', до') + '</div><div class="lbl">ДО</div></div>' +
               (r.variants.length ? r.variants.map(function(v, vi){
-                return '<div class="dimg"><div class="dpic"><button type="button" class="vbtn" data-act="pick" data-d="' + di + '" data-r="' + ri + '" data-v="' + vi + '" aria-pressed="' + (vi === r.sel) + '" aria-label="Выбрать вариант ' + (vi + 1) + '"><img src="' + esc(shown(v)) + '" alt="" loading="lazy"></button>' + tools(v, label + ', вариант ' + (vi + 1)) + '</div><div class="lbl">' + (vi === r.sel ? 'ПОСЛЕ ✓' : 'ВАРИАНТ ' + (vi + 1)) + '</div></div>';
+                return '<div class="dimg"><div class="dpic" draggable="true" data-slot="d|' + di + '|' + ri + '|v|' + vi + '"><button type="button" class="vbtn" data-act="pick" data-d="' + di + '" data-r="' + ri + '" data-v="' + vi + '" aria-pressed="' + (vi === r.sel) + '" aria-label="Выбрать вариант ' + (vi + 1) + '"><img src="' + esc(shown(v)) + '" alt="" loading="lazy" draggable="false"></button>' + tools(v, label + ', вариант ' + (vi + 1)) + '</div><div class="lbl">' + (vi === r.sel ? 'ПОСЛЕ ✓' : 'ВАРИАНТ ' + (vi + 1)) + '</div></div>';
               }).join('') : '<div class="hint">Вариантов пока нет</div>') +
               '<div class="dact"><button type="button" class="mini" data-act="regen1" data-d="' + di + '" data-r="' + ri + '">Ещё варианты</button></div></div>';
           }).join('') +
@@ -821,6 +826,49 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     return fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now()).then(function(r){ if (!r.ok) throw new Error('Не скачалось фото'); return r.blob(); });
   }
   $('draftsReload').addEventListener('click', function(){ status('draftsStatus', ''); loadDrafts(); });
+
+  // ---- drag & drop: swap photos between pairs ----
+  var LAY = 'homeshot_layout_';
+  function urlsOf(d){ var a = []; d.rows.forEach(function(r){ a.push(r.before); a = a.concat(r.variants); }); return a.slice().sort().join('\n'); }
+  function saveLayout(d){ try { localStorage.setItem(LAY + d.id, JSON.stringify(d.rows.map(function(r){ return { before: r.before, variants: r.variants, sel: r.sel, on: r.on }; }))); } catch(_){} }
+  function applyLayout(d){
+    var saved; try { saved = JSON.parse(localStorage.getItem(LAY + d.id) || 'null'); } catch(_){ saved = null; }
+    if (!saved || saved.length !== d.rows.length) return;
+    var fake = { rows: saved }; if (urlsOf(fake) !== urlsOf(d)) return;
+    d.rows.forEach(function(r, i){ r.before = saved[i].before; r.variants = saved[i].variants; r.sel = Math.min(saved[i].sel || 0, Math.max(0, r.variants.length - 1)); r.on = !!saved[i].on; });
+  }
+  function slotGet(sl){
+    var a = sl.split('|');
+    if (a[0] === 'd'){ var r = drafts[+a[1]].rows[+a[2]]; return a[3] === 'b' ? r.before : r.variants[+a[4]]; }
+    return works[+a[1]].editPairs[+a[2]][a[3]];
+  }
+  function slotSet(sl, v){
+    var a = sl.split('|');
+    if (a[0] === 'd'){ var r = drafts[+a[1]].rows[+a[2]]; if (a[3] === 'b') r.before = v; else r.variants[+a[4]] = v; return; }
+    works[+a[1]].editPairs[+a[2]][a[3]] = v;
+  }
+  var dragSlot = null;
+  document.addEventListener('dragstart', function(e){
+    var el = e.target.closest && e.target.closest('[data-slot]'); if (!el) return;
+    dragSlot = el.dataset.slot; el.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragSlot); } catch(_){}
+  });
+  document.addEventListener('dragend', function(){ dragSlot = null; document.querySelectorAll('.dragging,.dropover').forEach(function(x){ x.classList.remove('dragging', 'dropover'); }); });
+  function sameGroup(a, b){ var x = a.split('|'), y = b.split('|'); return x[0] === y[0] && x[1] === y[1]; }
+  document.addEventListener('dragover', function(e){
+    var el = e.target.closest && e.target.closest('[data-slot]'); if (!el || !dragSlot || el.dataset.slot === dragSlot || !sameGroup(dragSlot, el.dataset.slot)) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    document.querySelectorAll('.dropover').forEach(function(x){ if (x !== el) x.classList.remove('dropover'); }); el.classList.add('dropover');
+  });
+  document.addEventListener('dragleave', function(e){ var el = e.target.closest && e.target.closest('[data-slot]'); if (el && !el.contains(e.relatedTarget)) el.classList.remove('dropover'); });
+  document.addEventListener('drop', function(e){
+    var el = e.target.closest && e.target.closest('[data-slot]'); if (!el || !dragSlot || !sameGroup(dragSlot, el.dataset.slot)) return;
+    e.preventDefault();
+    var a = dragSlot, b = el.dataset.slot, va = slotGet(a), vb = slotGet(b);
+    slotSet(a, vb); slotSet(b, va); dragSlot = null;
+    if (a[0] === 'd'){ var d = drafts[+a.split('|')[1]]; saveLayout(d); renderDrafts(); status('draftsStatus', 'Фото поменяны местами.', 'ok'); }
+    else renderPairEditor(+a.split('|')[1]);
+  });
 
   // ---- lightbox ----
   var lb = $('lightbox'), lbImg = $('lbImg'), lbScroll = $('lbScroll'), lbLast = null;
@@ -884,7 +932,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   });
   $('drafts').addEventListener('change', function(e){
     var t = e.target; if (t.dataset.act !== 'check') return;
-    var d = drafts[+t.dataset.d]; d.rows[+t.dataset.r].on = t.checked; renderDrafts();
+    var d = drafts[+t.dataset.d]; d.rows[+t.dataset.r].on = t.checked; saveLayout(d); renderDrafts();
   });
   $('drafts').addEventListener('click', function(e){
     var z = e.target.closest('button[data-zoom]');
@@ -899,7 +947,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       setColl(d.id, coll); return;
     }
     if (act === 'pick'){
-      var r = d.rows[+b.dataset.r]; r.sel = +b.dataset.v; if (r.variants.length) r.on = true; renderDrafts(); return;
+      var r = d.rows[+b.dataset.r]; r.sel = +b.dataset.v; if (r.variants.length) r.on = true; saveLayout(d); renderDrafts(); return;
     }
     if (act === 'publish'){
       var rows = d.rows.filter(function(x){ return x.on && x.variants.length; });
