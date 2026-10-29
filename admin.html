@@ -380,9 +380,10 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
     }).catch(function(e){ box.innerHTML = ''; status('draftsStatus', errText(e), 'err'); });
   }
   function pill(d){
-    if (d.regen) return '<span class="pill wait">Перегенерируется…</span>';
+    if (d.regen) return '<span class="pill wait">Ждёт перегенерации</span>';
     if (d.status.state === 'done') return '<span class="pill done">Готово</span>';
     if (d.status.state === 'error') return '<span class="pill err">Ошибка</span>';
+    if (d.status.state === 'manual') return '<span class="pill wait">Ждёт обработки: напишите Claude «обработай черновики»</span>';
     return '<span class="pill wait">В обработке, 2–5 минут</span>';
   }
   function renderDrafts(){

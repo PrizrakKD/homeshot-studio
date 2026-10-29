@@ -97,6 +97,34 @@ for (const id of fs.readdirSync(ROOT).sort()) {
   const statusPath = path.join(dir, 'status.json'), regenPath = path.join(dir, 'regen.json');
   const status = readJson(statusPath, { state: 'queued', variants: {} });
   status.variants = status.variants || {};
+  const remotePath = path.join(dir, 'remote.json');
+  const remote = readJson(remotePath, null);
+  if (remote && remote.variants) {
+    // Results generated elsewhere (Claude + Higgsfield subscription): download them into gen/.
+    fs.mkdirSync(genDir, { recursive: true });
+    const errors = [];
+    for (const [key, urls] of Object.entries(remote.variants)) {
+      try {
+        const stamp = Date.now().toString(36), saved = [];
+        for (let i = 0; i < urls.length; i++) {
+          const rel = `gen/${key}-${stamp}-${i + 1}.jpg`;
+          await download(urls[i], path.join(dir, rel));
+          saved.push(rel);
+        }
+        for (const old of status.variants[key] || []) fs.rmSync(path.join(dir, old), { force: true });
+        status.variants[key] = saved;
+        console.log(`${id}/${key}: скачано ${saved.length}`);
+      } catch (e) { errors.push(`${key}: ${e.message}`); }
+    }
+    fs.rmSync(remotePath, { force: true });
+    fs.rmSync(regenPath, { force: true });
+    const srcKeys = fs.readdirSync(srcDir).filter(f => /\.jpe?g$/i.test(f)).map(f => path.parse(f).name);
+    const allDone = srcKeys.every(k => (status.variants[k] || []).length);
+    Object.assign(status, { state: errors.length ? 'error' : allDone ? 'done' : 'manual', message: errors.join('\n'), updated: now() });
+    writeJson(statusPath, status);
+    changed++;
+    continue;
+  }
   const regen = readJson(regenPath, null);
   const regenAll = regen && (!regen.items || !regen.items.length);
   const srcs = fs.readdirSync(srcDir).filter(f => /\.jpe?g$/i.test(f)).sort();
@@ -107,9 +135,9 @@ for (const id of fs.readdirSync(ROOT).sort()) {
   if (!todo.length && !regen) continue;
 
   if (!KEY || !MODEL) {
-    const msg = !KEY ? 'Не задан ключ Higgsfield (секреты HF_KEY_ID и HF_KEY_SECRET)' : 'Не задана модель (переменная HF_MODEL_PATH)';
-    if (status.state !== 'error' || status.message !== msg) { Object.assign(status, { state: 'error', message: msg, updated: now() }); writeJson(statusPath, status); changed++; }
-    console.warn(`${id}: ${msg}`);
+    // No API key: the draft waits for manual processing through Claude.
+    if (status.state !== 'manual') { Object.assign(status, { state: 'manual', message: '', updated: now() }); writeJson(statusPath, status); changed++; }
+    console.log(`${id}: ждёт обработки через Claude`);
     continue;
   }
 
