@@ -147,6 +147,46 @@ section{padding-block:72px}
 .lst-tt{font-size:15px;color:#2B5BA8;overflow-wrap:anywhere}
 .lst-ad,.lst-dt{font-size:13px;color:#7A7A7A}
 @media (max-width:480px){.lst-pr{font-size:16px}.lst-tt{font-size:13px}.lst-tx{padding:10px}}
+.pkg{width:100%;display:flex;justify-content:space-between;gap:16px;align-items:baseline;text-align:left;font:inherit;color:inherit;background:transparent;border:1.5px solid transparent;border-bottom-color:var(--line);border-radius:8px;padding:12px;margin:-4px -12px 0;width:calc(100% + 24px);cursor:pointer;transition:border-color .15s,background .15s}
+.pkg:last-child{border-bottom-color:transparent;padding-bottom:12px}
+.pkg:hover{border-color:var(--gold-dim);background:rgba(214,168,112,.06)}
+.pkg[aria-pressed=true]{border-color:var(--gold);background:rgba(214,168,112,.1)}
+.pkg .pkg-l{display:block;margin:0;color:var(--fg);font-size:inherit}
+.pkg .pkg-l b{display:block}
+.pkg .pkg-l span{display:block;color:var(--dim);font-size:13px;margin-top:2px}
+.pkg .price{display:block;margin:0;color:var(--fg);font-size:20px}
+.pkg .price s{display:block}
+.ex{border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;color:var(--muted);background:transparent;cursor:pointer}
+.ex:hover{border-color:var(--gold-dim)}
+.ex[aria-pressed=true]{border-color:var(--gold);color:var(--fg);background:rgba(214,168,112,.1)}
+.ex.free{cursor:default}
+.pkg-hint{margin-top:16px;font-size:14px;color:var(--dim)}
+.order{margin-top:28px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:24px;display:grid;gap:16px;max-width:860px}
+.order-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.order h3{font-size:22px}
+.orow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:640px){.orow{grid-template-columns:1fr}}
+.ofield{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ofield label{font-size:12px;font-weight:600;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.ofield input,.ofield textarea{min-height:46px;padding:10px 14px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:500 15px var(--f);width:100%}
+.ofield textarea{resize:vertical;color:var(--muted);line-height:1.5}
+.ofield input:focus-visible,.ofield textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.ohint{font-size:13px;color:var(--dim)}
+.ohint.warn{color:var(--gold)}
+.oacts{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.ostat{font-size:14px;color:var(--gold)}
+.loss{margin:36px 0 0;max-width:860px;border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:12px;background:var(--surface)}
+.loss figcaption b{display:block;font-size:18px;font-weight:600}
+.loss figcaption span{display:block;font-size:14px;color:var(--muted);margin-top:2px}
+.loss-legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--muted)}
+.loss-legend span{display:flex;align-items:center;gap:8px}
+.loss-legend i{width:18px;height:0;border-top:2px solid #4F8FE0}
+.loss-legend i.lg-a{border-top-style:dashed}
+.loss-legend i.lg-b{border-top-color:#BF8530}
+.loss-plot{position:relative}
+.loss-plot svg{display:block;width:100%;height:auto;overflow:visible}
+.loss-tip{position:absolute;pointer-events:none;background:#0F0D0B;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:12px;line-height:1.5;color:var(--fg);white-space:nowrap;transform:translate(-50%,-110%);font-variant-numeric:tabular-nums}
+.loss-tip[hidden]{display:none}
 .ab-note{margin-top:12px;font-size:12px;color:var(--dim)}
 .ab-res{margin-top:28px;max-width:860px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:24px;display:grid;gap:12px;justify-items:start}
 .ab-res h3{font-size:24px}
@@ -218,24 +258,35 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
       <div class="groups">
         <div class="group">
           <h3>Фото</h3>
-          <div class="row"><div><b>Старт</b><span>5 фото</span></div><div class="price">990 ₽</div></div>
-          <div class="row"><div><b>Стандарт</b><span>10 фото</span></div><div class="price">1 690 ₽</div></div>
-          <div class="row"><div><b>Максимум</b><span>15 фото и 1 круг правок</span></div><div class="price">2 490 ₽</div></div>
+          <button type="button" class="row pkg" data-pkg="Старт" data-price="990 ₽" aria-pressed="false"><span class="pkg-l"><b>Старт</b><span>5 фото</span></span><span class="price">990 ₽</span></button>
+          <button type="button" class="row pkg" data-pkg="Стандарт" data-price="1 690 ₽" aria-pressed="false"><span class="pkg-l"><b>Стандарт</b><span>10 фото</span></span><span class="price">1 690 ₽</span></button>
+          <button type="button" class="row pkg" data-pkg="Максимум" data-price="2 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Максимум</b><span>15 фото и 1 круг правок</span></span><span class="price">2 490 ₽</span></button>
         </div>
         <div class="group">
           <h3>Видео</h3>
-          <div class="row"><div><b>Визитка</b><span>15 сек: 3 проезда, заставка с параметрами, финал с телефоном</span></div><div class="price">1 490 ₽</div></div>
-          <div class="row"><div><b>Презентация</b><span>30 сек: 6 проездов, музыка, форматы 1:1 и 9:16</span></div><div class="price">2 490 ₽</div></div>
+          <button type="button" class="row pkg" data-pkg="Визитка" data-price="1 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Визитка</b><span>15 сек: 3 проезда, заставка с параметрами, финал с телефоном</span></span><span class="price">1 490 ₽</span></button>
+          <button type="button" class="row pkg" data-pkg="Презентация" data-price="2 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Презентация</b><span>30 сек: 6 проездов, музыка, форматы 1:1 и 9:16</span></span><span class="price">2 490 ₽</span></button>
         </div>
         <div class="group feat">
           <h3>Фото и видео</h3>
-          <div class="row"><div><b>Комплект</b><span>10 фото и видео-визитка 15 сек</span></div><div class="price">2 490 ₽<s>3 180 ₽</s></div></div>
-          <div class="row"><div><b>Премиум</b><span>15 фото, видео 30 сек и 1 круг правок</span></div><div class="price">3 990 ₽<s>4 980 ₽</s></div></div>
+          <button type="button" class="row pkg" data-pkg="Комплект" data-price="2 490 ₽" aria-pressed="false"><span class="pkg-l"><b>Комплект</b><span>10 фото и видео-визитка 15 сек</span></span><span class="price">2 490 ₽<s>3 180 ₽</s></span></button>
+          <button type="button" class="row pkg" data-pkg="Премиум" data-price="3 990 ₽" aria-pressed="false"><span class="pkg-l"><b>Премиум</b><span>15 фото, видео 30 сек и 1 круг правок</span></span><span class="price">3 990 ₽<s>4 980 ₽</s></span></button>
         </div>
       </div>
       <div class="extras">
-        <span>Доп. фото <b>150 ₽</b></span><span>Доп. шот в видео <b>300 ₽</b></span><span>Вертикальная версия <b>300 ₽</b></span><span>Доп. круг правок <b>300 ₽</b></span><span>Срочно за 3 часа <b>+50%</b></span><span>Первое фото на пробу <b>бесплатно</b></span>
+        <button type="button" class="ex" data-ex="Доп. фото (150 ₽)" aria-pressed="false">Доп. фото <b>150 ₽</b></button><button type="button" class="ex" data-ex="Доп. шот в видео (300 ₽)" aria-pressed="false">Доп. шот в видео <b>300 ₽</b></button><button type="button" class="ex" data-ex="Вертикальная версия (300 ₽)" aria-pressed="false">Вертикальная версия <b>300 ₽</b></button><button type="button" class="ex" data-ex="Доп. круг правок (300 ₽)" aria-pressed="false">Доп. круг правок <b>300 ₽</b></button><button type="button" class="ex" data-ex="Срочно за 3 часа (+50%)" aria-pressed="false">Срочно за 3 часа <b>+50%</b></button><span class="ex free">Первое фото на пробу <b>бесплатно</b></span>
       </div>
+      <p class="pkg-hint">Нажмите на пакет, чтобы оформить заявку. Допы можно отметить кнопками выше.</p>
+      <form class="order" id="order" hidden>
+        <div class="order-head"><div><div class="eyebrow">Заявка</div><h3 id="ordPkg" style="margin-top:8px"></h3></div><button type="button" class="copy" id="ordClose">Убрать</button></div>
+        <div class="ofield"><label for="ordUrl">Ссылка на ваше объявление</label><input type="url" id="ordUrl" placeholder="https://www.avito.ru/…" autocomplete="off"><span class="ohint">Вставьте ссылку с Авито или Циан: по ней мы посмотрим фото и сразу скажем, что можно улучшить.</span></div>
+        <div class="orow">
+          <div class="ofield"><label for="ordName">Как к вам обращаться</label><input type="text" id="ordName" autocomplete="name"></div>
+          <div class="ofield"><label for="ordNote">Комментарий</label><input type="text" id="ordNote" placeholder="Например: нужно к выходным"></div>
+        </div>
+        <div class="ofield"><label for="ordText">Сообщение</label><textarea id="ordText" rows="6" readonly></textarea></div>
+        <div class="oacts"><button type="submit" class="btn btn-primary" id="ordTg">Отправить в Telegram</button><button type="button" class="btn btn-ghost" id="ordWa" hidden>Отправить в WhatsApp</button><span class="ostat" id="ordStat" role="status"></span></div>
+      </form>
     </div>
   </section>
 
@@ -259,6 +310,12 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
         </div>
       </div>
       <p class="ab-note">Схематичный пример карточек в выдаче. Цена условная.</p>
+      <figure class="loss" id="loss">
+        <figcaption><b>Сколько стоит ожидание</b><span>Деньги, которые квартира не приносит, пока ищется арендатор, и разовая цена обработки</span></figcaption>
+        <div class="loss-legend"><span><i class="lg-a"></i>Потери от простоя</span><span><i class="lg-b"></i>Homeshot, пакет «Комплект»</span></div>
+        <div class="loss-plot" id="lossPlot"></div>
+        <p class="ab-note">Расчёт: аренда 32 000 ₽ в месяц, это около 1 067 ₽ за каждый день простоя. Пакет «Комплект» стоит 2 490 ₽ один раз.</p>
+      </figure>
       <div class="ab-res" id="abRes" hidden aria-live="polite">
         <h3 id="abHead"></h3>
         <p id="abText"></p>
@@ -373,6 +430,92 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
       w.pairs = w.pairs && w.pairs.length ? w.pairs : [{ before: w.before, after: w.after }]; w.idx = 0; return w;
     });
     cfg = r[1] || {}; renderHero(); renderGallery(); renderContacts(); renderTest(); });
+
+  // ---- loss chart ----
+  (function(){
+    var plot = $('lossPlot'); if (!plot) return;
+    var DAY = 1067, PRICE = 2490, DAYS = 10, W = 640, H = 240, L = 56, R = 120, T = 12, B = 30;
+    var ymax = 12000, xs = function(d){ return L + d / DAYS * (W - L - R); }, ys = function(v){ return T + (1 - v / ymax) * (H - T - B); };
+    var fmt = function(v){ return Math.round(v).toLocaleString('ru-RU').replace(/\u00a0/g, ' ') + ' ₽'; };
+    var grid = '', i;
+    for (i = 0; i <= 12000; i += 4000) grid += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + ys(i) + '" y2="' + ys(i) + '" stroke="#2E2823" stroke-width="1"/><text x="' + (L - 8) + '" y="' + (ys(i) + 4) + '" text-anchor="end" fill="#8C8177" font-size="11">' + (i ? (i / 1000) + ' тыс' : '0') + '</text>';
+    for (i = 0; i <= DAYS; i += 2) grid += '<text x="' + xs(i) + '" y="' + (H - 8) + '" text-anchor="middle" fill="#8C8177" font-size="11">' + i + (i === DAYS ? ' дн.' : '') + '</text>';
+    var cross = PRICE / DAY;
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Потери от простоя растут примерно на 1 067 рублей в день и через 10 дней достигают 10 670 рублей. Пакет Homeshot стоит 2 490 рублей один раз. Линии пересекаются на третий день.">' + grid +
+      '<rect x="' + xs(cross) + '" y="' + T + '" width="' + (xs(DAYS) - xs(cross)) + '" height="' + (H - T - B) + '" fill="#4F8FE0" opacity=".06"/>' +
+      '<line x1="' + xs(0) + '" y1="' + ys(PRICE) + '" x2="' + xs(DAYS) + '" y2="' + ys(PRICE) + '" stroke="#BF8530" stroke-width="2" stroke-linecap="round"/>' +
+      '<line x1="' + xs(0) + '" y1="' + ys(0) + '" x2="' + xs(DAYS) + '" y2="' + ys(DAY * DAYS) + '" stroke="#4F8FE0" stroke-width="2" stroke-dasharray="6 4" stroke-linecap="round"/>' +
+      '<circle cx="' + xs(cross) + '" cy="' + ys(PRICE) + '" r="5" fill="#F2ECE4" stroke="#1C1815" stroke-width="2"/>' +
+      '<text x="' + (xs(cross) + 8) + '" y="' + (ys(PRICE) + 18) + '" fill="#F2ECE4" font-size="12" font-weight="600">окупается на 3-й день</text>' +
+      '<text x="' + (xs(DAYS) + 8) + '" y="' + (ys(DAY * DAYS) + 4) + '" fill="#F2ECE4" font-size="12" font-weight="600">−' + fmt(DAY * DAYS) + '</text>' +
+      '<text x="' + (xs(DAYS) + 8) + '" y="' + (ys(DAY * DAYS) + 19) + '" fill="#8C8177" font-size="11">простой</text>' +
+      '<text x="' + (xs(DAYS) + 8) + '" y="' + (ys(PRICE) + 4) + '" fill="#F2ECE4" font-size="12" font-weight="600">' + fmt(PRICE) + '</text>' +
+      '<text x="' + (xs(DAYS) + 8) + '" y="' + (ys(PRICE) + 19) + '" fill="#8C8177" font-size="11">Homeshot</text>' +
+      '<line id="lossX" x1="0" x2="0" y1="' + T + '" y2="' + (H - B) + '" stroke="#B0A598" stroke-width="1" opacity="0"/>' +
+      '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) + '" fill="transparent" id="lossHit"/></svg><div class="loss-tip" id="lossTip" hidden></div>';
+    plot.innerHTML = svg;
+    var hit = $('lossHit'), cx = $('lossX'), tip = $('lossTip');
+    function move(clientX){
+      var r = plot.querySelector('svg').getBoundingClientRect(), k = r.width / W;
+      var d = Math.max(0, Math.min(DAYS, Math.round(((clientX - r.left) / k - L) / (W - L - R) * DAYS)));
+      var x = xs(d); cx.setAttribute('x1', x); cx.setAttribute('x2', x); cx.setAttribute('opacity', '.6');
+      tip.hidden = false; tip.style.left = (x * k) + 'px'; tip.style.top = (ys(Math.max(DAY * d, PRICE)) * k) + 'px';
+      tip.innerHTML = '<b>' + d + ' ' + (d % 10 === 1 && d !== 11 ? 'день' : (d % 10 >= 2 && d % 10 <= 4 && (d < 10 || d > 20) ? 'дня' : 'дней')) + ' простоя</b><br>Потери: ' + fmt(DAY * d) + '<br>Homeshot: ' + fmt(PRICE) + ' разово';
+    }
+    hit.addEventListener('mousemove', function(e){ move(e.clientX); });
+    hit.addEventListener('touchmove', function(e){ if (e.touches[0]) move(e.touches[0].clientX); }, { passive: true });
+    hit.addEventListener('mouseleave', function(){ tip.hidden = true; cx.setAttribute('opacity', '0'); });
+  })();
+
+  // ---- packages & order ----
+  var order = { pkg: '', price: '', extras: [] };
+  function orderText(){
+    var lines = ['Здравствуйте! Хочу заказать пакет «' + order.pkg + '» (' + order.price + ').'];
+    if (order.extras.length) lines.push('Дополнительно: ' + order.extras.join(', ') + '.');
+    var u = $('ordUrl').value.trim(), n = $('ordName').value.trim(), c = $('ordNote').value.trim();
+    lines.push('Объявление: ' + (u || 'пришлю ссылку отдельно'));
+    if (n) lines.push('Меня зовут ' + n + '.');
+    if (c) lines.push('Комментарий: ' + c);
+    return lines.join('\n');
+  }
+  function syncOrder(){
+    $('ordPkg').textContent = order.pkg + ' · ' + order.price;
+    $('ordText').value = orderText();
+    var hasTg = !!(cfg.telegram), hasWa = !!(cfg.whatsapp);
+    $('ordTg').hidden = !hasTg; $('ordWa').hidden = !hasWa;
+    if (!hasTg && !hasWa) $('ordStat').textContent = 'Скопируйте текст и отправьте нам удобным способом: контакты ниже.';
+  }
+  document.addEventListener('click', function(e){
+    var pk = e.target.closest('.pkg');
+    if (pk){
+      document.querySelectorAll('.pkg').forEach(function(x){ x.setAttribute('aria-pressed', String(x === pk)); });
+      order.pkg = pk.dataset.pkg; order.price = pk.dataset.price;
+      var f = $('order'), wasHidden = f.hidden; f.hidden = false; syncOrder();
+      if (wasHidden || !$('ordUrl').value) { f.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(function(){ $('ordUrl').focus({ preventScroll: true }); }, 400); }
+      return;
+    }
+    var ex = e.target.closest('.ex[data-ex]');
+    if (ex){
+      var on = ex.getAttribute('aria-pressed') !== 'true'; ex.setAttribute('aria-pressed', String(on));
+      order.extras = [].map.call(document.querySelectorAll('.ex[aria-pressed=true]'), function(x){ return x.dataset.ex; });
+      if (!$('order').hidden) syncOrder();
+    }
+  });
+  $('ordClose').addEventListener('click', function(){ $('order').hidden = true; document.querySelectorAll('.pkg').forEach(function(x){ x.setAttribute('aria-pressed', 'false'); }); });
+  $('order').addEventListener('input', function(){ $('ordText').value = orderText(); var u = $('ordUrl').value.trim(); var h = $('ordUrl').nextElementSibling; if (u){ h.textContent = /^https?:\/\//i.test(u) ? 'Отлично, по ссылке посмотрим фото и сразу скажем, что можно улучшить.' : 'Ссылка должна начинаться с https://'; h.classList.toggle('warn', !/^https?:\/\//i.test(u)); } });
+  function send(kind){
+    var u = $('ordUrl').value.trim();
+    if (!u && !$('order').dataset.nudged){ $('order').dataset.nudged = '1'; var h = $('ordUrl').nextElementSibling; h.textContent = 'Добавьте ссылку на объявление: так мы ответим быстрее и сразу по делу. Можно отправить и без неё.'; h.classList.add('warn'); $('ordUrl').focus(); return; }
+    var text = orderText();
+    try { navigator.clipboard.writeText(text).catch(function(){}); } catch(_){}
+    var url = kind === 'tg'
+      ? 'https://t.me/' + cfg.telegram.replace(/^@/, '') + '?text=' + encodeURIComponent(text)
+      : 'https://wa.me/' + cfg.whatsapp.replace(/\D/g, '') + '?text=' + encodeURIComponent(text);
+    window.open(url, '_blank', 'noopener');
+    $('ordStat').textContent = 'Открываю ' + (kind === 'tg' ? 'Telegram' : 'WhatsApp') + '. Если текст не подставился, вставьте его в чат: он уже скопирован.';
+  }
+  $('order').addEventListener('submit', function(e){ e.preventDefault(); send('tg'); });
+  $('ordWa').addEventListener('click', function(){ send('wa'); });
 
   function renderTest(){
     var sec = $('test');
