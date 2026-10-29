@@ -80,10 +80,13 @@ section{padding-block:72px}
 .sec-head p{color:var(--muted);max-width:46ch}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
 .wcar{position:relative}
-.wtrack{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 28px) / 2);column-gap:28px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.wtrack{--peek:72px;position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 28px - var(--peek) * 2) / 2);column-gap:28px;padding-inline:var(--peek);scroll-padding-inline:var(--peek);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
 .wtrack::-webkit-scrollbar{display:none}
-.wtrack .card{scroll-snap-align:start}
-@media (max-width:760px){.wtrack{grid-auto-columns:88%;column-gap:14px}}
+.wtrack .card{scroll-snap-align:start;transition:opacity .35s ease,transform .35s ease}
+.wtrack .card.peek{opacity:.35;transform:scale(.97);cursor:pointer}
+.wtrack .card.peek:hover{opacity:.6}
+.wtrack .card.peek *{pointer-events:none}
+@media (max-width:760px){.wtrack{--peek:0px;grid-auto-columns:84%;column-gap:14px}}
 .wnav{position:absolute;top:calc(50% - 60px);z-index:3;width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:rgba(20,17,15,.88);color:var(--fg);font:500 30px/1 var(--f);padding-bottom:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:background .2s,color .2s,opacity .2s}
 .wnav:hover{background:var(--gold);color:var(--ink);border-color:var(--gold)}
 .wnav:disabled{opacity:0;pointer-events:none}
@@ -455,9 +458,19 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
   }
   function initCarousel(){
     var tr = $('wTrack'), pv = $('wPrev'), nx = $('wNext'); if (!tr) return;
-    function upd(){ var max = tr.scrollWidth - tr.clientWidth - 2; pv.disabled = tr.scrollLeft <= 2; nx.disabled = tr.scrollLeft >= max; var none = max <= 0; pv.hidden = nx.hidden = none; }
+    function upd(){
+      var max = tr.scrollWidth - tr.clientWidth - 2; pv.disabled = tr.scrollLeft <= 2; nx.disabled = tr.scrollLeft >= max; var none = max <= 0; pv.hidden = nx.hidden = none;
+      var tb = tr.getBoundingClientRect();
+      tr.querySelectorAll('.card').forEach(function(c){ var r = c.getBoundingClientRect(); c.classList.toggle('peek', r.left < tb.left - 2 + parseFloat(getComputedStyle(tr).paddingLeft) - 4 || r.right > tb.right + 2 - parseFloat(getComputedStyle(tr).paddingRight) + 4); });
+    }
     function step(dir){ var cards = tr.querySelectorAll('.card'); if (!cards.length) return; var lefts = [].map.call(cards, function(c){ return c.offsetLeft - cards[0].offsetLeft; }); var cur = 0; lefts.forEach(function(l, k){ if (Math.abs(l - tr.scrollLeft) < Math.abs(lefts[cur] - tr.scrollLeft)) cur = k; }); var to = Math.max(0, Math.min(lefts.length - 1, cur + dir)); tr.scrollTo({ left: Math.min(lefts[to], tr.scrollWidth - tr.clientWidth), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
     pv.addEventListener('click', function(){ step(-1); }); nx.addEventListener('click', function(){ step(1); });
+    tr.addEventListener('click', function(e){
+      var c = e.target.closest('.card.peek'); if (!c) return;
+      e.preventDefault();
+      var tb = tr.getBoundingClientRect(), r = c.getBoundingClientRect();
+      step(r.left < tb.left + tb.width / 2 ? -1 : 1);
+    });
     tr.addEventListener('scroll', function(){ requestAnimationFrame(upd); }, { passive: true });
     window.addEventListener('resize', upd); upd();
   }
