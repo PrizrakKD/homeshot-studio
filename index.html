@@ -220,6 +220,7 @@ section{padding-block:72px}
 .loss-save b{font-size:clamp(34px,3.6vw,48px);white-space:nowrap;line-height:1;font-weight:700;letter-spacing:-.03em;color:#fff;font-variant-numeric:tabular-nums}
 .loss-save b.neg{color:var(--muted)}
 .loss-save .ls-c{font-size:14px;color:var(--muted)}
+.loss-save .ls-p{font-size:14px;color:var(--fg);margin-top:8px;line-height:1.45}
 .loss-save .ls-h{font-size:12px;color:var(--dim);margin-top:6px}
 .loss-cta{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding-top:4px}
 .loss-cta span{font-size:13px;color:var(--dim)}
@@ -328,13 +329,14 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
         <div class="loss-body">
           <div class="loss-plot" id="lossPlot"></div>
           <div class="loss-save" aria-live="polite">
-            <span class="ls-k" id="lsK">Ваша экономия</span>
-            <b id="lsV">+4 979 ₽</b>
-            <span class="ls-c" id="lsC">если квартира сдастся на неделю раньше</span>
+            <span class="ls-k">Ваши потери</span>
+            <b id="lsV">−7 469 ₽</b>
+            <span class="ls-c" id="lsC">за неделю простоя</span>
+            <span class="ls-p" id="lsP">Пакет «Комплект» окупится уже на 3-й день. Любой наш пакет окупается за 1–4 дня.</span>
             <span class="ls-h">Наведите на столбец, чтобы посчитать для другого срока</span>
           </div>
         </div>
-        <p class="ab-note" id="lossNote">Расчёт: аренда 32 000 ₽ в месяц, это около 1 067 ₽ за каждый день простоя. Экономия: потери за эти дни минус разовая цена пакета.</p>
+        <p class="ab-note" id="lossNote">Расчёт: аренда 32 000 ₽ в месяц, это около 1 067 ₽ за каждый день простоя. Цена пакета платится один раз.</p>
         <div class="loss-cta"><a class="btn btn-primary" href="#prices" id="abCta">Не теряйте деньги: напишите нам</a><span>Выберите пакет, и заявка соберётся сама</span></div>
       </figure>
     </div>
@@ -544,11 +546,10 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
         tip.hidden = false; tip.style.left = x + 'px'; tip.style.top = (geo.ys(Math.max(DAY * d, price)) * k) + 'px';
         tip.innerHTML = '<b>' + d + ' ' + daysW(d) + ' простоя</b><br>Потери: ' + fmt(DAY * d) + '<br>Пакет: ' + fmt(price) + ' разово';
       } else tip.hidden = true;
-      var dd = d || DEF_D, save = DAY * dd - price, v = $('lsV');
-      v.textContent = (save > 0 ? '+' : '−') + fmt(Math.abs(save));
-      v.classList.toggle('neg', save <= 0);
-      $('lsK').textContent = save > 0 ? 'Ваша экономия' : 'Пока не окупилось';
-      $('lsC').textContent = dd === 7 && !d ? 'если квартира сдастся на неделю раньше' : 'если квартира сдастся на ' + dd + ' ' + daysW(dd) + ' раньше';
+      var dd = d || DEF_D, pay = Math.ceil(price / DAY);
+      $('lsV').textContent = '−' + fmt(DAY * dd);
+      $('lsC').textContent = dd === 7 && !d ? 'за неделю простоя' : 'за ' + dd + ' ' + daysW(dd) + ' простоя';
+      $('lsP').textContent = 'Пакет «' + pname + '» окупится уже ' + (pay === 1 ? 'в первый день' : 'на ' + pay + '-й день') + '. Любой наш пакет окупается за 1–4 дня.';
     }
     document.querySelector('.loss-pk').addEventListener('click', function(e){
       var b = e.target.closest('[data-lp]'); if (!b) return;
