@@ -130,6 +130,12 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .item .t a{color:var(--fg);text-decoration:none}
 .item .t a:hover{color:var(--gold);text-decoration:underline}
 .witem{display:grid;gap:10px}
+.pedit-h{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+.pedit{display:grid;gap:10px}
+.prow{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);overflow-x:auto}
+.prow .lbl{font-size:10px;letter-spacing:.16em;color:var(--dim);font-weight:600;text-align:center;margin-top:4px}
+.pnum{font-size:12px;font-weight:700;color:var(--dim);width:18px;text-align:center;flex-shrink:0}
+.pmove{display:flex;gap:6px;margin-left:auto;flex-shrink:0}
 .wedit{border:1px solid var(--gold-dim);border-radius:8px;padding:16px;display:grid;gap:14px;background:var(--surface)}
 .feat-btns{display:flex;gap:6px;flex-shrink:0}
 .del.feat[aria-pressed=true]{color:var(--ink);background:var(--gold);border-color:var(--gold)}
@@ -328,6 +334,14 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       return Promise.all(dirs.map(function(d){
         return gh('/contents/works/' + encodeURIComponent(d) + '?ref=' + BRANCH).then(function(files){
           var w = { dir: d, files: files.map(function(f){ return f.path; }), title: d, sub: '', thumb: '' };
+          var fBy = function(re){ return files.find(function(f){ return re.test(f.name); }); };
+          w.pairs = []; w.pairFiles = [];
+          var lb = fBy(/^before\./i), la = fBy(/^after\./i);
+          if (lb && la){ w.pairs.push({ before: lb.download_url, after: la.download_url }); w.pairFiles.push(lb.path, la.path); }
+          files.map(function(f){ var m = f.name.match(/^(\d+)-before\./i); return m && m[1]; }).filter(Boolean).sort(function(a, b){ return a - b; }).forEach(function(n){
+            var b = fBy(new RegExp('^' + n + '-before\\.', 'i')), a = fBy(new RegExp('^' + n + '-after\\.', 'i'));
+            if (b && a){ w.pairs.push({ before: b.download_url, after: a.download_url }); w.pairFiles.push(b.path, a.path); }
+          });
           var after = files.find(function(f){ return /^after\./i.test(f.name); }) || files.filter(function(f){ return /^\d+-after\./i.test(f.name); }).sort(function(a, b){ return parseInt(a.name) - parseInt(b.name); })[0];
           w.count = files.filter(function(f){ return /^(\d+-)?after\./i.test(f.name); }).length;
           if (after) w.thumb = after.download_url;
@@ -362,8 +376,27 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
             '<div class="field"><label for="e-title-' + i + '">Название</label><input type="text" id="e-title-' + i + '" value="' + esc(w.title) + '" required></div>' +
             '<div class="field"><label for="e-sub-' + i + '">Подпись</label><input type="text" id="e-sub-' + i + '" value="' + esc(w.sub) + '" placeholder="1-к квартира, 46,8 м²"></div>' +
             '<div class="field" style="grid-column:1/-1"><label for="e-src-' + i + '">Ссылка на объявление клиента</label><input type="text" id="e-src-' + i + '" value="' + esc(w.source) + '" placeholder="https://www.avito.ru/…"><span class="hint">На сайте не показывается</span></div>' +
-          '</div><div class="actions"><button type="submit" class="btn btn-primary">Сохранить</button><button type="button" class="btn btn-ghost" data-cancel="' + i + '">Отмена</button></div></form></div>';
+          '</div><div class="pedit-h"><b>Пары фото</b><span class="hint">Кадрирование, порядок и удаление пар. Первая пара показывается первой.</span></div><div class="pedit" id="pe-' + i + '"></div>' +
+          '<div class="actions"><button type="submit" class="btn btn-primary">Сохранить</button><button type="button" class="btn btn-ghost" data-cancel="' + i + '">Отмена</button></div></form></div>';
       }).join('');
+  }
+
+  function wtools(url, label, i){
+    return '<button type="button" class="tool crop" data-wcrop="' + esc(url) + '" data-wi="' + i + '" data-label="' + esc(label) + '" aria-label="Кадрировать: ' + esc(label) + '" title="Кадрировать">' + CROP + '</button>' +
+      '<button type="button" class="tool zoom" data-wzoom="' + esc(url) + '" data-label="' + esc(label) + '" aria-label="Увеличить: ' + esc(label) + '" title="Увеличить">' + ZOOM + '</button>' +
+      (crops[url] ? '<span class="cropped">кадрировано</span>' : '');
+  }
+  function renderPairEditor(i){
+    var w = works[i], box = $('pe-' + i); if (!box) return;
+    var ps = w.editPairs || [];
+    box.innerHTML = ps.length ? ps.map(function(p, k){
+      return '<div class="prow"><span class="pnum">' + (k + 1) + '</span>' +
+        '<div class="dimg"><div class="dpic"><img src="' + esc(shown(p.before)) + '" alt="Пара ' + (k + 1) + ', до">' + wtools(p.before, 'Пара ' + (k + 1) + ', до', i) + '</div><div class="lbl">ДО</div></div>' +
+        '<div class="dimg"><div class="dpic"><img src="' + esc(shown(p.after)) + '" alt="Пара ' + (k + 1) + ', после">' + wtools(p.after, 'Пара ' + (k + 1) + ', после', i) + '</div><div class="lbl">ПОСЛЕ</div></div>' +
+        '<div class="pmove"><button type="button" class="mini" data-pmv="-1" data-wi="' + i + '" data-k="' + k + '"' + (k ? '' : ' disabled') + ' aria-label="Выше">↑</button>' +
+        '<button type="button" class="mini" data-pmv="1" data-wi="' + i + '" data-k="' + k + '"' + (k < ps.length - 1 ? '' : ' disabled') + ' aria-label="Ниже">↓</button>' +
+        '<button type="button" class="mini danger" data-prm="' + k + '" data-wi="' + i + '"' + (ps.length > 1 ? '' : ' disabled title="Должна остаться хотя бы одна пара"') + '>Убрать</button></div></div>';
+    }).join('') : '<p class="hint">Пар нет.</p>';
   }
 
   $('list').addEventListener('submit', function(e){
@@ -374,10 +407,19 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     var btn = f.querySelector('[type=submit]'); btn.disabled = true; status('listStatus', 'Сохраняю…');
     var srcUrl = $('e-src-' + i).value.trim();
     if (srcUrl && !/^https?:\/\//i.test(srcUrl)){ btn.disabled = false; status('listStatus', 'Ссылка должна начинаться с https://', 'err'); return; }
-    Promise.all([b64FromText(title + '\n' + sub + '\n'), srcUrl ? b64FromText(srcUrl + '\n') : null]).then(function(b){
+    var ep = w.editPairs || w.pairs;
+    var pairsChanged = ep.length !== w.pairs.length || ep.some(function(p, k){ return p !== w.pairs[k] || crops[p.before] || crops[p.after]; });
+    var pairJob = pairsChanged ? Promise.all(ep.map(function(p){ return Promise.all([blobOf(p.before).then(b64FromBlob), blobOf(p.after).then(b64FromBlob)]); })) : Promise.resolve(null);
+    Promise.all([b64FromText(title + '\n' + sub + '\n'), srcUrl ? b64FromText(srcUrl + '\n') : null, pairJob]).then(function(b){
       var entries = [{ path: 'works/' + w.dir + '/info.txt', b64: b[0] }];
       if (srcUrl) entries.push({ path: 'works/' + w.dir + '/source.txt', b64: b[1] });
       else if (w.source) entries.push({ path: 'works/' + w.dir + '/source.txt', del: true });
+      if (b[2]){
+        var keep = {};
+        b[2].forEach(function(pb, k){ var n = String(k + 1).padStart(2, '0'); ['before', 'after'].forEach(function(side, j){ var fp = 'works/' + w.dir + '/' + n + '-' + side + '.jpg'; keep[fp] = true; entries.push({ path: fp, b64: pb[j] }); }); });
+        w.pairFiles.forEach(function(fp){ if (!keep[fp]) entries.push({ path: fp, del: true }); });
+        status('listStatus', 'Загружаю фото…');
+      }
       return commit(entries, 'Изменить работу: ' + title);
     }).then(function(){ status('listStatus', 'Сохранено. На сайте обновится через 1–2 минуты.', 'ok'); return loadList(); })
       .catch(function(err){ btn.disabled = false; status('listStatus', errText(err), 'err'); });
@@ -393,7 +435,16 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
         .catch(function(err){ cfgData[key] = prev; renderWorks(); status('listStatus', errText(err), 'err'); });
       return;
     }
+    var wz = e.target.closest('[data-wzoom]');
+    if (wz){ openLb(shown(wz.dataset.wzoom), wz.dataset.label, wz); return; }
+    var wc = e.target.closest('[data-wcrop]');
+    if (wc){ var wi = +wc.dataset.wi; openCrop(wc.dataset.wcrop, wc.dataset.label, wc, function(){ renderPairEditor(wi); }); return; }
+    var mv = e.target.closest('[data-pmv]');
+    if (mv){ var mw = works[+mv.dataset.wi], k = +mv.dataset.k, k2 = k + Number(mv.dataset.pmv); var t = mw.editPairs[k]; mw.editPairs[k] = mw.editPairs[k2]; mw.editPairs[k2] = t; renderPairEditor(+mv.dataset.wi); return; }
+    var rm = e.target.closest('[data-prm]');
+    if (rm){ var rw = works[+rm.dataset.wi]; rw.editPairs.splice(+rm.dataset.prm, 1); renderPairEditor(+rm.dataset.wi); return; }
     var ed = e.target.closest('[data-edit]'), cn = e.target.closest('[data-cancel]');
+    if (ed){ var ew = works[+ed.dataset.edit]; ew.editPairs = ew.pairs.slice(); renderPairEditor(+ed.dataset.edit); }
     if (ed || cn){
       var form = $('list').querySelector('.wedit[data-i="' + (ed ? ed.dataset.edit : cn.dataset.cancel) + '"]');
       form.hidden = !!cn; if (ed){ form.hidden = false; form.querySelector('input').focus(); }
@@ -788,10 +839,11 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   lb.addEventListener('click', function(e){ if (e.target === lb || e.target === lbScroll) closeLb(); });
 
   // ---- crop modal ----
-  var cm = $('cropModal'), cmImg = $('cmImg'), cmCropper = null, cmUrl = null, cmObj = null, cmLast = null;
+  var cm = $('cropModal'), cmImg = $('cmImg'), cmCropper = null, cmUrl = null, cmObj = null, cmLast = null, cmDone = null;
   $('cmRatios').innerHTML = RATIOS.map(function(r){ return '<button type="button" class="rt" data-r="' + r[1] + '" aria-pressed="' + (r[1] === 1) + '">' + r[0] + '</button>'; }).join('') +
     '<button type="button" class="rt" data-rot="-90" aria-label="Повернуть влево">↺ 90°</button><button type="button" class="rt" data-rot="90" aria-label="Повернуть вправо">↻ 90°</button><button type="button" class="rt" data-reset="1">Сбросить</button>';
-  function openCrop(url, label, opener){
+  function openCrop(url, label, opener, done){
+    cmDone = done || renderDrafts;
     if (typeof Cropper === 'undefined'){ status('draftsStatus', 'Кадрирование не загрузилось, обновите страницу.', 'err'); return; }
     cmLast = opener; cmUrl = url; $('cmTitle').textContent = 'Кадрирование: ' + label;
     cm.hidden = false; document.body.style.overflow = 'hidden';
@@ -810,7 +862,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     else if (b.dataset.reset) cmCropper.reset();
   });
   $('cmCancel').addEventListener('click', closeCrop);
-  $('cmUndo').addEventListener('click', function(){ if (crops[cmUrl]){ URL.revokeObjectURL(crops[cmUrl].preview); delete crops[cmUrl]; } closeCrop(); renderDrafts(); });
+  $('cmUndo').addEventListener('click', function(){ if (crops[cmUrl]){ URL.revokeObjectURL(crops[cmUrl].preview); delete crops[cmUrl]; } closeCrop(); cmDone(); });
   $('cmApply').addEventListener('click', function(){
     if (!cmCropper) return;
     var canvas = cmCropper.getCroppedCanvas({ maxWidth: 2400, maxHeight: 2400, imageSmoothingEnabled: true, imageSmoothingQuality: 'high', fillColor: '#ffffff' });
@@ -818,7 +870,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       if (!b) return;
       if (crops[cmUrl]) URL.revokeObjectURL(crops[cmUrl].preview);
       crops[cmUrl] = { blob: b, preview: URL.createObjectURL(b) };
-      closeCrop(); renderDrafts();
+      closeCrop(); cmDone();
     }, 'image/jpeg', 0.9);
   });
   document.addEventListener('keydown', function(e){

@@ -79,6 +79,16 @@ section{padding-block:72px}
 .sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:36px}
 .sec-head p{color:var(--muted);max-width:46ch}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
+.wcar{position:relative}
+.wtrack{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 28px) / 2);column-gap:28px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.wtrack::-webkit-scrollbar{display:none}
+.wtrack .card{scroll-snap-align:start}
+@media (max-width:760px){.wtrack{grid-auto-columns:88%;column-gap:14px}}
+.wnav{position:absolute;top:calc(50% - 60px);z-index:3;width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:rgba(20,17,15,.88);color:var(--fg);font:500 30px/1 var(--f);padding-bottom:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:background .2s,color .2s,opacity .2s}
+.wnav:hover{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.wnav:disabled{opacity:0;pointer-events:none}
+.wnav.prev{left:-26px}.wnav.next{right:-26px}
+@media (max-width:1240px){.wnav.prev{left:8px}.wnav.next{right:8px}}
 @media (max-width:760px){.grid{grid-template-columns:1fr}}
 .card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0}
 .card .meta{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px}
@@ -430,7 +440,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
       g.innerHTML = '<div class="empty"><h3>Работы скоро появятся</h3><p>А пока пришлите ссылку на своё объявление, и мы бесплатно покажем одно фото.</p></div>';
       return;
     }
-    g.innerHTML = '<div class="grid">' + works.map(function(w, i){
+    g.innerHTML = '<div class="wcar"><button type="button" class="wnav prev" id="wPrev" aria-label="Предыдущая работа">‹</button><div class="wtrack" id="wTrack">' + works.map(function(w, i){
       var tabs = w.video ? '<div class="tabs" role="group" aria-label="Вид"><button type="button" aria-pressed="true" data-tab="photo" data-i="' + i + '">Фото</button><button type="button" aria-pressed="false" data-tab="video" data-i="' + i + '">Видео</button></div>' : '';
       var n = w.pairs.length;
       var pager = n > 1 ? '<div class="pager" id="pager-' + i + '">' +
@@ -440,7 +450,16 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
       return '<article class="card"><div id="media-' + i + '">' + cmpHTML(pairOf(w), 'w' + i) + '</div>' +
         '<div class="meta"><div><h3>' + esc(w.title) + '</h3>' + (w.sub ? '<div class="sub">' + esc(w.sub) + '</div>' : '') + (n > 1 ? '<div class="sub">' + n + ' ' + plural(n, 'фото', 'фото', 'фото') + ' до и после</div>' : '') + '</div>' +
         '<div class="ctrls">' + pager + tabs + '</div></div></article>';
-    }).join('') + '</div>';
+    }).join('') + '</div><button type="button" class="wnav next" id="wNext" aria-label="Следующая работа">›</button></div>';
+    initCarousel();
+  }
+  function initCarousel(){
+    var tr = $('wTrack'), pv = $('wPrev'), nx = $('wNext'); if (!tr) return;
+    function upd(){ var max = tr.scrollWidth - tr.clientWidth - 2; pv.disabled = tr.scrollLeft <= 2; nx.disabled = tr.scrollLeft >= max; var none = max <= 0; pv.hidden = nx.hidden = none; }
+    function step(dir){ var cards = tr.querySelectorAll('.card'); if (!cards.length) return; var lefts = [].map.call(cards, function(c){ return c.offsetLeft - cards[0].offsetLeft; }); var cur = 0; lefts.forEach(function(l, k){ if (Math.abs(l - tr.scrollLeft) < Math.abs(lefts[cur] - tr.scrollLeft)) cur = k; }); var to = Math.max(0, Math.min(lefts.length - 1, cur + dir)); tr.scrollTo({ left: Math.min(lefts[to], tr.scrollWidth - tr.clientWidth), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }
+    pv.addEventListener('click', function(){ step(-1); }); nx.addEventListener('click', function(){ step(1); });
+    tr.addEventListener('scroll', function(){ requestAnimationFrame(upd); }, { passive: true });
+    window.addEventListener('resize', upd); upd();
   }
   function pairOf(w){ var p = w.pairs[w.idx] || w.pairs[0]; return { before: p.before, after: p.after, title: w.title + (w.pairs.length > 1 ? ', фото ' + (w.idx + 1) : '') }; }
   function plural(n, a, b, c){ return n % 10 === 1 && n % 100 !== 11 ? a : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? b : c); }
