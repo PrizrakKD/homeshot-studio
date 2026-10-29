@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Homeshot Studio · фото и видео для объявлений в Калининграде</title>
+<meta name="description" content="Превращаем обычные фото квартиры в профессиональные снимки и видео для Авито, Циан и соцсетей. Без выезда, за 1 день.">
+<meta property="og:title" content="Homeshot Studio">
+<meta property="og:description" content="Фото и видео для объявлений о квартирах. Без выезда, за 1 день.">
+<meta property="og:image" content="assets/logo.png">
+<link rel="icon" href="assets/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#14110F; --surface:#1C1815; --line:#2E2823; --fg:#F2ECE4; --muted:#B0A598; --dim:#8C8177;
+  --gold:#D6A870; --gold-dim:#8A6A45; --ink:#14110F;
+  --f:"Manrope", "Segoe UI", system-ui, sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+img{max-width:100%}
+a{color:var(--gold)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:var(--gold)}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:600;letter-spacing:-.02em}
+h2{font-size:clamp(28px,4vw,40px);line-height:1.1}
+p{margin:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 24px;border-radius:999px;font:600 15px var(--f);text-decoration:none;cursor:pointer;border:1.5px solid transparent;transition:background .2s,color .2s,border-color .2s}
+.btn-primary{background:var(--gold);color:var(--ink)}
+.btn-primary:hover{background:var(--fg)}
+.btn-ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn-ghost:hover{border-color:var(--gold)}
+.btn:focus-visible,input:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+.top{position:sticky;top:0;z-index:20;background:rgba(20,17,15,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:14px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--fg)}
+.brand b{font-size:22px;font-weight:600;letter-spacing:-.04em;line-height:1;display:block}
+.brand small{font-size:8px;font-weight:600;letter-spacing:.55em;color:var(--gold);display:block;margin-top:3px}
+.nav{display:flex;gap:24px;align-items:center}
+.nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500}
+.nav a:hover{color:var(--fg)}
+.nav a.btn-primary,.nav a.btn-primary:hover{color:var(--ink)}
+@media (max-width:720px){.nav .hide-m{display:none}}
+
+.hero{padding-block:72px 56px}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:56px;align-items:center}
+.hero h1{font-size:clamp(38px,5.6vw,68px);line-height:1.02;font-weight:300;letter-spacing:-.035em}
+.hero h1 strong{font-weight:700}
+.hero .lead{margin-top:22px;color:var(--muted);font-size:18px;max-width:52ch}
+.hero .ctas{margin-top:32px;display:flex;flex-wrap:wrap;gap:12px}
+.facts{margin-top:36px;display:flex;flex-wrap:wrap;gap:10px 28px;font-size:14px;color:var(--muted)}
+.facts span{display:flex;align-items:center;gap:10px}
+.facts span::before{content:"";width:6px;height:6px;border-radius:3px;background:var(--gold)}
+.hero-frame{position:relative;aspect-ratio:1/1;max-width:100%;border-radius:8px;overflow:hidden;background:var(--surface);border:1px solid var(--line)}
+.hero-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:32px;color:var(--dim)}
+.hero-empty svg{display:block;margin:0 auto 18px}
+@media (max-width:860px){.hero .wrap{grid-template-columns:1fr}.hero{padding-block:40px}}
+
+.cmp{position:relative;aspect-ratio:1/1;max-width:100%;overflow:hidden;background:var(--surface);--pos:50%;user-select:none;touch-action:pan-y}
+.cmp img,.cmp video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.cmp .before{clip-path:inset(0 calc(100% - var(--pos)) 0 0)}
+.cmp .handle{position:absolute;top:0;bottom:0;left:var(--pos);width:2px;margin-left:-1px;background:var(--fg);pointer-events:none}
+.cmp .handle::after{content:"";position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:var(--fg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314110F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l-6 6 6 6M15 6l6 6-6 6'/%3E%3C/svg%3E") center/22px no-repeat;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+.cmp input[type=range]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.chip{position:absolute;top:14px;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.2em;pointer-events:none;background:rgba(20,17,15,.75);color:var(--fg)}
+.chip.l{left:14px}.chip.r{right:14px;background:var(--gold);color:var(--ink)}
+
+section{padding-block:72px}
+.sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:36px}
+.sec-head p{color:var(--muted);max-width:46ch}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0}
+.card .meta{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px}
+.card h3{font-size:17px;font-weight:600;letter-spacing:-.01em}
+.card .sub{font-size:13px;color:var(--dim);margin-top:2px}
+.tabs{display:flex;gap:4px;background:var(--bg);border-radius:999px;padding:3px;flex-shrink:0}
+.tabs button{min-height:36px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--fg);color:var(--ink)}
+.empty{border:1.5px dashed var(--line);border-radius:8px;padding:56px 24px;text-align:center;color:var(--muted)}
+.empty h3{color:var(--fg);font-size:20px;margin-bottom:8px}
+
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;counter-reset:s}
+@media (max-width:760px){.steps{grid-template-columns:1fr}}
+.step{border-top:1px solid var(--line);padding-top:22px;counter-increment:s}
+.step::before{content:"0" counter(s);display:block;font-size:13px;font-weight:600;letter-spacing:.2em;color:var(--gold);margin-bottom:14px}
+.step h3{font-size:20px;margin-bottom:8px}
+.step p{color:var(--muted)}
+
+.groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+@media (max-width:900px){.groups{grid-template-columns:1fr}}
+.group{border:1px solid var(--line);border-radius:8px;padding:26px 24px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.group.feat{border-color:var(--gold-dim);background:var(--surface)}
+.group h3{font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.row{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0;padding-bottom:0}
+.row b{display:block;font-weight:600;font-size:17px}
+.row span{display:block;color:var(--dim);font-size:13px;margin-top:2px}
+.price{font-variant-numeric:tabular-nums;font-weight:600;font-size:20px;white-space:nowrap}
+.price s{display:block;font-size:13px;color:var(--dim);font-weight:400;text-align:right}
+.extras{margin-top:28px;display:flex;flex-wrap:wrap;gap:10px}
+.extras span{border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:14px;color:var(--muted)}
+.extras b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums}
+
+.contact{background:var(--surface);border-top:1px solid var(--line)}
+.contact .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center}
+@media (max-width:860px){.contact .wrap{grid-template-columns:1fr}}
+.contact h2{font-size:clamp(30px,4.4vw,48px);font-weight:300}
+.contact h2 strong{font-weight:700}
+.clist{display:flex;flex-direction:column;gap:12px}
+.cline{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:var(--bg);min-width:0}
+.cline small{display:block;font-size:11px;letter-spacing:.24em;color:var(--dim);font-weight:600}
+.cline div{min-width:0}
+.cline strong{display:block;font-size:20px;font-weight:600;overflow-wrap:anywhere}
+.cline strong a{color:inherit;text-decoration:none}
+.copy{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer;flex-shrink:0}
+.copy:hover{color:var(--fg);border-color:var(--gold)}
+footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var(--dim);font-size:13px;border-top:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Homeshot Studio, наверх">
+      <svg width="34" height="34" viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M8 31 L32 9 L56 31" stroke="#F2ECE4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 42 V55 H25" stroke="#F2ECE4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M39 55 H50 V42" stroke="#F2ECE4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="38" r="6" fill="#D6A870"/></svg>
+      <span><b>homeshot</b><small>STUDIO</small></span>
+    </a>
+    <nav class="nav" aria-label="Разделы">
+      <a href="#works">Работы</a>
+      <a href="#how" class="hide-m">Как это работает</a>
+      <a href="#prices" class="hide-m">Цены</a>
+      <a class="btn btn-primary" href="#contact" style="min-height:40px;padding:0 18px">Заказать</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="wrap">
+      <div>
+        <div class="eyebrow">Фото и видео для объявлений · Калининград</div>
+        <h1 style="margin-top:18px">Ваша квартира может выглядеть <strong>так&nbsp;же</strong></h1>
+        <p class="lead">Делаем из обычных фото с телефона профессиональные снимки и видео для Авито, Циан и соцсетей. Свет, ракурс и чистота кадра меняются. Планировка, мебель и состояние квартиры остаются как есть.</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="#works">Смотреть работы</a>
+          <a class="btn btn-ghost" href="#contact">Бесплатный пример</a>
+        </div>
+        <div class="facts"><span>Без выезда фотографа</span><span>Готово за 1 день</span><span>Под любые соцсети</span></div>
+      </div>
+      <div class="hero-frame" id="heroFrame">
+        <div class="hero-empty"><div><svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M8 31 L32 9 L56 31" stroke="#5a4f46" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 42 V55 H25" stroke="#5a4f46" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M39 55 H50 V42" stroke="#5a4f46" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="38" r="6" fill="#8A6A45"/></svg>Загружаем работы…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <section id="works">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><div class="eyebrow">Портфолио</div><h2 style="margin-top:12px">Было и стало</h2></div>
+        <p>Потяните ползунок на любом снимке, чтобы сравнить исходное фото из объявления с результатом.</p>
+      </div>
+      <div id="gallery"></div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head"><div><div class="eyebrow">Процесс</div><h2 style="margin-top:12px">Как это работает</h2></div></div>
+      <div class="steps">
+        <div class="step"><h3>Присылаете объявление</h3><p>Ссылку на Авито или Циан, либо фото квартиры с телефона. Выезжать никуда не нужно.</p></div>
+        <div class="step"><h3>Мы обрабатываем</h3><p>Выправляем свет и геометрию, убираем лишнее из кадра, собираем видео с плавными проездами камеры.</p></div>
+        <div class="step"><h3>Получаете комплект</h3><p>Готовые фото, видео и версии под все форматы. Загружаете в объявление и ждёте звонков.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="prices">
+    <div class="wrap">
+      <div class="sec-head"><div><div class="eyebrow">Пакеты</div><h2 style="margin-top:12px">Выберите под свой бюджет</h2></div><p>Можно взять только фото, только видео или всё вместе со скидкой.</p></div>
+      <div class="groups">
+        <div class="group">
+          <h3>Фото</h3>
+          <div class="row"><div><b>Старт</b><span>5 фото</span></div><div class="price">990 ₽</div></div>
+          <div class="row"><div><b>Стандарт</b><span>10 фото</span></div><div class="price">1 690 ₽</div></div>
+          <div class="row"><div><b>Максимум</b><span>15 фото и 1 круг правок</span></div><div class="price">2 490 ₽</div></div>
+        </div>
+        <div class="group">
+          <h3>Видео</h3>
+          <div class="row"><div><b>Визитка</b><span>15 сек: 3 проезда, заставка с параметрами, финал с телефоном</span></div><div class="price">1 490 ₽</div></div>
+          <div class="row"><div><b>Презентация</b><span>30 сек: 6 проездов, музыка, форматы 1:1 и 9:16</span></div><div class="price">2 490 ₽</div></div>
+        </div>
+        <div class="group feat">
+          <h3>Фото и видео</h3>
+          <div class="row"><div><b>Комплект</b><span>10 фото и видео-визитка 15 сек</span></div><div class="price">2 490 ₽<s>3 180 ₽</s></div></div>
+          <div class="row"><div><b>Премиум</b><span>15 фото, видео 30 сек и 1 круг правок</span></div><div class="price">3 990 ₽<s>4 980 ₽</s></div></div>
+        </div>
+      </div>
+      <div class="extras">
+        <span>Доп. фото <b>150 ₽</b></span><span>Доп. шот в видео <b>300 ₽</b></span><span>Вертикальная версия <b>300 ₽</b></span><span>Доп. круг правок <b>300 ₽</b></span><span>Срочно за 3 часа <b>+50%</b></span><span>Первое фото на пробу <b>бесплатно</b></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact" id="contact">
+    <div class="wrap">
+      <div>
+        <div class="eyebrow">Связаться</div>
+        <h2 style="margin-top:14px">Пришлите ссылку на объявление, <strong>покажем одно фото бесплатно</strong></h2>
+      </div>
+      <div class="clist" id="contacts"></div>
+    </div>
+  </section>
+</main>
+<footer><div class="wrap">© Homeshot Studio · Калининград</div></footer>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var works = [], cfg = {};
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  function cmpHTML(w, key, eager){
+    var lz = eager ? '' : ' loading="lazy"';
+    return '<div class="cmp">' +
+      '<img class="after" src="' + esc(w.after) + '"' + lz + ' alt="' + esc(w.title) + ', после обработки">' +
+      '<img class="before" src="' + esc(w.before) + '"' + lz + ' alt="' + esc(w.title) + ', исходное фото">' +
+      '<span class="chip l">ДО</span><span class="chip r">ПОСЛЕ</span><div class="handle"></div>' +
+      '<input type="range" min="0" max="100" value="50" id="rng-' + key + '" aria-label="Сравнить до и после: ' + esc(w.title) + '">' +
+    '</div>';
+  }
+
+  function renderHero(){
+    var f = $('heroFrame');
+    if (works.length) f.innerHTML = cmpHTML(works[0], 'hero', true);
+    else f.querySelector('.hero-empty div').lastChild.textContent = 'Скоро здесь появятся наши работы';
+  }
+
+  function renderGallery(){
+    var g = $('gallery');
+    if (!works.length){
+      g.innerHTML = '<div class="empty"><h3>Работы скоро появятся</h3><p>А пока пришлите ссылку на своё объявление, и мы бесплатно покажем одно фото.</p></div>';
+      return;
+    }
+    g.innerHTML = '<div class="grid">' + works.map(function(w, i){
+      var tabs = w.video ? '<div class="tabs" role="group" aria-label="Вид"><button type="button" aria-pressed="true" data-tab="photo" data-i="' + i + '">Фото</button><button type="button" aria-pressed="false" data-tab="video" data-i="' + i + '">Видео</button></div>' : '';
+      return '<article class="card"><div id="media-' + i + '">' + cmpHTML(w, 'w' + i) + '</div>' +
+        '<div class="meta"><div><h3>' + esc(w.title) + '</h3>' + (w.sub ? '<div class="sub">' + esc(w.sub) + '</div>' : '') + '</div>' + tabs + '</div></article>';
+    }).join('') + '</div>';
+  }
+
+  function renderContacts(){
+    var items = [];
+    if (cfg.phone) items.push(['ТЕЛЕФОН', cfg.phone, 'tel:' + cfg.phone.replace(/[^\d+]/g, '')]);
+    if (cfg.telegram){ var t = cfg.telegram.replace(/^@/, ''); items.push(['TELEGRAM', '@' + t, 'https://t.me/' + t]); }
+    if (cfg.whatsapp) items.push(['WHATSAPP', cfg.whatsapp, 'https://wa.me/' + cfg.whatsapp.replace(/\D/g, '')]);
+    var el = $('contacts');
+    if (!items.length){ el.innerHTML = '<div class="cline"><div><small>КОНТАКТЫ</small><strong>Скоро появятся</strong></div></div>'; return; }
+    el.innerHTML = items.map(function(it){
+      return '<div class="cline"><div><small>' + it[0] + '</small><strong><a href="' + esc(it[2]) + '" target="_blank" rel="noopener">' + esc(it[1]) + '</a></strong></div><button type="button" class="copy" data-copy="' + esc(it[1]) + '">Копировать</button></div>';
+    }).join('');
+  }
+
+  document.addEventListener('input', function(e){
+    var t = e.target;
+    if (t.type === 'range' && t.parentNode.classList.contains('cmp')) t.parentNode.style.setProperty('--pos', t.value + '%');
+  });
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.copy){
+      var done = function(){ t.textContent = 'Скопировано'; setTimeout(function(){ t.textContent = 'Копировать'; }, 1600); };
+      if (navigator.clipboard) navigator.clipboard.writeText(t.dataset.copy).then(done, function(){});
+      return;
+    }
+    if (t.dataset.tab){
+      var i = +t.dataset.i, w = works[i], m = $('media-' + i);
+      t.parentNode.querySelectorAll('button').forEach(function(b){ b.setAttribute('aria-pressed', String(b === t)); });
+      m.innerHTML = t.dataset.tab === 'video'
+        ? '<div class="cmp"><video src="' + esc(w.video) + '" autoplay muted loop playsinline aria-label="' + esc(w.title) + ', видео"></video></div>'
+        : cmpHTML(w, 'w' + i, true);
+    }
+  });
+
+  Promise.all([
+    fetch('works.json', {cache:'no-cache'}).then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
+    fetch('config.json', {cache:'no-cache'}).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; })
+  ]).then(function(r){ works = r[0] || []; cfg = r[1] || {}; renderHero(); renderGallery(); renderContacts(); });
+})();
+</script>
+</body>
+</html>
