@@ -80,6 +80,37 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .mini.danger:hover{color:var(--err);border-color:var(--err)}
 .mini[disabled]{opacity:.5;cursor:wait}
 .dpic{position:relative}
+.draft{padding:0;gap:0;overflow:hidden}
+.dtop{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 16px}
+.collapse{width:36px;height:36px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}
+.collapse:hover{color:var(--fg);border-color:var(--gold)}
+.draft.coll .collapse{transform:rotate(-90deg)}
+.dinfo{flex:1;min-width:180px}
+.dinfo b{display:block;font-weight:600;overflow-wrap:anywhere}
+.dinfo small{display:block;color:var(--dim);font-size:12px}
+.dthumbs{display:flex;gap:4px}
+.dthumbs img{width:40px;height:40px;object-fit:cover;border-radius:4px}
+.draft:not(.coll) .dthumbs{display:none}
+@media (max-width:640px){.dthumbs{display:none}}
+.dbody{display:grid;gap:12px;padding:0 16px 16px;border-top:1px solid var(--line);padding-top:16px}
+.draft.coll .dbody{display:none}
+.drow{border:1px solid transparent;border-radius:8px;padding:8px}
+.drow.on{border-color:var(--gold-dim);background:var(--surface)}
+.chk{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;cursor:pointer;font-size:12px;color:var(--dim);font-weight:600}
+.chk input{width:22px;height:22px;accent-color:var(--gold);cursor:pointer;margin:0}
+.chk input:disabled{cursor:not-allowed;opacity:.4}
+.tool{position:absolute;right:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:rgba(20,17,15,.8);color:var(--fg);cursor:pointer;z-index:1}
+.tool:hover{background:var(--gold);color:var(--ink)}
+.tool.crop{top:6px}
+.tool.zoom{bottom:6px;top:auto;cursor:zoom-in}
+.vbtn~.tool.crop{top:8px;right:8px}.vbtn~.tool.zoom{bottom:8px;right:8px}
+.cropped{position:absolute;left:6px;bottom:6px;font-size:10px;font-weight:700;letter-spacing:.06em;background:var(--gold);color:var(--ink);border-radius:999px;padding:2px 7px}
+.dfoot{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.cm{position:fixed;inset:0;z-index:60;background:rgba(10,8,7,.9);display:flex;align-items:center;justify-content:center;padding:16px}
+.cm-box{width:min(900px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:14px}
+.cm-area{height:min(60vh,560px);background:var(--bg);border-radius:6px;overflow:hidden}
+.cm-area img{display:block;max-width:100%}
+
 #pairQueue{display:grid;gap:10px}
 .pq{display:flex;flex-wrap:wrap;gap:10px}
 .pqi{position:relative;width:96px}
@@ -126,13 +157,13 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
 
   <div id="app" hidden>
     <div class="card">
-      <div class="dhead" style="align-items:flex-start"><div><h2>Черновики с Авито</h2><p class="hint">Сюда попадают фото из расширения. Выберите лучший вариант и нажмите «В форму», чтобы кадрировать и опубликовать.</p></div><button type="button" class="mini" id="draftsReload">Обновить</button></div>
+      <div class="dhead" style="align-items:flex-start"><div><h2>Черновики с Авито</h2><p class="hint">Сюда попадают фото из расширения. Отметьте пары галочками, выберите вариант «после», при необходимости кадрируйте и нажмите «Опубликовать».</p></div><button type="button" class="mini" id="draftsReload">Обновить</button></div>
       <div class="drafts" id="drafts"><p class="hint">Загружаю…</p></div>
       <span class="status" id="draftsStatus" role="status"></span>
     </div>
 
     <form class="card" id="addForm">
-      <div><h2>Новая работа</h2><p class="hint">Фото сжимаются автоматически. На сайте работа появится через 1–2 минуты после публикации.</p></div>
+      <div><h2>Ручная загрузка</h2><p class="hint">Для фото с компьютера или телефона. Фото сжимаются автоматически. На сайте работа появится через 1–2 минуты после публикации.</p></div>
       <div class="fields">
         <div class="field"><label for="f-title">Название</label><input type="text" id="f-title" required placeholder="Гостиная, ул. Пугачёва"></div>
         <div class="field"><label for="f-sub">Подпись</label><input type="text" id="f-sub" placeholder="1-к квартира, 46,8 м²"></div>
@@ -174,6 +205,14 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   </div>
 </div>
 
+<div class="cm" id="cropModal" hidden role="dialog" aria-modal="true" aria-labelledby="cmTitle">
+  <div class="cm-box">
+    <div class="cm-head"><b id="cmTitle">Кадрирование</b></div>
+    <div class="cm-area"><img id="cmImg" alt="Кадрируемое фото"></div>
+    <div class="ratios" id="cmRatios" role="group" aria-label="Пропорции"></div>
+    <div class="actions"><button type="button" class="btn btn-primary" id="cmApply">Применить</button><button type="button" class="btn btn-ghost" id="cmCancel">Отмена</button><button type="button" class="btn btn-ghost" id="cmUndo">Вернуть оригинал</button></div>
+  </div>
+</div>
 <div class="lb" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Просмотр фото">
   <div class="lb-scroll" id="lbScroll"><img id="lbImg" alt=""></div>
   <div class="lb-bar"><span id="lbCap"></span><button type="button" class="mini" id="lbClose">Закрыть</button></div>
@@ -448,6 +487,10 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
 
   // ---- drafts ----
   var drafts = [];
+  var crops = {}; // image url -> {blob, preview}
+  var COLL_KEY = 'homeshot_collapsed';
+  function getColl(){ try { return JSON.parse(localStorage.getItem(COLL_KEY) || '{}'); } catch(_){ return {}; } }
+  function setColl(id, v){ var c = getColl(); c[id] = v; try { localStorage.setItem(COLL_KEY, JSON.stringify(c)); } catch(_){} }
   function rawJson(file){ return file ? fetch(file.download_url + '?t=' + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }) : Promise.resolve(null); }
   function loadDrafts(){
     var box = $('drafts');
@@ -458,18 +501,22 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
         return Promise.all([gh(base + '?ref=' + BRANCH), gh(base + '/src?ref=' + BRANCH, { allow404: true }), gh(base + '/gen?ref=' + BRANCH, { allow404: true })]).then(function(r){
           var top = r[0], src = (r[1] || []).filter(function(f){ return /\.jpe?g$/i.test(f.name); }), gen = r[2] || [];
           var find = function(n){ return top.find(function(f){ return f.name === n; }); };
-          return Promise.all([rawJson(find('meta.json')), rawJson(find('status.json'))]).then(function(j){
+          return Promise.all([rawJson(find('meta.json')), rawJson(find('status.json')), rawJson(find('published.json'))]).then(function(j){
             var genBy = {}; gen.forEach(function(f){ genBy['gen/' + f.name] = f.download_url; });
             var status = j[1] || { state: 'queued', variants: {} };
             var all = [];
             top.forEach(function(f){ if (f.type === 'file') all.push(f.path); });
             src.forEach(function(f){ all.push(f.path); }); gen.forEach(function(f){ all.push(f.path); });
+            var meta = j[0] || { title: id };
+            var old = drafts.find(function(x){ return x.id === id; });
             return {
-              id: id, meta: j[0] || { title: id }, status: status, regen: !!find('regen.json'), request: !!find('request.json'), files: all,
+              id: id, meta: meta, status: status, published: j[2], regen: !!find('regen.json'), request: !!find('request.json'), files: all,
+              title: old ? old.title : (meta.title || ''), sub: old ? old.sub : (meta.address || ''),
               rows: src.map(function(f){
                 var key = f.name.replace(/\.[^.]+$/, '');
                 var vs = ((status.variants || {})[key] || []).map(function(p){ return genBy[p]; }).filter(Boolean);
-                return { key: key, before: f.download_url, variants: vs, sel: 0 };
+                var o = old && old.rows.find(function(x){ return x.key === key; });
+                return { key: key, before: f.download_url, variants: vs, sel: o && o.sel < vs.length ? o.sel : 0, on: o ? o.on : false };
               })
             };
           });
@@ -482,33 +529,70 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   function pill(d){
     if (d.request) return '<span class="pill wait">В очереди на обработку</span>';
     if (d.regen) return '<span class="pill wait">В очереди на перегенерацию</span>';
-    if (d.status.state === 'done') return '<span class="pill done">Готово</span>';
+    if (d.published) return '<span class="pill done">Опубликовано</span>';
+    if (d.status.state === 'done') return '<span class="pill done">Варианты готовы</span>';
     if (d.status.state === 'error') return '<span class="pill err">Ошибка</span>';
     if (d.status.state === 'manual') return '<span class="pill wait">Новый: нажмите «Сделать красиво»</span>';
     return '<span class="pill wait">В обработке, 2–5 минут</span>';
   }
   var ZOOM = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M11 8v6M8 11h6"/></svg>';
-  function zoomBtn(src, label){ return '<button type="button" class="zoom" data-zoom="' + esc(src) + '" data-label="' + esc(label) + '" aria-label="Увеличить: ' + esc(label) + '">' + ZOOM + '</button>'; }
+  var CROP = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>';
+  var CHEV = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  function shown(url){ return crops[url] ? crops[url].preview : url; }
+  function tools(url, label){
+    return '<button type="button" class="tool crop" data-crop="' + esc(url) + '" data-label="' + esc(label) + '" aria-label="Кадрировать: ' + esc(label) + '" title="Кадрировать">' + CROP + '</button>' +
+      '<button type="button" class="tool zoom" data-zoom="' + esc(url) + '" data-label="' + esc(label) + '" aria-label="Увеличить: ' + esc(label) + '" title="Увеличить">' + ZOOM + '</button>' +
+      (crops[url] ? '<span class="cropped">кадрировано</span>' : '');
+  }
   function renderDrafts(){
     var box = $('drafts');
     if (!drafts.length){ box.innerHTML = '<p class="hint">Черновиков нет. Откройте объявление на Авито и нажмите «В Homeshot» в расширении.</p>'; return; }
+    var coll = getColl();
     box.innerHTML = drafts.map(function(d, di){
-      var m = d.meta;
-      return '<div class="draft"><div class="dhead"><div><b>' + esc(m.title) + '</b><small>' + esc(m.address || '') + '</small>' + pill(d) + '</div>' +
-        '<div class="actions">' + (m.url ? '<a class="mini client" href="' + esc(m.url) + '" target="_blank" rel="noopener">Клиент</a>' : '') + (!d.rows.some(function(r){ return r.variants.length; }) && !d.request ? '<button type="button" class="mini gold" data-act="pretty" data-d="' + di + '">Сделать красиво</button>' : '<button type="button" class="mini" data-act="regen" data-d="' + di + '">Перегенерировать всё</button>') + '<button type="button" class="mini danger" data-act="del" data-d="' + di + '">Удалить черновик</button></div></div>' +
-        (d.status.state === 'error' && d.status.message ? '<div class="errmsg">' + esc(d.status.message) + '</div>' : '') +
-        d.rows.map(function(r, ri){
-          return '<div class="drow"><div class="dimg"><div class="dpic"><img src="' + esc(r.before) + '" alt="Исходное фото ' + (ri + 1) + '" loading="lazy">' + zoomBtn(r.before, 'Фото ' + (ri + 1) + ', до') + '</div><div class="lbl">ДО</div></div>' +
-            (r.variants.length ? r.variants.map(function(v, vi){
-              return '<div class="dimg"><div class="dpic"><button type="button" class="vbtn" data-act="pick" data-d="' + di + '" data-r="' + ri + '" data-v="' + vi + '" aria-pressed="' + (vi === r.sel) + '" aria-label="Выбрать вариант ' + (vi + 1) + '"><img src="' + esc(v) + '" alt="" loading="lazy"></button>' + zoomBtn(v, 'Фото ' + (ri + 1) + ', вариант ' + (vi + 1)) + '</div><div class="lbl">ВАРИАНТ ' + (vi + 1) + '</div></div>';
-            }).join('') : '<div class="hint">Варианты ещё не готовы</div>') +
-            '<div class="dact">' + (r.variants.length ? '<button type="button" class="mini gold" data-act="form" data-d="' + di + '" data-r="' + ri + '">В форму</button>' : '') +
-            '<button type="button" class="mini" data-act="regen1" data-d="' + di + '" data-r="' + ri + '">Ещё варианты</button></div></div>';
-        }).join('') + '</div>';
+      var m = d.meta, hasVars = d.rows.some(function(r){ return r.variants.length; });
+      var picked = d.rows.filter(function(r){ return r.on && r.variants.length; }).length;
+      var isColl = coll[d.id] != null ? coll[d.id] : di > 0;
+      var thumbs = d.rows.slice(0, 6).map(function(r){ return '<img src="' + esc(r.variants.length ? shown(r.variants[r.sel]) : r.before) + '" alt="">'; }).join('');
+      return '<section class="draft' + (isColl ? ' coll' : '') + '" data-id="' + esc(d.id) + '">' +
+        '<div class="dtop">' +
+          '<button type="button" class="collapse" data-act="toggle" data-d="' + di + '" aria-expanded="' + !isColl + '" aria-label="' + (isColl ? 'Развернуть' : 'Свернуть') + ' черновик">' + CHEV + '</button>' +
+          '<div class="dinfo"><b>' + esc(d.title || m.title) + '</b><small>' + d.rows.length + ' фото' + (picked ? ' · отмечено: ' + picked : '') + '</small>' + pill(d) + '</div>' +
+          '<div class="dthumbs">' + thumbs + '</div>' +
+          '<div class="actions">' +
+            (m.url ? '<a class="mini client" href="' + esc(m.url) + '" target="_blank" rel="noopener">Клиент</a>' : '') +
+            (!hasVars && !d.request ? '<button type="button" class="mini gold" data-act="pretty" data-d="' + di + '">Сделать красиво</button>' : '') +
+            (hasVars ? '<button type="button" class="mini gold" data-act="publish" data-d="' + di + '"' + (picked ? '' : ' disabled title="Отметьте пары для публикации"') + '>Опубликовать' + (picked ? ' (' + picked + ')' : '') + '</button>' : '') +
+          '</div>' +
+        '</div>' +
+        '<div class="dbody">' +
+          '<div class="fields">' +
+            '<div class="field"><label for="dt-' + di + '">Название на сайте</label><input type="text" id="dt-' + di + '" data-field="title" data-d="' + di + '" value="' + esc(d.title) + '"></div>' +
+            '<div class="field"><label for="ds-' + di + '">Подпись</label><input type="text" id="ds-' + di + '" data-field="sub" data-d="' + di + '" value="' + esc(d.sub) + '" placeholder="1-к квартира, 46,8 м²"></div>' +
+          '</div>' +
+          (d.status.state === 'error' && d.status.message ? '<div class="errmsg">' + esc(d.status.message) + '</div>' : '') +
+          d.rows.map(function(r, ri){
+            var label = 'Фото ' + (ri + 1);
+            return '<div class="drow' + (r.on ? ' on' : '') + '">' +
+              '<label class="chk"><input type="checkbox" data-act="check" data-d="' + di + '" data-r="' + ri + '"' + (r.on ? ' checked' : '') + (r.variants.length ? '' : ' disabled') + ' aria-label="Публиковать пару ' + (ri + 1) + '"><span>' + (ri + 1) + '</span></label>' +
+              '<div class="dimg"><div class="dpic"><img src="' + esc(shown(r.before)) + '" alt="' + label + ', до" loading="lazy">' + tools(r.before, label + ', до') + '</div><div class="lbl">ДО</div></div>' +
+              (r.variants.length ? r.variants.map(function(v, vi){
+                return '<div class="dimg"><div class="dpic"><button type="button" class="vbtn" data-act="pick" data-d="' + di + '" data-r="' + ri + '" data-v="' + vi + '" aria-pressed="' + (vi === r.sel) + '" aria-label="Выбрать вариант ' + (vi + 1) + '"><img src="' + esc(shown(v)) + '" alt="" loading="lazy"></button>' + tools(v, label + ', вариант ' + (vi + 1)) + '</div><div class="lbl">' + (vi === r.sel ? 'ПОСЛЕ ✓' : 'ВАРИАНТ ' + (vi + 1)) + '</div></div>';
+              }).join('') : '<div class="hint">Вариантов пока нет</div>') +
+              '<div class="dact"><button type="button" class="mini" data-act="regen1" data-d="' + di + '" data-r="' + ri + '">Ещё варианты</button></div></div>';
+          }).join('') +
+          '<div class="dfoot">' +
+            (hasVars ? '<button type="button" class="mini" data-act="regen" data-d="' + di + '">Перегенерировать всё</button>' : '') +
+            '<button type="button" class="mini danger" data-act="del" data-d="' + di + '">Удалить черновик</button>' +
+          '</div>' +
+        '</div></section>';
     }).join('');
   }
-  function blobOf(url){ return fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now()).then(function(r){ if (!r.ok) throw new Error('Не скачалось фото'); return r.blob(); }); }
+  function blobOf(url){
+    if (crops[url]) return Promise.resolve(crops[url].blob);
+    return fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now()).then(function(r){ if (!r.ok) throw new Error('Не скачалось фото'); return r.blob(); });
+  }
   $('draftsReload').addEventListener('click', function(){ status('draftsStatus', ''); loadDrafts(); });
+
   // ---- lightbox ----
   var lb = $('lightbox'), lbImg = $('lbImg'), lbScroll = $('lbScroll'), lbLast = null;
   function openLb(src, label, opener){
@@ -524,47 +608,105 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   });
   $('lbClose').addEventListener('click', closeLb);
   lb.addEventListener('click', function(e){ if (e.target === lb || e.target === lbScroll) closeLb(); });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !lb.hidden) closeLb(); });
 
+  // ---- crop modal ----
+  var cm = $('cropModal'), cmImg = $('cmImg'), cmCropper = null, cmUrl = null, cmObj = null, cmLast = null;
+  $('cmRatios').innerHTML = RATIOS.map(function(r){ return '<button type="button" class="rt" data-r="' + r[1] + '" aria-pressed="' + (r[1] === 1) + '">' + r[0] + '</button>'; }).join('') +
+    '<button type="button" class="rt" data-rot="-90" aria-label="Повернуть влево">↺ 90°</button><button type="button" class="rt" data-rot="90" aria-label="Повернуть вправо">↻ 90°</button><button type="button" class="rt" data-reset="1">Сбросить</button>';
+  function openCrop(url, label, opener){
+    if (typeof Cropper === 'undefined'){ status('draftsStatus', 'Кадрирование не загрузилось, обновите страницу.', 'err'); return; }
+    cmLast = opener; cmUrl = url; $('cmTitle').textContent = 'Кадрирование: ' + label;
+    cm.hidden = false; document.body.style.overflow = 'hidden';
+    fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now()).then(function(r){ return r.blob(); }).then(function(b){
+      if (cmObj) URL.revokeObjectURL(cmObj); cmObj = URL.createObjectURL(b); cmImg.src = cmObj;
+      if (cmCropper) cmCropper.destroy();
+      var pressed = $('cmRatios').querySelector('[data-r][aria-pressed=true]');
+      cmCropper = new Cropper(cmImg, { aspectRatio: pressed ? Number(pressed.dataset.r) : 1, viewMode: 1, autoCropArea: 1, background: false, dragMode: 'move', toggleDragModeOnDblclick: false });
+    }).catch(function(){ closeCrop(); status('draftsStatus', 'Не удалось загрузить фото для кадрирования.', 'err'); });
+  }
+  function closeCrop(){ cm.hidden = true; document.body.style.overflow = ''; if (cmCropper){ cmCropper.destroy(); cmCropper = null; } if (cmLast && cmLast.isConnected) cmLast.focus(); }
+  $('cmRatios').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b || !cmCropper) return;
+    if (b.dataset.r !== undefined){ $('cmRatios').querySelectorAll('[data-r]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); }); cmCropper.setAspectRatio(Number(b.dataset.r)); }
+    else if (b.dataset.rot) cmCropper.rotate(Number(b.dataset.rot));
+    else if (b.dataset.reset) cmCropper.reset();
+  });
+  $('cmCancel').addEventListener('click', closeCrop);
+  $('cmUndo').addEventListener('click', function(){ if (crops[cmUrl]){ URL.revokeObjectURL(crops[cmUrl].preview); delete crops[cmUrl]; } closeCrop(); renderDrafts(); });
+  $('cmApply').addEventListener('click', function(){
+    if (!cmCropper) return;
+    var canvas = cmCropper.getCroppedCanvas({ maxWidth: 2400, maxHeight: 2400, imageSmoothingEnabled: true, imageSmoothingQuality: 'high', fillColor: '#ffffff' });
+    canvas.toBlob(function(b){
+      if (!b) return;
+      if (crops[cmUrl]) URL.revokeObjectURL(crops[cmUrl].preview);
+      crops[cmUrl] = { blob: b, preview: URL.createObjectURL(b) };
+      closeCrop(); renderDrafts();
+    }, 'image/jpeg', 0.9);
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'Escape') return;
+    if (!cm.hidden) closeCrop(); else if (!lb.hidden) closeLb();
+  });
+
+  $('drafts').addEventListener('input', function(e){
+    var t = e.target; if (!t.dataset.field) return;
+    drafts[+t.dataset.d][t.dataset.field] = t.value;
+  });
+  $('drafts').addEventListener('change', function(e){
+    var t = e.target; if (t.dataset.act !== 'check') return;
+    var d = drafts[+t.dataset.d]; d.rows[+t.dataset.r].on = t.checked; renderDrafts();
+  });
   $('drafts').addEventListener('click', function(e){
     var z = e.target.closest('button[data-zoom]');
-    if (z){ openLb(z.dataset.zoom, z.dataset.label, z); return; }
+    if (z){ openLb(crops[z.dataset.zoom] ? crops[z.dataset.zoom].preview : z.dataset.zoom, z.dataset.label, z); return; }
+    var c = e.target.closest('button[data-crop]');
+    if (c){ openCrop(c.dataset.crop, c.dataset.label, c); return; }
     var b = e.target.closest('button[data-act]'); if (!b) return;
     var d = drafts[+b.dataset.d], act = b.dataset.act;
+    if (act === 'toggle'){
+      var sec = b.closest('.draft'), coll = !sec.classList.contains('coll');
+      sec.classList.toggle('coll', coll); b.setAttribute('aria-expanded', String(!coll)); b.setAttribute('aria-label', (coll ? 'Развернуть' : 'Свернуть') + ' черновик');
+      setColl(d.id, coll); return;
+    }
+    if (act === 'pick'){
+      var r = d.rows[+b.dataset.r]; r.sel = +b.dataset.v; if (r.variants.length) r.on = true; renderDrafts(); return;
+    }
+    if (act === 'publish'){
+      var rows = d.rows.filter(function(x){ return x.on && x.variants.length; });
+      var title = (d.title || '').trim();
+      if (!title){ status('draftsStatus', 'Укажите название на сайте.', 'err'); var sec2 = b.closest('.draft'); sec2.classList.remove('coll'); sec2.querySelector('[data-field=title]').focus(); return; }
+      if (!rows.length){ status('draftsStatus', 'Отметьте хотя бы одну пару.', 'err'); return; }
+      b.disabled = true; status('draftsStatus', 'Готовлю фото: ' + rows.length + '…');
+      var dir = 'works/' + today() + '-' + slug(title) + '-' + Math.random().toString(36).slice(2, 6);
+      Promise.all(rows.map(function(x){ return Promise.all([blobOf(x.before).then(b64FromBlob), blobOf(x.variants[x.sel]).then(b64FromBlob)]); })).then(function(pairsB64){
+        return Promise.all([b64FromText(title + '\n' + (d.sub || '').trim() + '\n'), b64FromText(JSON.stringify({ at: new Date().toISOString(), work: dir, pairs: rows.map(function(x){ return x.key; }) }) + '\n')]).then(function(t){
+          var entries = [{ path: dir + '/info.txt', b64: t[0] }, { path: 'drafts/' + d.id + '/published.json', b64: t[1] }];
+          pairsB64.forEach(function(p, i){ var n = String(i + 1).padStart(2, '0'); entries.push({ path: dir + '/' + n + '-before.jpg', b64: p[0] }, { path: dir + '/' + n + '-after.jpg', b64: p[1] }); });
+          if (d.meta.url) entries.push({ path: dir + '/source.txt', b64: btoa(unescape(encodeURIComponent(d.meta.url + '\n'))) });
+          status('draftsStatus', 'Загружаю на GitHub…');
+          return commit(entries, 'Опубликовать: ' + title);
+        });
+      }).then(function(){
+        status('draftsStatus', 'Опубликовано, пар фото: ' + rows.length + '. На сайте через 1–2 минуты.', 'ok');
+        setColl(d.id, true); return Promise.all([loadDrafts(), loadList()]);
+      }).catch(function(err){ b.disabled = false; status('draftsStatus', err.status ? errText(err) : err.message, 'err'); });
+      return;
+    }
     if (act === 'pretty'){
       b.disabled = true; status('draftsStatus', 'Ставлю в очередь…');
       b64FromText(JSON.stringify({ at: new Date().toISOString() }) + '\n').then(function(b64){
         return commit([{ path: 'drafts/' + d.id + '/request.json', b64: b64 }], 'Сделать красиво: ' + (d.meta.title || d.id));
-      }).then(function(){ status('draftsStatus', 'Черновик в очереди. Claude заберёт его и сделает варианты.', 'ok'); d.request = true; renderDrafts(); })
-        .catch(function(e){ b.disabled = false; status('draftsStatus', errText(e), 'err'); });
-      return;
-    }
-    if (act === 'pick'){
-      var r = d.rows[+b.dataset.r]; r.sel = +b.dataset.v;
-      b.closest('.drow').querySelectorAll('.vbtn').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
-      return;
-    }
-    if (act === 'form'){
-      var row = d.rows[+b.dataset.r]; b.disabled = true; status('draftsStatus', 'Загружаю фото в форму…');
-      var hadPair = !!(picked.before && picked.after);
-      addCurrentPair().then(function(){ return Promise.all([blobOf(row.before), blobOf(row.variants[row.sel])]); }).then(function(bl){
-        if (hadPair) status('addStatus', 'Предыдущая пара добавлена в объект.', 'ok');
-        $('f-before').value = ''; $('f-after').value = '';
-        loadSlot('before', bl[0]); loadSlot('after', bl[1]);
-        formSource = d.meta.url || '';
-        if (!$('f-title').value) $('f-title').value = d.meta.title || '';
-        if (!$('f-sub').value && d.meta.address) $('f-sub').value = d.meta.address;
-        status('draftsStatus', ''); $('addForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }).catch(function(e){ status('draftsStatus', e.message, 'err'); }).then(function(){ b.disabled = false; });
+      }).then(function(){ status('draftsStatus', 'Черновик в очереди. Напишите Claude «обработай очередь».', 'ok'); d.request = true; renderDrafts(); })
+        .catch(function(err){ b.disabled = false; status('draftsStatus', errText(err), 'err'); });
       return;
     }
     if (act === 'regen' || act === 'regen1'){
       var items = act === 'regen1' ? [d.rows[+b.dataset.r].key] : [];
-      b.disabled = true; status('draftsStatus', 'Отправляю на перегенерацию…');
+      b.disabled = true; status('draftsStatus', 'Ставлю в очередь на перегенерацию…');
       b64FromText(JSON.stringify({ at: new Date().toISOString(), items: items }) + '\n').then(function(b64){
         return commit([{ path: 'drafts/' + d.id + '/regen.json', b64: b64 }], 'Перегенерировать: ' + (d.meta.title || d.id));
-      }).then(function(){ status('draftsStatus', 'Запущено. Новые варианты через 2–5 минут, нажмите «Обновить».', 'ok'); d.regen = true; renderDrafts(); })
-        .catch(function(e){ b.disabled = false; status('draftsStatus', errText(e), 'err'); });
+      }).then(function(){ status('draftsStatus', 'В очереди. Напишите Claude «обработай очередь».', 'ok'); d.regen = true; renderDrafts(); })
+        .catch(function(err){ b.disabled = false; status('draftsStatus', errText(err), 'err'); });
       return;
     }
     if (act === 'del'){
@@ -572,7 +714,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       b.disabled = true; status('draftsStatus', 'Удаляю…');
       commit(d.files.map(function(p){ return { path: p, del: true }; }), 'Удалить черновик: ' + (d.meta.title || d.id))
         .then(function(){ status('draftsStatus', 'Черновик удалён.', 'ok'); return loadDrafts(); })
-        .catch(function(e){ b.disabled = false; status('draftsStatus', errText(e), 'err'); });
+        .catch(function(err){ b.disabled = false; status('draftsStatus', errText(err), 'err'); });
     }
   });
 
