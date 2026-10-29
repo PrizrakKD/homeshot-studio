@@ -46,6 +46,11 @@ p{margin:0}
 .nav a:hover{color:var(--fg)}
 .nav a.btn-primary,.nav a.btn-primary:hover{color:var(--ink)}
 @media (max-width:720px){.nav .hide-m{display:none}}
+@media (max-width:460px){.nav .hide-xs{display:none}.nav{gap:6px}.nav .btn{padding:0 11px!important;font-size:13px}.brand b{font-size:18px}.brand svg{width:28px;height:28px}.top .wrap{gap:8px}}
+.nav .btn{white-space:nowrap}
+.nav a.nav-loss{color:var(--fg);border-color:var(--gold-dim)}
+.nav a.nav-loss:hover{border-color:var(--gold);color:var(--fg)}
+#loss{scroll-margin-top:90px}
 
 .hero{padding-block:72px 56px}
 .hero .wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:56px;align-items:center}
@@ -215,10 +220,11 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
       <span><b>homeshot</b><small>STUDIO</small></span>
     </a>
     <nav class="nav" aria-label="Разделы">
-      <a href="#works">Работы</a>
+      <a href="#works" class="hide-xs">Работы</a>
       <a href="#how" class="hide-m">Как это работает</a>
       <a href="#prices" class="hide-m">Цены</a>
-      <a class="btn btn-primary" href="#contact" style="min-height:40px;padding:0 18px">Заказать</a>
+      <a class="btn btn-ghost nav-loss" href="#loss" style="min-height:40px;padding:0 16px">Ваши потери</a>
+      <a class="btn btn-primary" href="#prices" style="min-height:40px;padding:0 18px">Заказать</a>
     </nav>
   </div>
 </header>
@@ -492,7 +498,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
   function orderText(){
     var lines = order.trial
       ? ['Здравствуйте! Хочу попробовать: обработайте, пожалуйста, бесплатно одно фото из моего объявления, чтобы я увидел результат.']
-      : ['Здравствуйте! Хочу заказать пакет «' + order.pkg + '» (' + order.price + ').'];
+      : order.pkg ? ['Здравствуйте! Хочу заказать пакет «' + order.pkg + '» (' + order.price + ').'] : ['Здравствуйте! Хочу заказать обработку фото, пакет пока не выбрал.'];
     if (!order.trial && order.extras.length) lines.push('Дополнительно: ' + order.extras.join(', ') + '.');
     var u = $('ordUrl').value.trim(), n = $('ordName').value.trim(), c = $('ordNote').value.trim();
     lines.push('Объявление: ' + (u || 'пришлю ссылку отдельно'));
@@ -501,7 +507,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     return lines.join('\n');
   }
   function syncOrder(){
-    $('ordPkg').textContent = order.trial ? 'Бесплатная проба · 1 фото' : order.pkg + ' · ' + order.price;
+    $('ordPkg').textContent = order.trial ? 'Бесплатная проба · 1 фото' : order.pkg ? order.pkg + ' · ' + order.price : 'Выберите пакет выше';
     $('ordText').value = orderText();
     var hasTg = !!(cfg.telegram), hasWa = !!(cfg.whatsapp), hasMax = !!(cfg.max && /^https:\/\/(www\.)?max\.ru\//i.test(cfg.max));
     $('ordTg').hidden = !hasTg; $('ordWa').hidden = !hasWa; $('ordMax').hidden = !hasMax;
@@ -526,6 +532,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     }
     var ex = e.target.closest('.ex[data-ex]');
     if (ex){
+      if (order.trial){ order.trial = false; $('trial').setAttribute('aria-pressed', 'false'); }
       var on = ex.getAttribute('aria-pressed') !== 'true'; ex.setAttribute('aria-pressed', String(on));
       order.extras = [].map.call(document.querySelectorAll('.ex[aria-pressed=true]'), function(x){ return x.dataset.ex; });
       if (!$('order').hidden) syncOrder();
