@@ -54,7 +54,7 @@ for (const dir of dirs) {
     }
     pairs.push(p);
   }
-  const w = { title: prettify(dir), sub: '', before: pairs[0].before, after: pairs[0].after, pairs };
+  const w = { id: dir, title: prettify(dir), sub: '', before: pairs[0].before, after: pairs[0].after, pairs };
 
   const video = find(files, 'video', VID) || files.find(f => VID.test(f));
   if (video) {

@@ -375,7 +375,8 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
 
   function renderHero(){
     var f = $('heroFrame');
-    if (works.length) f.innerHTML = cmpHTML({ before: works[0].pairs[0].before, after: works[0].pairs[0].after, title: works[0].title }, 'hero', true);
+    var hw = works.find(function(w){ return cfg.hero && w.id === cfg.hero; }) || works[0];
+    if (works.length) f.innerHTML = cmpHTML({ before: hw.pairs[0].before, after: hw.pairs[0].after, title: hw.title }, 'hero', true);
     else f.querySelector('.hero-empty div').lastChild.textContent = 'Скоро здесь появятся наши работы';
   }
 
@@ -560,7 +561,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
   function renderTest(){
     var sec = $('test');
     if (!works.length){ sec.hidden = true; return; }
-    var w = works.slice().sort(function(x, y){ return y.pairs.length - x.pairs.length; })[0];
+    var w = works.find(function(x){ return cfg.test && x.id === cfg.test; }) || works.slice().sort(function(x, y){ return y.pairs.length - x.pairs.length; })[0];
     ['a', 'b'].forEach(function(side){
       var ph = sec.querySelector('[data-car="' + side + '"]');
       var imgs = w.pairs.map(function(p, i){ return '<img src="' + esc(side === 'a' ? p.before : p.after) + '" alt="' + (side === 'a' ? 'Как есть' : 'После Homeshot') + ', фото ' + (i + 1) + '"' + (i ? ' loading="lazy"' : '') + ' class="' + (i ? '' : 'on') + '">'; }).join('');

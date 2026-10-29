@@ -122,6 +122,11 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .item .t a:hover{color:var(--gold);text-decoration:underline}
 .witem{display:grid;gap:10px}
 .wedit{border:1px solid var(--gold-dim);border-radius:8px;padding:16px;display:grid;gap:14px;background:var(--surface)}
+.feat-btns{display:flex;gap:6px;flex-shrink:0}
+.del.feat[aria-pressed=true]{color:var(--ink);background:var(--gold);border-color:var(--gold)}
+.del.feat:hover{color:var(--gold);border-color:var(--gold)}
+.del.feat[aria-pressed=true]:hover{color:var(--ink)}
+@media (max-width:640px){.item{flex-wrap:wrap}.feat-btns{order:5;width:100%}}
 .del.edit:hover,.del.client:hover{color:var(--gold);border-color:var(--gold)}
 a.del,a.mini{display:inline-flex;align-items:center;text-decoration:none}
 a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
@@ -314,11 +319,19 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
         });
       }));
     }).then(function(ws){
-      works = ws;
+      works = ws; renderWorks();
+    }).catch(function(e){ list.innerHTML = ''; status('listStatus', errText(e), 'err'); });
+  }
+  function renderWorks(){
+    var list = $('list'), ws = works;
       if (!ws.length){ list.innerHTML = '<p class="hint">Пока нет ни одной работы. Добавьте первую выше.</p>'; return; }
+      var heroDir = cfgData.hero && ws.some(function(w){ return w.dir === cfgData.hero; }) ? cfgData.hero : ws[0].dir;
+      var testDir = cfgData.test && ws.some(function(w){ return w.dir === cfgData.test; }) ? cfgData.test : ws.slice().sort(function(x, y){ return (y.count || 1) - (x.count || 1); })[0].dir;
       list.innerHTML = ws.map(function(w, i){
         return '<div class="witem"><div class="item">' + (w.thumb ? '<img src="' + esc(w.thumb) + '" alt="" loading="lazy">' : '<img alt="">') +
           '<div class="t"><b>' + (w.source ? '<a href="' + esc(w.source) + '" target="_blank" rel="noopener" title="Открыть объявление клиента">' + esc(w.title) + ' ↗</a>' : esc(w.title)) + '</b><small>' + esc(w.sub || 'Без подписи') + (w.count > 1 ? ' · ' + w.count + ' пары фото' : '') + '</small></div>' +
+          '<div class="feat-btns"><button type="button" class="del feat" data-feat="hero" data-i="' + i + '" aria-pressed="' + (w.dir === heroDir) + '" title="Показывать в шапке сайта">' + (w.dir === heroDir ? '★ ' : '') + 'В шапке</button>' +
+          '<button type="button" class="del feat" data-feat="test" data-i="' + i + '" aria-pressed="' + (w.dir === testDir) + '" title="Показывать в блоке «Простой тест»">' + (w.dir === testDir ? '★ ' : '') + 'В тесте</button></div>' +
           '<button type="button" class="del edit" data-edit="' + i + '">Изменить</button>' +
           '<button type="button" class="del" data-i="' + i + '">Удалить</button></div>' +
           '<form class="wedit" data-i="' + i + '" hidden><div class="fields">' +
@@ -327,7 +340,6 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
             '<div class="field" style="grid-column:1/-1"><label for="e-src-' + i + '">Ссылка на объявление клиента</label><input type="text" id="e-src-' + i + '" value="' + esc(w.source) + '" placeholder="https://www.avito.ru/…"><span class="hint">На сайте не показывается</span></div>' +
           '</div><div class="actions"><button type="submit" class="btn btn-primary">Сохранить</button><button type="button" class="btn btn-ghost" data-cancel="' + i + '">Отмена</button></div></form></div>';
       }).join('');
-    }).catch(function(e){ list.innerHTML = ''; status('listStatus', errText(e), 'err'); });
   }
 
   $('list').addEventListener('submit', function(e){
@@ -347,6 +359,16 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       .catch(function(err){ btn.disabled = false; status('listStatus', errText(err), 'err'); });
   });
   $('list').addEventListener('click', function(e){
+    var ft = e.target.closest('[data-feat]');
+    if (ft){
+      var fw = works[+ft.dataset.i], key = ft.dataset.feat;
+      if (ft.getAttribute('aria-pressed') === 'true') return;
+      var prev = cfgData[key]; cfgData[key] = fw.dir; renderWorks(); status('listStatus', 'Сохраняю…');
+      saveConfig(key === 'hero' ? 'Работа в шапке: ' + fw.title : 'Работа в тесте: ' + fw.title)
+        .then(function(){ status('listStatus', (key === 'hero' ? 'В шапке сайта' : 'В блоке теста') + ' теперь «' + fw.title + '». На сайте через 1–2 минуты.', 'ok'); })
+        .catch(function(err){ cfgData[key] = prev; renderWorks(); status('listStatus', errText(err), 'err'); });
+      return;
+    }
     var ed = e.target.closest('[data-edit]'), cn = e.target.closest('[data-cancel]');
     if (ed || cn){
       var form = $('list').querySelector('.wedit[data-i="' + (ed ? ed.dataset.edit : cn.dataset.cancel) + '"]');
@@ -465,13 +487,18 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   });
 
   // ---- contacts ----
-  var cfgSha = null;
+  var cfgSha = null, cfgData = {};
+  function saveConfig(message){
+    return b64FromText(JSON.stringify(cfgData, null, 2) + '\n').then(function(b64){
+      return gh('/contents/config.json', { method: 'PUT', body: { message: message, content: b64, sha: cfgSha || undefined, branch: BRANCH } });
+    }).then(function(r){ cfgSha = r.content.sha; });
+  }
   function loadContacts(){
     return gh('/contents/config.json?ref=' + BRANCH, { allow404: true }).then(function(f){
       if (!f) return;
       cfgSha = f.sha;
       var bytes = Uint8Array.from(atob(f.content.replace(/\n/g, '')), function(c){ return c.charCodeAt(0); });
-      var c = JSON.parse(new TextDecoder().decode(bytes));
+      var c = JSON.parse(new TextDecoder().decode(bytes)); cfgData = c; if (works.length) renderWorks();
       $('c-phone').value = c.phone || ''; $('c-tg').value = c.telegram || ''; $('c-wa').value = c.whatsapp || ''; $('c-max').value = c.max || '';
     }).catch(function(){});
   }
@@ -480,9 +507,8 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     var c = { phone: $('c-phone').value.trim(), telegram: $('c-tg').value.trim().replace(/^@/, ''), whatsapp: $('c-wa').value.trim(), max: $('c-max').value.trim() };
     if (c.max && !/^https:\/\/(www\.)?max\.ru\//i.test(c.max)){ status('cStatus', 'Ссылка MAX должна начинаться с https://max.ru/', 'err'); return; }
     var btn = $('cBtn'); btn.disabled = true; status('cStatus', 'Сохраняю…');
-    b64FromText(JSON.stringify(c, null, 2) + '\n').then(function(b64){
-      return gh('/contents/config.json', { method: 'PUT', body: { message: 'Обновить контакты', content: b64, sha: cfgSha || undefined, branch: BRANCH } });
-    }).then(function(r){ cfgSha = r.content.sha; status('cStatus', 'Сохранено. На сайте через 1–2 минуты.', 'ok'); })
+    Object.assign(cfgData, c);
+    saveConfig('Обновить контакты').then(function(){ status('cStatus', 'Сохранено. На сайте через 1–2 минуты.', 'ok'); })
       .catch(function(e){ status('cStatus', errText(e), 'err'); })
       .then(function(){ btn.disabled = false; });
   });
