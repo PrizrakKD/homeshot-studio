@@ -171,8 +171,17 @@ section{padding-block:72px}
 .formats{display:flex;align-items:center;gap:20px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:16px 20px;margin-bottom:20px}
 .formats b{display:block;font-weight:600}
 .formats span{display:block;color:var(--muted);font-size:14px;margin-top:2px}
-.fm-icons{display:flex;align-items:flex-end;gap:8px;flex-shrink:0}
-.fm-icons i{display:block;border:1.5px solid var(--gold);border-radius:3px}
+.formats{cursor:default}
+.fm{position:relative;width:300px;height:104px;flex-shrink:0;max-width:100%}
+.fm-f{position:absolute;left:0;top:calc(40px - var(--h) / 2);width:var(--w);height:var(--h);border:1.5px dashed var(--gold-dim);border-radius:3px;transform:translateX(calc(150px - var(--w) / 2));transition:transform .7s cubic-bezier(.34,1.45,.64,1),border-color .4s ease,background-color .4s ease;transition-delay:var(--d-in,0s)}
+.fm-f em{position:absolute;left:50%;top:calc(32px + var(--h) / 2 + 8px);transform:translate(-50%,-4px);font:600 11px/1 var(--f);font-style:normal;color:var(--gold);letter-spacing:.04em;opacity:0;white-space:nowrap;transition:opacity .35s ease,transform .45s cubic-bezier(.22,1,.36,1);transition-delay:var(--d-in,0s)}
+.f11{--w:64px;--h:64px;--x:36px;border-style:solid;border-color:var(--gold);z-index:1}
+.f169{--w:64px;--h:36px;--x:116px;--d:.05s}
+.f916{--w:36px;--h:64px;--x:186px;--d:.1s}
+.f34{--w:48px;--h:64px;--x:258px;--d:.15s}
+.formats:hover .fm-f,.formats:focus-within .fm-f,.formats.open .fm-f{transform:translateX(calc(var(--x) - var(--w) / 2));border-style:solid;border-color:var(--gold);background-color:rgba(214,168,112,.06);transition-delay:var(--d,0s)}
+.formats:hover .fm-f em,.formats:focus-within .fm-f em,.formats.open .fm-f em{opacity:1;transform:translate(-50%,0);transition-delay:calc(var(--d,0s) + .25s)}
+@media (prefers-reduced-motion:reduce){.fm-f,.fm-f em{transition:none}}
 @media (max-width:560px){.formats{flex-direction:column;align-items:flex-start}}
 .pkg-hint{margin-top:16px;font-size:14px;color:var(--dim)}
 .order{margin-top:28px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:24px;display:grid;gap:16px}
@@ -307,7 +316,12 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     <div class="wrap">
       <div class="sec-head"><div><div class="eyebrow">Пакеты</div><h2 style="margin-top:12px">Выберите под свой бюджет</h2></div><p>Можно взять только фото, только видео или всё вместе со скидкой.</p></div>
       <div class="formats">
-        <div class="fm-icons" aria-hidden="true"><i style="width:30px;height:30px"></i><i style="width:44px;height:25px"></i><i style="width:20px;height:36px"></i><i style="width:27px;height:36px"></i></div>
+        <div class="fm" aria-hidden="true">
+          <span class="fm-f f11"><em>1:1</em></span>
+          <span class="fm-f f169"><em>16:9</em></span>
+          <span class="fm-f f916"><em>9:16</em></span>
+          <span class="fm-f f34"><em>3:4</em></span>
+        </div>
         <div><b>Каждое фото во всех форматах</b><span>Квадрат 1:1, горизонталь 16:9, вертикаль 9:16 и 3:4 для Авито, Циан, сторис и постов. Всё аккуратно разложено по папкам, ничего не нужно обрезать самому.</span></div>
       </div>
       <div class="groups">
@@ -493,6 +507,8 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     draw();
     var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(draw, 150); });
   })();
+
+  document.querySelectorAll('.formats').forEach(function(f){ f.addEventListener('click', function(){ f.classList.toggle('open'); }); });
 
   // ---- packages & order ----
   var order = { pkg: '', price: '', extras: [], trial: false };
