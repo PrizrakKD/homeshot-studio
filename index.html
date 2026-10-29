@@ -160,6 +160,12 @@ section{padding-block:72px}
 .ex:hover{border-color:var(--gold-dim)}
 .ex[aria-pressed=true]{border-color:var(--gold);color:var(--fg);background:rgba(214,168,112,.1)}
 .ex.free{cursor:default}
+.formats{display:flex;align-items:center;gap:20px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:16px 20px;margin-bottom:20px}
+.formats b{display:block;font-weight:600}
+.formats span{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.fm-icons{display:flex;align-items:flex-end;gap:8px;flex-shrink:0}
+.fm-icons i{display:block;border:1.5px solid var(--gold);border-radius:3px}
+@media (max-width:560px){.formats{flex-direction:column;align-items:flex-start}}
 .pkg-hint{margin-top:16px;font-size:14px;color:var(--dim)}
 .order{margin-top:28px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:24px;display:grid;gap:16px;max-width:860px}
 .order-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
@@ -255,6 +261,10 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
   <section id="prices">
     <div class="wrap">
       <div class="sec-head"><div><div class="eyebrow">Пакеты</div><h2 style="margin-top:12px">Выберите под свой бюджет</h2></div><p>Можно взять только фото, только видео или всё вместе со скидкой.</p></div>
+      <div class="formats">
+        <div class="fm-icons" aria-hidden="true"><i style="width:30px;height:30px"></i><i style="width:44px;height:25px"></i><i style="width:20px;height:36px"></i><i style="width:27px;height:36px"></i></div>
+        <div><b>Каждое фото во всех форматах</b><span>Квадрат 1:1, горизонталь 16:9, вертикаль 9:16 и 3:4 для Авито, Циан, сторис и постов. Всё аккуратно разложено по папкам, ничего не нужно обрезать самому.</span></div>
+      </div>
       <div class="groups">
         <div class="group">
           <h3>Фото</h3>
@@ -274,7 +284,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
         </div>
       </div>
       <div class="extras">
-        <button type="button" class="ex" data-ex="Доп. фото (150 ₽)" aria-pressed="false">Доп. фото <b>150 ₽</b></button><button type="button" class="ex" data-ex="Доп. шот в видео (300 ₽)" aria-pressed="false">Доп. шот в видео <b>300 ₽</b></button><button type="button" class="ex" data-ex="Вертикальная версия (300 ₽)" aria-pressed="false">Вертикальная версия <b>300 ₽</b></button><button type="button" class="ex" data-ex="Доп. круг правок (300 ₽)" aria-pressed="false">Доп. круг правок <b>300 ₽</b></button><button type="button" class="ex" data-ex="Срочно за 3 часа (+50%)" aria-pressed="false">Срочно за 3 часа <b>+50%</b></button><span class="ex free">Первое фото на пробу <b>бесплатно</b></span>
+        <button type="button" class="ex" data-ex="Доп. фото (150 ₽)" aria-pressed="false">Доп. фото <b>150 ₽</b></button><button type="button" class="ex" data-ex="Доп. шот в видео (300 ₽)" aria-pressed="false">Доп. шот в видео <b>300 ₽</b></button><button type="button" class="ex" data-ex="Доп. круг правок (300 ₽)" aria-pressed="false">Доп. круг правок <b>300 ₽</b></button><button type="button" class="ex" data-ex="Срочно за 3 часа (+50%)" aria-pressed="false">Срочно за 3 часа <b>+50%</b></button><span class="ex free">Первое фото на пробу <b>бесплатно</b></span>
       </div>
       <p class="pkg-hint">Нажмите на пакет, чтобы оформить заявку. Допы можно отметить кнопками выше.</p>
       <form class="order" id="order" hidden>
@@ -285,7 +295,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
           <div class="ofield"><label for="ordNote">Комментарий</label><input type="text" id="ordNote" placeholder="Например: нужно к выходным"></div>
         </div>
         <div class="ofield"><label for="ordText">Сообщение</label><textarea id="ordText" rows="6" readonly></textarea></div>
-        <div class="oacts"><button type="submit" class="btn btn-primary" id="ordTg">Отправить в Telegram</button><button type="button" class="btn btn-ghost" id="ordWa" hidden>Отправить в WhatsApp</button><span class="ostat" id="ordStat" role="status"></span></div>
+        <div class="oacts"><button type="submit" class="btn btn-primary" id="ordTg">Отправить в Telegram</button><button type="button" class="btn btn-ghost" id="ordWa" hidden>Отправить в WhatsApp</button><button type="button" class="btn btn-ghost" id="ordMax" hidden>Отправить в MAX</button><span class="ostat" id="ordStat" role="status"></span></div>
       </form>
     </div>
   </section>
@@ -384,6 +394,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     if (cfg.phone) items.push(['ТЕЛЕФОН', cfg.phone, 'tel:' + cfg.phone.replace(/[^\d+]/g, '')]);
     if (cfg.telegram){ var t = cfg.telegram.replace(/^@/, ''); items.push(['TELEGRAM', '@' + t, 'https://t.me/' + t]); }
     if (cfg.whatsapp) items.push(['WHATSAPP', cfg.whatsapp, 'https://wa.me/' + cfg.whatsapp.replace(/\D/g, '')]);
+    if (cfg.max && /^https:\/\/(www\.)?max\.ru\//i.test(cfg.max)) items.push(['MAX', 'Написать в MAX', cfg.max]);
     var el = $('contacts');
     if (!items.length){ el.innerHTML = '<div class="cline"><div><small>КОНТАКТЫ</small><strong>Скоро появятся</strong></div></div>'; return; }
     el.innerHTML = items.map(function(it){
@@ -481,9 +492,9 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
   function syncOrder(){
     $('ordPkg').textContent = order.pkg + ' · ' + order.price;
     $('ordText').value = orderText();
-    var hasTg = !!(cfg.telegram), hasWa = !!(cfg.whatsapp);
-    $('ordTg').hidden = !hasTg; $('ordWa').hidden = !hasWa;
-    if (!hasTg && !hasWa) $('ordStat').textContent = 'Скопируйте текст и отправьте нам удобным способом: контакты ниже.';
+    var hasTg = !!(cfg.telegram), hasWa = !!(cfg.whatsapp), hasMax = !!(cfg.max && /^https:\/\/(www\.)?max\.ru\//i.test(cfg.max));
+    $('ordTg').hidden = !hasTg; $('ordWa').hidden = !hasWa; $('ordMax').hidden = !hasMax;
+    if (!hasTg && !hasWa && !hasMax) $('ordStat').textContent = 'Скопируйте текст и отправьте нам удобным способом: контакты ниже.';
   }
   document.addEventListener('click', function(e){
     var pk = e.target.closest('.pkg');
@@ -508,14 +519,17 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     if (!u && !$('order').dataset.nudged){ $('order').dataset.nudged = '1'; var h = $('ordUrl').nextElementSibling; h.textContent = 'Добавьте ссылку на объявление: так мы ответим быстрее и сразу по делу. Можно отправить и без неё.'; h.classList.add('warn'); $('ordUrl').focus(); return; }
     var text = orderText();
     try { navigator.clipboard.writeText(text).catch(function(){}); } catch(_){}
-    var url = kind === 'tg'
-      ? 'https://t.me/' + cfg.telegram.replace(/^@/, '') + '?text=' + encodeURIComponent(text)
-      : 'https://wa.me/' + cfg.whatsapp.replace(/\D/g, '') + '?text=' + encodeURIComponent(text);
+    var url = kind === 'tg' ? 'https://t.me/' + cfg.telegram.replace(/^@/, '') + '?text=' + encodeURIComponent(text)
+      : kind === 'wa' ? 'https://wa.me/' + cfg.whatsapp.replace(/\D/g, '') + '?text=' + encodeURIComponent(text)
+      : cfg.max;
     window.open(url, '_blank', 'noopener');
-    $('ordStat').textContent = 'Открываю ' + (kind === 'tg' ? 'Telegram' : 'WhatsApp') + '. Если текст не подставился, вставьте его в чат: он уже скопирован.';
+    $('ordStat').textContent = kind === 'max'
+      ? 'Открываю MAX. Текст заявки скопирован: вставьте его в чат и отправьте.'
+      : 'Открываю ' + (kind === 'tg' ? 'Telegram' : 'WhatsApp') + '. Если текст не подставился, вставьте его в чат: он уже скопирован.';
   }
   $('order').addEventListener('submit', function(e){ e.preventDefault(); send('tg'); });
   $('ordWa').addEventListener('click', function(){ send('wa'); });
+  $('ordMax').addEventListener('click', function(){ send('max'); });
 
   function renderTest(){
     var sec = $('test');
