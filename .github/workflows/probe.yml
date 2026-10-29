@@ -1,0 +1,21 @@
+name: Проверка доступа к Авито
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Ссылка
+        required: true
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch
+        env:
+          URL: ${{ inputs.url }}
+        run: |
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+          code=$(curl -sS -L -A "$UA" -H "Accept-Language: ru-RU,ru;q=0.9" -o page.html -w "%{http_code}" "$URL" || true)
+          echo "HTTP $code, bytes $(wc -c < page.html)"
+          echo "title: $(grep -o '<title>[^<]*' page.html | head -1)"
+          echo "avito images: $(grep -oE 'https://[0-9a-z]+\.img\.avito\.st/[^"&\\ ]+' page.html | sort -u | wc -l)"
+          grep -oiE 'captcha|firewall|доступ ограничен|подозрительн' page.html | sort | uniq -c | head
