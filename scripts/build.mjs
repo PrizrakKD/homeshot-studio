@@ -11,7 +11,7 @@ const VID = /\.(mp4|webm)$/i;
 
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT, 'works'), { recursive: true });
-for (const f of ['index.html', 'config.json']) fs.copyFileSync(path.join(ROOT, f), path.join(OUT, f));
+for (const f of ['index.html', 'admin.html', 'config.json']) fs.copyFileSync(path.join(ROOT, f), path.join(OUT, f));
 fs.cpSync(path.join(ROOT, 'assets'), path.join(OUT, 'assets'), { recursive: true });
 
 const find = (files, base, re) => files.find(f => re.test(f) && path.parse(f).name.toLowerCase() === base);

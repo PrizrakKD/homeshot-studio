@@ -2,7 +2,14 @@
 
 Сайт-портфолио: фото и видео для объявлений о квартирах.
 
-## Как добавить работу
+## Админка
+
+Откройте `https://prizrakkd.github.io/homeshot-studio/admin.html`.
+Там можно добавлять и удалять работы и менять контакты без захода на GitHub.
+Для входа нужен GitHub-токен: Settings → Developer settings → Fine-grained tokens,
+доступ только к репозиторию homeshot-studio, Permissions → Contents: Read and write.
+
+## Как добавить работу вручную
 
 1. Откройте папку `works` в репозитории на GitHub.
 2. Нажмите **Add file → Upload files** и перетащите папку с работой (например `2026-10-29-pugacheva`).
