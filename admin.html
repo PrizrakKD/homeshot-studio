@@ -82,7 +82,9 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .dpic{position:relative}
 .witem{display:grid;gap:10px}
 .wedit{border:1px solid var(--gold-dim);border-radius:8px;padding:16px;display:grid;gap:14px;background:var(--surface)}
-.del.edit:hover{color:var(--gold);border-color:var(--gold)}
+.del.edit:hover,.del.client:hover{color:var(--gold);border-color:var(--gold)}
+a.del,a.mini{display:inline-flex;align-items:center;text-decoration:none}
+a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
 .zoom{position:absolute;right:6px;bottom:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:rgba(20,17,15,.78);color:var(--fg);cursor:zoom-in}
 .zoom:hover{background:var(--gold);color:var(--ink)}
 .vbtn+.zoom{right:8px;bottom:8px}
@@ -249,10 +251,14 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
           var after = files.find(function(f){ return /^after\./i.test(f.name); });
           if (after) w.thumb = after.download_url;
           var info = files.find(function(f){ return /^info\.txt$/i.test(f.name); });
-          if (!info) return w;
-          return fetch(info.download_url, {cache:'no-store'}).then(function(r){ return r.text(); }).then(function(t){
-            var l = t.replace(/^﻿/, '').split(/\r?\n/); if (l[0]) w.title = l[0].trim(); if (l[1]) w.sub = l[1].trim(); return w;
-          }, function(){ return w; });
+          var src = files.find(function(f){ return /^source\.txt$/i.test(f.name); });
+          var txt = function(f){ return f ? fetch(f.download_url + '?t=' + Date.now(), {cache:'no-store'}).then(function(r){ return r.ok ? r.text() : ''; }, function(){ return ''; }) : Promise.resolve(''); };
+          w.source = '';
+          return Promise.all([txt(info), txt(src)]).then(function(t){
+            var l = t[0].replace(/^﻿/, '').split(/\r?\n/); if (l[0]) w.title = l[0].trim(); if (l[1]) w.sub = l[1].trim();
+            w.source = t[1].trim();
+            return w;
+          });
         });
       }));
     }).then(function(ws){
@@ -261,11 +267,13 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
       list.innerHTML = ws.map(function(w, i){
         return '<div class="witem"><div class="item">' + (w.thumb ? '<img src="' + esc(w.thumb) + '" alt="" loading="lazy">' : '<img alt="">') +
           '<div class="t"><b>' + esc(w.title) + '</b><small>' + esc(w.sub || 'Без подписи') + '</small></div>' +
+          (w.source ? '<a class="del client" href="' + esc(w.source) + '" target="_blank" rel="noopener">Клиент</a>' : '') +
           '<button type="button" class="del edit" data-edit="' + i + '">Изменить</button>' +
           '<button type="button" class="del" data-i="' + i + '">Удалить</button></div>' +
           '<form class="wedit" data-i="' + i + '" hidden><div class="fields">' +
             '<div class="field"><label for="e-title-' + i + '">Название</label><input type="text" id="e-title-' + i + '" value="' + esc(w.title) + '" required></div>' +
             '<div class="field"><label for="e-sub-' + i + '">Подпись</label><input type="text" id="e-sub-' + i + '" value="' + esc(w.sub) + '" placeholder="1-к квартира, 46,8 м²"></div>' +
+            '<div class="field" style="grid-column:1/-1"><label for="e-src-' + i + '">Ссылка на объявление клиента</label><input type="text" id="e-src-' + i + '" value="' + esc(w.source) + '" placeholder="https://www.avito.ru/…"><span class="hint">На сайте не показывается</span></div>' +
           '</div><div class="actions"><button type="submit" class="btn btn-primary">Сохранить</button><button type="button" class="btn btn-ghost" data-cancel="' + i + '">Отмена</button></div></form></div>';
       }).join('');
     }).catch(function(e){ list.innerHTML = ''; status('listStatus', errText(e), 'err'); });
@@ -277,8 +285,13 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
     var title = $('e-title-' + i).value.trim(), sub = $('e-sub-' + i).value.trim();
     if (!title){ status('listStatus', 'Название не может быть пустым.', 'err'); return; }
     var btn = f.querySelector('[type=submit]'); btn.disabled = true; status('listStatus', 'Сохраняю…');
-    b64FromText(title + '\n' + sub + '\n').then(function(b64){
-      return commit([{ path: 'works/' + w.dir + '/info.txt', b64: b64 }], 'Изменить работу: ' + title);
+    var srcUrl = $('e-src-' + i).value.trim();
+    if (srcUrl && !/^https?:\/\//i.test(srcUrl)){ btn.disabled = false; status('listStatus', 'Ссылка должна начинаться с https://', 'err'); return; }
+    Promise.all([b64FromText(title + '\n' + sub + '\n'), srcUrl ? b64FromText(srcUrl + '\n') : null]).then(function(b){
+      var entries = [{ path: 'works/' + w.dir + '/info.txt', b64: b[0] }];
+      if (srcUrl) entries.push({ path: 'works/' + w.dir + '/source.txt', b64: b[1] });
+      else if (w.source) entries.push({ path: 'works/' + w.dir + '/source.txt', del: true });
+      return commit(entries, 'Изменить работу: ' + title);
     }).then(function(){ status('listStatus', 'Сохранено. На сайте обновится через 1–2 минуты.', 'ok'); return loadList(); })
       .catch(function(err){ btn.disabled = false; status('listStatus', errText(err), 'err'); });
   });
@@ -299,7 +312,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 
   // ---- crop ----
   var RATIOS = [['1:1', 1], ['3:4', 3/4], ['4:5', 4/5], ['16:9', 16/9], ['9:16', 9/16], ['Свободно', NaN]];
-  var croppers = {}, urls = {}, picked = {}, loaders = {};
+  var croppers = {}, urls = {}, picked = {}, loaders = {}, formSource = '';
   function loadSlot(slot, blob){ picked[slot] = blob || null; loaders[slot](blob); }
   document.querySelectorAll('.crop').forEach(function(box){
     var slot = box.dataset.slot, def = Number(box.dataset.def);
@@ -338,7 +351,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
   }
   function resetCrops(){
     Object.keys(croppers).forEach(function(k){ if (croppers[k]) croppers[k].destroy(); croppers[k] = null; if (urls[k]) URL.revokeObjectURL(urls[k]); urls[k] = null; });
-    picked = {};
+    picked = {}; formSource = '';
     document.querySelectorAll('.crop-area, .ratios').forEach(function(el){ el.hidden = true; });
   }
 
@@ -354,6 +367,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
     Promise.all([cropped('before', fb).then(b64FromBlob), cropped('after', fa).then(b64FromBlob), fv ? b64FromBlob(fv) : null, b64FromText(title + '\n' + sub + '\n')]).then(function(r){
       var entries = [{ path: dir + '/before.jpg', b64: r[0] }, { path: dir + '/after.jpg', b64: r[1] }, { path: dir + '/info.txt', b64: r[3] }];
       if (r[2]) entries.push({ path: dir + '/video' + (/webm$/i.test(fv.name) ? '.webm' : '.mp4'), b64: r[2] });
+      if (formSource) entries.push({ path: dir + '/source.txt', b64: btoa(unescape(encodeURIComponent(formSource + '\n'))) });
       status('addStatus', 'Загружаю на GitHub…');
       return commit(entries, 'Новая работа: ' + title);
     }).then(function(){
@@ -433,8 +447,8 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
     if (!drafts.length){ box.innerHTML = '<p class="hint">Черновиков нет. Откройте объявление на Авито и нажмите «В Homeshot» в расширении.</p>'; return; }
     box.innerHTML = drafts.map(function(d, di){
       var m = d.meta;
-      return '<div class="draft"><div class="dhead"><div><b>' + esc(m.title) + '</b><small>' + esc(m.address || '') + (m.url ? ' · <a href="' + esc(m.url) + '" target="_blank" rel="noopener">объявление</a>' : '') + '</small>' + pill(d) + '</div>' +
-        '<div class="actions">' + (!d.rows.some(function(r){ return r.variants.length; }) && !d.request ? '<button type="button" class="mini gold" data-act="pretty" data-d="' + di + '">Сделать красиво</button>' : '<button type="button" class="mini" data-act="regen" data-d="' + di + '">Перегенерировать всё</button>') + '<button type="button" class="mini danger" data-act="del" data-d="' + di + '">Удалить черновик</button></div></div>' +
+      return '<div class="draft"><div class="dhead"><div><b>' + esc(m.title) + '</b><small>' + esc(m.address || '') + '</small>' + pill(d) + '</div>' +
+        '<div class="actions">' + (m.url ? '<a class="mini client" href="' + esc(m.url) + '" target="_blank" rel="noopener">Клиент</a>' : '') + (!d.rows.some(function(r){ return r.variants.length; }) && !d.request ? '<button type="button" class="mini gold" data-act="pretty" data-d="' + di + '">Сделать красиво</button>' : '<button type="button" class="mini" data-act="regen" data-d="' + di + '">Перегенерировать всё</button>') + '<button type="button" class="mini danger" data-act="del" data-d="' + di + '">Удалить черновик</button></div></div>' +
         (d.status.state === 'error' && d.status.message ? '<div class="errmsg">' + esc(d.status.message) + '</div>' : '') +
         d.rows.map(function(r, ri){
           return '<div class="drow"><div class="dimg"><div class="dpic"><img src="' + esc(r.before) + '" alt="Исходное фото ' + (ri + 1) + '" loading="lazy">' + zoomBtn(r.before, 'Фото ' + (ri + 1) + ', до') + '</div><div class="lbl">ДО</div></div>' +
@@ -488,6 +502,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
       Promise.all([blobOf(row.before), blobOf(row.variants[row.sel])]).then(function(bl){
         $('f-before').value = ''; $('f-after').value = '';
         loadSlot('before', bl[0]); loadSlot('after', bl[1]);
+        formSource = d.meta.url || '';
         if (!$('f-title').value) $('f-title').value = d.meta.title || '';
         if (!$('f-sub').value && d.meta.address) $('f-sub').value = d.meta.address;
         status('draftsStatus', ''); $('addForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
