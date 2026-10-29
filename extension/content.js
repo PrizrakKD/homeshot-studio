@@ -9,6 +9,7 @@
   root.innerHTML = `
   <style>
     :host{all:initial}
+    [hidden]{display:none!important}
     *{box-sizing:border-box;font-family:Manrope,"Segoe UI",system-ui,sans-serif}
     .fab{position:fixed;right:20px;bottom:20px;display:flex;align-items:center;gap:10px;height:52px;padding:0 20px 0 14px;border:0;border-radius:999px;background:#14110F;color:#F2ECE4;font:600 15px/1 inherit;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.35)}
     .fab:hover{background:#2a241f}
