@@ -80,6 +80,9 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .mini.danger:hover{color:var(--err);border-color:var(--err)}
 .mini[disabled]{opacity:.5;cursor:wait}
 .dpic{position:relative}
+.witem{display:grid;gap:10px}
+.wedit{border:1px solid var(--gold-dim);border-radius:8px;padding:16px;display:grid;gap:14px;background:var(--surface)}
+.del.edit:hover{color:var(--gold);border-color:var(--gold)}
 .zoom{position:absolute;right:6px;bottom:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:rgba(20,17,15,.78);color:var(--fg);cursor:zoom-in}
 .zoom:hover{background:var(--gold);color:var(--ink)}
 .vbtn+.zoom{right:8px;bottom:8px}
@@ -256,15 +259,37 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
       works = ws;
       if (!ws.length){ list.innerHTML = '<p class="hint">Пока нет ни одной работы. Добавьте первую выше.</p>'; return; }
       list.innerHTML = ws.map(function(w, i){
-        return '<div class="item">' + (w.thumb ? '<img src="' + esc(w.thumb) + '" alt="" loading="lazy">' : '<img alt="">') +
-          '<div class="t"><b>' + esc(w.title) + '</b><small>' + esc(w.sub || w.dir) + '</small></div>' +
-          '<button type="button" class="del" data-i="' + i + '">Удалить</button></div>';
+        return '<div class="witem"><div class="item">' + (w.thumb ? '<img src="' + esc(w.thumb) + '" alt="" loading="lazy">' : '<img alt="">') +
+          '<div class="t"><b>' + esc(w.title) + '</b><small>' + esc(w.sub || 'Без подписи') + '</small></div>' +
+          '<button type="button" class="del edit" data-edit="' + i + '">Изменить</button>' +
+          '<button type="button" class="del" data-i="' + i + '">Удалить</button></div>' +
+          '<form class="wedit" data-i="' + i + '" hidden><div class="fields">' +
+            '<div class="field"><label for="e-title-' + i + '">Название</label><input type="text" id="e-title-' + i + '" value="' + esc(w.title) + '" required></div>' +
+            '<div class="field"><label for="e-sub-' + i + '">Подпись</label><input type="text" id="e-sub-' + i + '" value="' + esc(w.sub) + '" placeholder="1-к квартира, 46,8 м²"></div>' +
+          '</div><div class="actions"><button type="submit" class="btn btn-primary">Сохранить</button><button type="button" class="btn btn-ghost" data-cancel="' + i + '">Отмена</button></div></form></div>';
       }).join('');
     }).catch(function(e){ list.innerHTML = ''; status('listStatus', errText(e), 'err'); });
   }
 
+  $('list').addEventListener('submit', function(e){
+    e.preventDefault();
+    var f = e.target, i = +f.dataset.i, w = works[i];
+    var title = $('e-title-' + i).value.trim(), sub = $('e-sub-' + i).value.trim();
+    if (!title){ status('listStatus', 'Название не может быть пустым.', 'err'); return; }
+    var btn = f.querySelector('[type=submit]'); btn.disabled = true; status('listStatus', 'Сохраняю…');
+    b64FromText(title + '\n' + sub + '\n').then(function(b64){
+      return commit([{ path: 'works/' + w.dir + '/info.txt', b64: b64 }], 'Изменить работу: ' + title);
+    }).then(function(){ status('listStatus', 'Сохранено. На сайте обновится через 1–2 минуты.', 'ok'); return loadList(); })
+      .catch(function(err){ btn.disabled = false; status('listStatus', errText(err), 'err'); });
+  });
   $('list').addEventListener('click', function(e){
-    var b = e.target.closest('.del'); if (!b) return;
+    var ed = e.target.closest('[data-edit]'), cn = e.target.closest('[data-cancel]');
+    if (ed || cn){
+      var form = $('list').querySelector('.wedit[data-i="' + (ed ? ed.dataset.edit : cn.dataset.cancel) + '"]');
+      form.hidden = !!cn; if (ed){ form.hidden = false; form.querySelector('input').focus(); }
+      return;
+    }
+    var b = e.target.closest('.del[data-i]'); if (!b) return;
     if (b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = 'Точно удалить?'; setTimeout(function(){ if (b.isConnected){ b.dataset.confirm = ''; b.textContent = 'Удалить'; } }, 3000); return; }
     var w = works[+b.dataset.i]; b.disabled = true; status('listStatus', 'Удаляю…');
     commit(w.files.map(function(p){ return { path: p, del: true }; }), 'Удалить работу: ' + w.title)
