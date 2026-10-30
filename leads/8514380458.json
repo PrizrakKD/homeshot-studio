@@ -1,0 +1,33 @@
+{
+  "id": "8514380458",
+  "price": 32000,
+  "rooms": 1,
+  "area": 45,
+  "ppm": 711.1111111111111,
+  "title": "1-к. квартира, 45 м², 4/9 эт.",
+  "photos": 5,
+  "slides": 5,
+  "cover": "https://b30.img.avito.st/image/1/1.0GxzMba-fIVlkd6EXz7PaXCRfoPBhniFweEdj80yfSfGkn4.GT8kryHJQf5GpCYtgY-cHgk8nYpwgE-vSUGwkNceyrE?cqp=2.6_1L9vhKD2uBLt-qyrAoZheVsuS8u7cVFre6r7a9jrN4_pCIDjlm5anolzs-MLkTK_L9899P2epdVNs=",
+  "sellerName": "Svetlana",
+  "done": 0,
+  "company": false,
+  "sellerKnown": true,
+  "href": "https://www.avito.ru/kaliningrad/kvartiry/1-k._kvartira_45_m_49_et._8514380458",
+  "addr": "ул. Генерала Челнокова, 46р-н Ленинградский",
+  "score": 45,
+  "why": [
+    "5 фото",
+    "цена в рынке",
+    "собственник"
+  ],
+  "quality": {
+    "mean": 131,
+    "dark": false,
+    "vertical": false
+  },
+  "rel": 0.8220937700706487,
+  "added": "2026-10-30T07:21:24.141Z",
+  "url": "https://www.avito.ru/kaliningrad/kvartiry/1-k._kvartira_45_m_49_et._8514380458",
+  "source": "https://www.avito.ru/kaliningrad/kvartiry/sdam/na_dlitelnyy_srok-ASgBAgICAkSSA8gQ8AeQUg?context=H4sIAAAAAAAA_wEmANn_YToxOntzOjE6InkiO3M6MTY6ImxIaVdDTGNDTWRGaVRWQnQiO31rvAVDJgAAAA&s=104&user=1",
+  "status": "new"
+}
