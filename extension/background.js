@@ -127,18 +127,26 @@ async function quality(url) {
 }
 
 async function commitFiles(s, files, message) {
-  const ref = await gh(s, `/git/ref/heads/${s.branch}`);
-  const head = ref.object.sha;
-  const commit = await gh(s, `/git/commits/${head}`);
+  // Blobs first (slow part), then tree/commit/ref. If someone pushed meanwhile
+  // (admin, GitHub Action), the ref update is not a fast-forward: rebuild on the new head and retry.
   const tree = [];
   for (const f of files) {
     if (f.del) { tree.push({ path: f.path, mode: '100644', type: 'blob', sha: null }); continue; }
     const b = await gh(s, '/git/blobs', { method: 'POST', body: { content: f.b64, encoding: 'base64' } });
     tree.push({ path: f.path, mode: '100644', type: 'blob', sha: b.sha });
   }
-  const t = await gh(s, '/git/trees', { method: 'POST', body: { base_tree: commit.tree.sha, tree } });
-  const c = await gh(s, '/git/commits', { method: 'POST', body: { message, tree: t.sha, parents: [head] } });
-  await gh(s, `/git/refs/heads/${s.branch}`, { method: 'PATCH', body: { sha: c.sha } });
+  for (let attempt = 0; ; attempt++) {
+    const ref = await gh(s, `/git/ref/heads/${s.branch}?t=${Date.now()}`);
+    const head = ref.object.sha;
+    const commit = await gh(s, `/git/commits/${head}`);
+    const t = await gh(s, '/git/trees', { method: 'POST', body: { base_tree: commit.tree.sha, tree } });
+    const c = await gh(s, '/git/commits', { method: 'POST', body: { message, tree: t.sha, parents: [head] } });
+    try { await gh(s, `/git/refs/heads/${s.branch}`, { method: 'PATCH', body: { sha: c.sha } }); return; }
+    catch (e) {
+      if (attempt >= 4 || !/fast.forward|422|reference/i.test(e.message)) throw e;
+      await new Promise(r => setTimeout(r, 800 + attempt * 700));
+    }
+  }
 }
 
 async function saveLeads(list) {

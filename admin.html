@@ -479,21 +479,27 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
 
   // one commit with many files: entries = [{path, b64}] or [{path, del:true}]
   function commit(entries, message){
-    var head, baseTree;
-    return gh('/git/ref/heads/' + BRANCH).then(function(ref){
-      head = ref.object.sha; return gh('/git/commits/' + head);
-    }).then(function(c){
-      baseTree = c.tree.sha;
-      return Promise.all(entries.map(function(e){
-        if (e.del) return Promise.resolve({ path: e.path, mode: '100644', type: 'blob', sha: null });
-        return gh('/git/blobs', { method: 'POST', body: { content: e.b64, encoding: 'base64' } }).then(function(b){ return { path: e.path, mode: '100644', type: 'blob', sha: b.sha }; });
-      }));
-    }).then(function(tree){
-      return gh('/git/trees', { method: 'POST', body: { base_tree: baseTree, tree: tree } });
-    }).then(function(t){
-      return gh('/git/commits', { method: 'POST', body: { message: message, tree: t.sha, parents: [head] } });
-    }).then(function(c){
-      return gh('/git/refs/heads/' + BRANCH, { method: 'PATCH', body: { sha: c.sha } });
+    // Upload blobs once; if the branch moved meanwhile (extension, GitHub Action), rebuild on the new head and retry.
+    return Promise.all(entries.map(function(e){
+      if (e.del) return Promise.resolve({ path: e.path, mode: '100644', type: 'blob', sha: null });
+      return gh('/git/blobs', { method: 'POST', body: { content: e.b64, encoding: 'base64' } }).then(function(b){ return { path: e.path, mode: '100644', type: 'blob', sha: b.sha }; });
+    })).then(function(tree){
+      function attempt(n){
+        var head;
+        return gh('/git/ref/heads/' + BRANCH + '?t=' + Date.now()).then(function(ref){
+          head = ref.object.sha; return gh('/git/commits/' + head);
+        }).then(function(c){
+          return gh('/git/trees', { method: 'POST', body: { base_tree: c.tree.sha, tree: tree } });
+        }).then(function(t){
+          return gh('/git/commits', { method: 'POST', body: { message: message, tree: t.sha, parents: [head] } });
+        }).then(function(c){
+          return gh('/git/refs/heads/' + BRANCH, { method: 'PATCH', body: { sha: c.sha } });
+        }).catch(function(err){
+          if (n >= 4 || !(err.status === 422 || /fast.forward/i.test(err.message))) throw err;
+          return new Promise(function(r){ setTimeout(r, 800 + n * 700); }).then(function(){ return attempt(n + 1); });
+        });
+      }
+      return attempt(0);
     });
   }
 
