@@ -1,0 +1,52 @@
+{
+  "added": "2026-10-30T14:34:34.276Z",
+  "addr": "Шахматная ул., 2р-н Ленинградский",
+  "area": 42,
+  "bad": [],
+  "company": false,
+  "cover": "https://50.img.avito.st/image/1/1.sW6enra-HYeIPr-G8IiEers-H4EsKRmHLE58jSCdHCUrPR8.-ujnQ3fC4u4BxPnzDVnGUq9b94hsekzA17yNEm16mWk",
+  "desc": "",
+  "done": 2,
+  "gallery": [
+    "https://50.img.avito.st/image/1/1.sW6enra-HYeIPr-G8IiEers-H4EsKRmHLE58jSCdHCUrPR8.-ujnQ3fC4u4BxPnzDVnGUq9b94hsekzA17yNEm16mWk",
+    "https://80.img.avito.st/image/1/1.ANVycra-rDxk0g49fmo_vlDSrjrAxag8wKLNNsxxrZ7H0a4.8p5f7-4U_-bKgLRkgv5SNQqF_2iAIh1GKx4bcb095cA",
+    "https://40.img.avito.st/image/1/1.ptwT2La-CjUFeKg0U5r8yzZ4CDOhbw41oQhrP63bC5emewg.n3fIHibU1ydJQQudb_iFCTKMAPz_J3uwJnjkygZz7EU",
+    "https://50.img.avito.st/image/1/1.bpC9gra-wnmrImB47dNQhJgiwH8PNcZ5D1KjcwOBw9sIIcA.SixLsJMfcGDCbX97oT2zDnAzpD0Qx21O8UQ-7aA-aHk",
+    "https://b40.img.avito.st/image/1/1.60TX5ba-R63BReWsjebdUPJFRatlUkOtZTUmp2nmRg9iRkU.GvBlWL-pL2aCj6wcP0w_s1qXEetdxy-gVUcmOdHVcTY"
+  ],
+  "href": "https://www.avito.ru/kaliningrad/kvartiry/1-k._kvartira_42_m_410_et._8117311666",
+  "id": "8117311666",
+  "photos": 8,
+  "ppm": 714.2857142857143,
+  "price": 30000,
+  "quality": {
+    "dark": true,
+    "mean": 79,
+    "vertical": false
+  },
+  "rel": 0.8163265306122449,
+  "rooms": 1,
+  "score": 70,
+  "sellerKnown": true,
+  "sellerName": "Пользователь",
+  "slides": 5,
+  "source": "https://www.avito.ru/kaliningrad/kvartiry/sdam-ASgBAgICAUSSA8gQ?context=H4sIAAAAAAAA_wFMALP_YToyOntzOjg6ImZyb21QYWdlIjtzOjE1OiJzaG9ydGN1dHNXaWRnZXQiO3M6MToieSI7czoxNjoic3dQNkRzazB0bTBCNGhqNiI7fS6jB2NMAAAA&user=1",
+  "title": "1-к. квартира, 42 м², 4/10 эт.",
+  "url": "https://www.avito.ru/kaliningrad/kvartiry/1-k._kvartira_42_m_410_et._8117311666",
+  "why": [
+    "8 фото",
+    "висит давно",
+    "цена в рынке",
+    "собственник",
+    "тёмная обложка"
+  ],
+  "photoFiles": [
+    "leads/8117311666/01.jpg",
+    "leads/8117311666/02.jpg",
+    "leads/8117311666/03.jpg",
+    "leads/8117311666/04.jpg",
+    "leads/8117311666/05.jpg"
+  ],
+  "status": "new",
+  "sent": "2026-10-30T14:37:28.393Z"
+}
