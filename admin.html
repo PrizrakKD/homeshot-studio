@@ -168,7 +168,12 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .lsc{min-width:38px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:800;background:var(--surface);color:var(--muted);flex-shrink:0}
 .lsc.hot{background:var(--gold);color:var(--ink)}
 .lead-it select{height:36px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 13px var(--f);padding:0 10px;flex-shrink:0}
-@media (max-width:640px){.lead-it{flex-wrap:wrap}}
+@media (max-width:640px){
+  .lead-it{flex-wrap:wrap;gap:10px 12px}
+  .lead-it .lead-th img{width:64px;height:64px}
+  .lead-it .t{flex:1 1 calc(100% - 80px)}
+  .lead-it select{flex:1;min-width:0}
+}
 .card h2.sch{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
 .card h2.sch:hover .collapse{color:var(--fg);border-color:var(--gold)}
 .card.sc-coll .collapse.scb{transform:rotate(-90deg)}
@@ -212,6 +217,8 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .witem{display:grid;gap:10px;position:relative}
 .grip{flex-shrink:0;width:22px;align-self:stretch;display:flex;align-items:center;justify-content:center;color:var(--dim);cursor:grab;border-radius:4px;font-size:16px;letter-spacing:-3px;user-select:none}
 .grip:hover{color:var(--gold);background:var(--surface)}
+.wmv{display:none;gap:4px;flex-shrink:0}
+@media (hover:none){.grip{display:none}.wmv{display:flex}}
 .witem.wdragging{opacity:.4}
 .witem.drop-before::before,.witem.drop-after::after{content:"";position:absolute;left:0;right:0;height:3px;border-radius:2px;background:var(--gold)}
 .witem.drop-before::before{top:-7px}.witem.drop-after::after{bottom:-7px}
@@ -226,14 +233,39 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .del.feat[aria-pressed=true]{color:var(--ink);background:var(--gold);border-color:var(--gold)}
 .del.feat:hover{color:var(--gold);border-color:var(--gold)}
 .del.feat[aria-pressed=true]:hover{color:var(--ink)}
-@media (max-width:640px){.item{flex-wrap:wrap}.feat-btns{order:5;width:100%}}
+@media (max-width:640px){.item{flex-wrap:wrap}.item>.t{flex:1 1 calc(100% - 150px)}.feat-btns{order:5;flex:1 1 auto}.feat-btns .feat{flex:1}.item>.del{order:6}}
+.item .t{min-width:0}.item .t b,.lead-it .t,.lv-side h2{overflow-wrap:anywhere}
+@media (max-width:640px){
+  /* pair rows: wrap into two columns instead of a sideways scroll */
+  .drow,.prow{flex-wrap:wrap;overflow:visible;gap:10px}
+  .drow .chk,.prow .pnum{width:100%;text-align:left}
+  .drow .chk{flex-direction:row;justify-content:flex-start;gap:8px}
+  .drow .dimg,.prow .dimg{width:calc(50% - 5px)}
+  .drow .dimg img,.prow .dimg img{width:100%;height:auto;aspect-ratio:1}
+  .drow .dpic,.prow .dpic{width:100%}
+  .prow .phs{width:100%;height:auto;aspect-ratio:1}
+  .drow .dact,.prow .pmove{width:100%;margin-left:0;flex-direction:row;flex-wrap:wrap}
+  .newhint{max-width:none}
+  /* lead viewer */
+  .lv-img{padding:8px 8px 40px}
+  .lv-nav{width:40px;height:40px;margin-top:-36px;font-size:24px}
+  .lv-nav.prev{left:6px}.lv-nav.next{right:6px}
+  .lv-n{bottom:8px;font-size:11px}
+  .lv-thumbs{justify-content:flex-start;padding:0 8px 10px}
+  .lv-thumbs button{width:60px;height:46px}
+  #lvClose{position:fixed;top:10px;right:10px;z-index:3;background:rgba(20,17,15,.9)}
+  /* crop modal: full screen, buttons always visible */
+  .cm{padding:0}
+  .cm-box{width:100%;height:100dvh;max-height:100dvh;border-radius:0;border:0;padding:12px;grid-template-rows:auto minmax(0,1fr) auto auto;gap:10px}
+  .cm-area{height:100%;min-height:0}
+}
 .del.edit:hover,.del.client:hover{color:var(--gold);border-color:var(--gold)}
 a.del,a.mini{display:inline-flex;align-items:center;text-decoration:none}
 a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
 .zoom{position:absolute;right:6px;bottom:6px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:rgba(20,17,15,.78);color:var(--fg);cursor:zoom-in}
 .zoom:hover{background:var(--gold);color:var(--ink)}
 .vbtn+.zoom{right:8px;bottom:8px}
-.lb{position:fixed;inset:0;z-index:50;background:rgba(10,8,7,.97);display:flex;flex-direction:column}
+.lb{position:fixed;inset:0;z-index:50;background:#0d0b0a;display:flex;flex-direction:column}
 .lb-scroll{position:relative;flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:16px 84px;touch-action:pan-y}
 .lb-scroll img{width:100%;height:100%;object-fit:contain;display:block;user-select:none;-webkit-user-drag:none}
 .lb-nav{position:absolute;top:50%;margin-top:-28px;width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:rgba(20,17,15,.85);color:var(--fg);font:500 32px/1 var(--f);padding-bottom:4px;cursor:pointer;z-index:2}
@@ -306,7 +338,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     </form>
 
     <div class="card">
-      <div><h2>Работы на сайте</h2><p class="hint">Порядок как на сайте. Перетащите работу за ⋮⋮, чтобы поменять порядок. Новые работы появляются сверху.</p></div>
+      <div><h2>Работы на сайте</h2><p class="hint">Порядок как на сайте. Перетащите работу за ⋮⋮ (на телефоне кнопками ↑↓), чтобы поменять порядок. Новые работы появляются сверху.</p></div>
       <div class="list" id="list"><p class="hint">Загружаю…</p></div>
       <span class="status" id="listStatus" role="status"></span>
     </div>
@@ -480,6 +512,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       var testDir = cfgData.test && ws.some(function(w){ return w.dir === cfgData.test; }) ? cfgData.test : ws.slice().sort(function(x, y){ return (y.count || 1) - (x.count || 1); })[0].dir;
       list.innerHTML = ws.map(function(w, i){
         return '<div class="witem" data-wi="' + i + '"><div class="item"><span class="grip" draggable="true" data-wdrag="' + i + '" title="Перетащите, чтобы поменять порядок на сайте" aria-hidden="true">⋮⋮</span>' +
+          '<span class="wmv"><button type="button" class="mini" data-wmv="-1" data-i="' + i + '"' + (i ? '' : ' disabled') + ' aria-label="Выше">↑</button><button type="button" class="mini" data-wmv="1" data-i="' + i + '"' + (i < works.length - 1 ? '' : ' disabled') + ' aria-label="Ниже">↓</button></span>' +
           '<button type="button" class="collapse wtog" data-edit="' + i + '" aria-expanded="false" aria-label="Редактировать: ' + esc(w.title) + '" title="Редактировать">' + CHEV + '</button>' + (w.thumb ? '<img src="' + esc(w.thumb) + '" alt="" loading="lazy">' : '<img alt="">') +
           '<div class="t"><b>' + (w.source ? '<a href="' + esc(w.source) + '" target="_blank" rel="noopener" title="Открыть объявление клиента">' + esc(w.title) + ' ↗</a>' : esc(w.title)) + '</b><small>' + esc(w.sub || 'Без подписи') + (w.count > 1 ? ' · ' + w.count + ' пары фото' : '') + '</small></div>' +
           '<div class="feat-btns"><button type="button" class="del feat" data-feat="hero" data-i="' + i + '" aria-pressed="' + (w.dir === heroDir) + '" title="Показывать в шапке сайта">' + (w.dir === heroDir ? '★ ' : '') + 'В шапке</button>' +
@@ -1165,14 +1198,18 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     clearWdrop(); wDrag = null;
     if (!row.classList.contains('drop-before') && !row.classList.contains('drop-after') && +row.dataset.wi === from) return;
     if (to > from) to--;
-    if (to === from) return;
+    moveWork(from, to);
+  });
+  function moveWork(from, to){
+    if (to === from || to < 0 || to >= works.length) return;
     var prevOrder = cfgData.order, arr = works.slice(), m = arr.splice(from, 1)[0]; arr.splice(to, 0, m);
     cfgData.order = arr.map(function(w){ return w.dir; });
     renderWorks(); status('listStatus', 'Сохраняю порядок…');
     saveConfig('Порядок работ на сайте')
       .then(function(){ status('listStatus', 'Порядок сохранён. На сайте обновится через 1–2 минуты.', 'ok'); })
       .catch(function(err){ cfgData.order = prevOrder; renderWorks(); status('listStatus', errText(err), 'err'); });
-  });
+  }
+  $('list').addEventListener('click', function(e){ var b = e.target.closest('[data-wmv]'); if (!b) return; var i = +b.dataset.i; moveWork(i, i + Number(b.dataset.wmv)); });
 
   // ---- lightbox ----
   var lb = $('lightbox'), lbImg = $('lbImg'), lbScroll = $('lbScroll'), lbLast = null;
@@ -1196,7 +1233,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     if (!lbList.length) return;
     lbI = (k + lbList.length) % lbList.length;
     var it = lbList[lbI]; lbImg.src = it.src; lbImg.alt = it.label;
-    $('lbCap').textContent = it.label + (lbList.length > 1 ? ' · ' + (lbI + 1) + ' из ' + lbList.length + ' · листайте стрелками' : '');
+    $('lbCap').textContent = it.label + (lbList.length > 1 ? ' · ' + (lbI + 1) + ' из ' + lbList.length + (matchMedia('(pointer: coarse)').matches ? ' · листайте свайпом' : ' · листайте стрелками') : '');
     $('lbPrev').hidden = $('lbNext').hidden = lbList.length < 2;
   }
   function closeLb(){ lb.hidden = true; lbImg.removeAttribute('src'); if (!lbKeepOverflow) document.body.style.overflow = ''; if (lbLast && lbLast.isConnected) lbLast.focus(); }
