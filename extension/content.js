@@ -62,6 +62,12 @@
   const fab = $('.fab'), ov = $('.ov'), grid = $('#hs-grid'), msg = $('#hs-msg'), go = $('#hs-go');
   let photos = [];
 
+  function toast(text) {
+    const el = document.createElement('div');
+    el.textContent = text;
+    el.style.cssText = 'position:fixed;left:50%;top:20px;transform:translateX(-50%);max-width:min(560px,calc(100vw - 32px));padding:12px 18px;border-radius:12px;background:#14110F;color:#F2ECE4;border:1px solid #8A6A45;font:600 14px/1.45 "Segoe UI",system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:2147483647';
+    root.appendChild(el); setTimeout(() => el.remove(), 9000);
+  }
   function sync() { fab.hidden = !isItem(); }
   sync();
   // Opened from the admin "Написать сообщение" button: open the Avito chat with the seller.
@@ -69,10 +75,15 @@
     history.replaceState(null, '', location.pathname + location.search);
     let tries = 0;
     const t = setInterval(() => {
-      const btn = document.querySelector('[data-marker="messenger-button/button"], [data-marker*="messenger"] button, a[data-marker*="messenger"]')
-        || [...document.querySelectorAll('button, a')].find(x => /^\s*Написать( сообщение)?\s*$/i.test(x.textContent || ''));
-      if (btn) { clearInterval(t); btn.click(); }
-      else if (++tries > 40) clearInterval(t);
+      // Only the seller's "Написать" button on the listing. Never the header messenger link
+      // (it opens your own chat list).
+      const visible = x => { const r = x.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+      const outsideHeader = x => !x.closest('header, [data-marker^="header"], [class*="header"], nav') && !/\/profile\/messenger|\/messenger\/?$/.test(x.getAttribute('href') || '');
+      const cands = [...document.querySelectorAll('[data-marker="messenger-button/button"], [data-marker*="item-view"] [data-marker*="messenger"] button')]
+        .concat([...document.querySelectorAll('button, [role="button"]')].filter(x => /^\s*Написать( сообщение)?\s*$/i.test(x.textContent || '')));
+      const btn = cands.find(x => visible(x) && outsideHeader(x));
+      if (btn) { clearInterval(t); btn.scrollIntoView({ block: 'center' }); btn.click(); toast('Текст сообщения уже в буфере: вставьте его в чат (Ctrl+V) и прикрепите фото «до» и «после».'); }
+      else if (++tries > 40) { clearInterval(t); toast('Не нашёл кнопку «Написать». Нажмите её на странице объявления: текст сообщения уже в буфере (Ctrl+V).'); }
     }, 250);
   }
   // Opened from the admin "take this photo" button: #homeshot-pick=<lead photo url>
