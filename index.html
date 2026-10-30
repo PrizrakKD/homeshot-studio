@@ -210,6 +210,16 @@ section{padding-block:72px}
 @media (prefers-reduced-motion:reduce){.fm-f,.fm-f em{transition:none}}
 @media (max-width:560px){.formats{flex-direction:column;align-items:flex-start}}
 .pkg-hint{margin-top:16px;font-size:14px;color:var(--dim)}
+.fly{position:fixed;z-index:60;pointer-events:none;padding:8px 14px;border-radius:999px;background:var(--gold);color:var(--ink);font:700 13px/1 var(--f);white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.opill{position:fixed;left:50%;bottom:18px;z-index:55;display:flex;width:max-content;align-items:center;gap:12px;max-width:calc(100% - 32px);padding:10px 10px 10px 18px;border-radius:999px;border:1px solid var(--gold-dim);background:rgba(20,17,15,.94);backdrop-filter:blur(8px);color:var(--fg);font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.5);transform:translate(-50%,140%);opacity:0;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .25s}
+.opill.show{transform:translate(-50%,0);opacity:1}
+.opill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.opill small{color:var(--dim);display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.opill button{flex-shrink:0;border:0;border-radius:999px;background:var(--gold);color:var(--ink);font:700 13px var(--f);padding:9px 16px;cursor:pointer}
+.opill.bump{animation:obump .45s ease}
+@keyframes obump{40%{transform:translate(-50%,0) scale(1.06)}}
+.order.flash{animation:oflash 1s ease}
+@keyframes oflash{0%{box-shadow:0 0 0 0 rgba(214,168,112,.55)}100%{box-shadow:0 0 0 18px rgba(214,168,112,0)}}
 .order{margin-top:28px;border:1px solid var(--gold-dim);border-radius:10px;background:var(--surface);padding:24px;display:grid;gap:16px}
 .order-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .order h3{font-size:22px}
@@ -679,13 +689,44 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     $('ordTg').hidden = !hasTg; $('ordWa').hidden = !hasWa; $('ordMax').hidden = !hasMax;
     if (!hasTg && !hasWa && !hasMax) $('ordStat').textContent = 'Скопируйте текст и отправьте нам удобным способом: контакты ниже.';
   }
+  // ---- order: fly animation + bottom pill, no page jumps ----
+  var pill = document.createElement('div'); pill.className = 'opill'; pill.setAttribute('role', 'status');
+  pill.innerHTML = '<span><small>Заявка готова</small><b id="opTxt"></b></span><button type="button" id="opGo">Заполнить ↓</button>';
+  document.body.appendChild(pill);
+  var orderVisible = false;
+  function updPill(){ var show = !$('order').hidden && !orderVisible; pill.classList.toggle('show', show); }
+  if ('IntersectionObserver' in window) new IntersectionObserver(function(en){ orderVisible = en[0].isIntersecting; updPill(); }, { threshold: .25 }).observe($('order'));
+  $('opGo').addEventListener('click', function(){ var f = $('order'); f.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(function(){ $('ordUrl').focus({ preventScroll: true }); }, 500); });
+  function flyToOrder(from, label){
+    var f = $('order'); $('opTxt').textContent = label;
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var fr = f.getBoundingClientRect(), vh = innerHeight;
+    var inView = fr.top < vh * .9 && fr.bottom > 0;
+    var done = function(){
+      if (inView){ f.classList.remove('flash'); void f.offsetWidth; f.classList.add('flash'); }
+      updPill(); if (!inView){ pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump'); }
+    };
+    if (reduce || !from.animate) return done();
+    var br = from.getBoundingClientRect(), el = document.createElement('div'); el.className = 'fly'; el.textContent = label; document.body.appendChild(el);
+    var sx = br.left + br.width / 2 - el.offsetWidth / 2, sy = br.top + br.height / 2 - el.offsetHeight / 2;
+    var tx = inView ? fr.left + fr.width / 2 - el.offsetWidth / 2 : innerWidth / 2 - el.offsetWidth / 2;
+    var ty = inView ? Math.min(fr.top + 30, vh - 60) : vh - 50;
+    el.style.left = sx + 'px'; el.style.top = sy + 'px';
+    var dx = tx - sx, dy = ty - sy;
+    el.animate([
+      { transform: 'translate(0,0) scale(.6)', opacity: 0 },
+      { transform: 'translate(' + dx * .15 + 'px,' + (dy * .15 - 40) + 'px) scale(1.05)', opacity: 1, offset: .25 },
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.7)', opacity: .9 }
+    ], { duration: 750, easing: 'cubic-bezier(.45,0,.25,1)' }).onfinish = function(){ el.remove(); done(); };
+  }
+
   document.addEventListener('click', function(e){
     var pk = e.target.closest('.pkg');
     if (pk){
       document.querySelectorAll('.pkg').forEach(function(x){ x.setAttribute('aria-pressed', String(x === pk)); });
       order.pkg = pk.dataset.pkg; order.price = pk.dataset.price; order.trial = false; $('trial').setAttribute('aria-pressed', 'false');
       var f = $('order'), wasHidden = f.hidden; f.hidden = false; syncOrder();
-      if (wasHidden || !$('ordUrl').value) { f.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(function(){ $('ordUrl').focus({ preventScroll: true }); }, 400); }
+      flyToOrder(pk, order.pkg + ' · ' + order.price);
       return;
     }
     if (e.target.closest('#trial')){
@@ -693,7 +734,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
       document.querySelectorAll('.pkg, .ex[data-ex]').forEach(function(x){ x.setAttribute('aria-pressed', 'false'); });
       $('trial').setAttribute('aria-pressed', 'true');
       var tf = $('order'); tf.hidden = false; syncOrder();
-      tf.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(function(){ $('ordUrl').focus({ preventScroll: true }); }, 400);
+      flyToOrder($('trial'), 'Бесплатная проба');
       return;
     }
     var ex = e.target.closest('.ex[data-ex]');
@@ -704,7 +745,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
       if (!$('order').hidden) syncOrder();
     }
   });
-  $('ordClose').addEventListener('click', function(){ $('order').hidden = true; order.trial = false; document.querySelectorAll('.pkg, #trial').forEach(function(x){ x.setAttribute('aria-pressed', 'false'); }); });
+  $('ordClose').addEventListener('click', function(){ $('order').hidden = true; pill.classList.remove('show'); order.trial = false; document.querySelectorAll('.pkg, #trial').forEach(function(x){ x.setAttribute('aria-pressed', 'false'); }); });
   $('order').addEventListener('input', function(){ $('ordText').value = orderText(); var u = $('ordUrl').value.trim(); var h = $('ordUrl').nextElementSibling; if (u){ h.textContent = /^https?:\/\//i.test(u) ? 'Отлично, по ссылке посмотрим фото и сразу скажем, что можно улучшить.' : 'Ссылка должна начинаться с https://'; h.classList.toggle('warn', !/^https?:\/\//i.test(u)); } });
   function send(kind){
     var u = $('ordUrl').value.trim();
