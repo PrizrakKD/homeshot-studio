@@ -6,7 +6,7 @@ chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   if (msg.type === 'open-options') { chrome.runtime.openOptionsPage(); return false; }
-  const run = msg.type === 'scan' ? scan(msg.urls) : msg.type === 'send' ? send(msg) : msg.type === 'settings' ? settings() : msg.type === 'quality' ? quality(msg.url) : msg.type === 'leads' ? saveLeads(msg.leads) : msg.type === 'match' ? match(msg.url, msg.urls) : null;
+  const run = msg.type === 'scan' ? scan(msg.urls) : msg.type === 'send' ? send(msg) : msg.type === 'settings' ? settings() : msg.type === 'quality' ? quality(msg.url) : msg.type === 'leads' ? saveLeads(msg.leads) : msg.type === 'match' ? match(msg.url, msg.urls) : msg.type === 'leadCheck' ? leadCheck(msg.id) : msg.type === 'sendToLead' ? sendToLead(msg) : null;
   if (!run) return false;
   run.then(r => reply({ ok: true, ...r }), e => reply({ ok: false, error: e.message || String(e) }));
   return true;
@@ -132,6 +132,7 @@ async function commitFiles(s, files, message) {
   const commit = await gh(s, `/git/commits/${head}`);
   const tree = [];
   for (const f of files) {
+    if (f.del) { tree.push({ path: f.path, mode: '100644', type: 'blob', sha: null }); continue; }
     const b = await gh(s, '/git/blobs', { method: 'POST', body: { content: f.b64, encoding: 'base64' } });
     tree.push({ path: f.path, mode: '100644', type: 'blob', sha: b.sha });
   }
@@ -160,6 +161,54 @@ async function saveLeads(list) {
   }
   await commitFiles(s, files, list.length === 1 ? `Лид: ${list[0].title}` : `Лиды: ${list.length} шт.`);
   return {};
+}
+
+// ---- full-size photos from the listing page into an existing lead ----
+async function leadRepo(s, id) {
+  const r = await fetch(`https://api.github.com/repos/${s.owner}/${s.repo}/contents/leads/${id}.json?ref=${s.branch}`, {
+    headers: { Authorization: 'Bearer ' + s.token, Accept: 'application/vnd.github+json' }, cache: 'no-store'
+  });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error('GitHub: ' + r.status);
+  const j = await r.json();
+  const bytes = Uint8Array.from(atob(j.content.replace(/\n/g, '')), c => c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+async function leadCheck(id) {
+  const s = await chrome.storage.local.get({ ...DEFAULTS, hs_leads: {} });
+  if (!s.token || !id) return { lead: null };
+  const repo = await leadRepo(s, id).catch(() => null);
+  if (repo) return { lead: 'repo', full: (repo.fullFiles || []).length };
+  return { lead: s.hs_leads[id] ? 'local' : null };
+}
+async function sendToLead({ id, urls }) {
+  const s = await chrome.storage.local.get({ ...DEFAULTS, hs_leads: {} });
+  if (!s.token) throw new Error('Сначала укажите GitHub-токен в настройках расширения.');
+  let lead = await leadRepo(s, id);
+  const local = s.hs_leads[id];
+  if (!lead && local) { const { state, ...rest } = local; lead = { ...rest, status: 'new', sent: new Date().toISOString() }; }
+  if (!lead) throw new Error('Это объявление не в лидах.');
+  const gallery = (lead.gallery || []).slice(), files = (lead.photoFiles || []).slice(), full = (lead.fullFiles || []).slice();
+  const refs = await pool(gallery, 4, load);
+  const out = [];
+  for (const url of urls) {
+    const it = await load(url);
+    let k = -1, bd = 99;
+    refs.forEach((g, i) => { if (!g) return; const d = dist(g.hash, it.hash); if (d < bd) { bd = d; k = i; } });
+    if (bd > 12) { k = Math.max(gallery.length, files.length); gallery[k] = url; }
+    const path = `leads/${id}/${String(k + 1).padStart(2, '0')}-full.jpg`;
+    out.push({ path, b64: await toJpegB64(it.blob) });
+    const old = files[k]; files[k] = path;
+    if (old && old !== path && /-full\.jpg$/.test(old)) out.push({ path: old, del: true });
+    const fi = full.indexOf(old); if (fi >= 0) full.splice(fi, 1);
+    if (!full.includes(path)) full.push(path);
+  }
+  for (let i = 0; i < gallery.length; i++) if (gallery[i] == null) gallery[i] = '';
+  const data = { ...lead, gallery, photoFiles: files, fullFiles: full, updated: new Date().toISOString() };
+  out.push({ path: `leads/${id}.json`, b64: textB64(JSON.stringify(data, null, 2) + '\n') });
+  await commitFiles(s, out, `Лид: полноразмерные фото (${urls.length}): ${lead.title}`);
+  if (local) { s.hs_leads[id] = { ...local, state: 'sent' }; await chrome.storage.local.set({ hs_leads: s.hs_leads }); }
+  return { admin: `https://${s.owner.toLowerCase()}.github.io/${s.repo}/admin.html`, count: urls.length };
 }
 
 // Admin "take this photo": find the gallery photo on the listing page that matches the lead photo.

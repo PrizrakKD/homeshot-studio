@@ -128,8 +128,13 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .lv-nav:hover{background:var(--gold);color:var(--ink)}
 .lv-nav.prev{left:16px}.lv-nav.next{right:16px}
 .lv-nav[disabled]{opacity:0;pointer-events:none}
-.lv-n{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(20,17,15,.8);color:var(--fg)}
+.lv-n{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(20,17,15,.8);color:var(--fg)}
 .lv-thumbs{display:flex;gap:8px;padding:0 16px 16px;overflow-x:auto;justify-content:center}
+.rdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7FD18B;box-shadow:0 0 0 2px rgba(20,17,15,.85);margin-right:6px;vertical-align:1px}
+.lv-thumbs button{position:relative;}
+.lv-thumbs button .rdot{position:absolute;top:5px;right:5px;margin:0;z-index:1}
+.lead-th{position:relative;flex-shrink:0;line-height:0}
+.lead-th .rdot{position:absolute;top:6px;right:6px;margin:0}
 .lv-thumbs button{flex-shrink:0;width:74px;height:56px;border-radius:6px;overflow:hidden;border:2px solid transparent;padding:0;background:var(--surface);cursor:pointer;opacity:.6}
 .lv-thumbs button[aria-current=true]{border-color:var(--gold);opacity:1}
 .lv-thumbs img{width:100%;height:100%;object-fit:cover;display:block}
@@ -159,6 +164,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .lchips{display:flex;flex-wrap:wrap;gap:4px}
 .lchips span{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--surface);color:var(--muted)}
 .lchips span.x{color:var(--err)}
+.lchips span.ok{color:var(--fg)}
 .lsc{min-width:38px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:800;background:var(--surface);color:var(--muted);flex-shrink:0}
 .lsc.hot{background:var(--gold);color:var(--ink)}
 .lead-it select{height:36px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 13px var(--f);padding:0 10px;flex-shrink:0}
@@ -340,10 +346,10 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     <div class="lchips" id="lvChips"></div>
     <div class="field"><label for="lvStatus">Статус</label><select id="lvStatus"></select></div>
     <div class="lv-acts">
-      <button type="button" class="btn btn-primary" id="lvTake">Взять это фото в работу</button>
+      <button type="button" class="btn btn-primary" id="lvTake">Загрузить в полном размере</button>
       <a class="btn btn-ghost" id="lvOpen" target="_blank" rel="noopener">Открыть на Авито ↗</a>
     </div>
-    <p class="hint" id="lvHint">Откроется объявление, расширение само отметит выбранное фото в полном размере. Останется нажать «Отправить в Homeshot».</p>
+    <p class="hint" id="lvHint">Откроется объявление, расширение само отметит это фото. Нажмите «Заменить в лиде», и сюда загрузится полный размер, слот получит зелёную точку «готово к генерации».</p>
     <div class="lv-desc" id="lvDesc"></div>
   </aside>
 </div>
@@ -1039,10 +1045,11 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     $('leadsList').innerHTML = arr.map(function(l){
       var i = leadsData.indexOf(l), st = l.status || 'new';
       var th = (l.photoFiles && l.photoFiles[0]) ? rawUrl(l.photoFiles[0]) : l.cover;
-      return '<div class="lead-it">' + (th ? '<img class="open" data-lview="' + i + '" src="' + esc(th) + '" alt="Открыть объявление крупно" loading="lazy" referrerpolicy="no-referrer">' : '<img alt="">') +
+      var nFull = (l.fullFiles || []).length;
+      return '<div class="lead-it"><span class="lead-th">' + (th ? '<img class="open" data-lview="' + i + '" src="' + esc(th) + '" alt="Открыть объявление крупно" loading="lazy" referrerpolicy="no-referrer">' : '<img alt="">') + (nFull ? '<i class="rdot" title="Есть фото в полном размере"></i>' : '') + '</span>' +
         '<div class="t"><div><button type="button" class="lt" data-lview="' + i + '">' + esc(l.title) + '</button><a class="ext" href="' + esc(l.url) + '" target="_blank" rel="noopener" title="Открыть на Авито">Авито ↗</a></div>' +
         '<small>' + Number(l.price || 0).toLocaleString('ru-RU') + ' ₽/мес · ' + esc(l.addr || '') + (l.sellerName ? ' · ' + esc(l.sellerName) : '') + (l.photos != null ? ' · ' + l.photos + ' фото' : '') + '</small>' +
-        '<div class="lchips">' + (l.why || []).map(function(w){ return '<span>' + esc(w) + '</span>'; }).join('') + (l.bad || []).map(function(w){ return '<span class="x">' + esc(w) + '</span>'; }).join('') + '</div></div>' +
+        '<div class="lchips">' + (nFull ? '<span class="ok"><i class="rdot"></i>готово к генерации: ' + nFull + '</span>' : '') + (l.why || []).map(function(w){ return '<span>' + esc(w) + '</span>'; }).join('') + (l.bad || []).map(function(w){ return '<span class="x">' + esc(w) + '</span>'; }).join('') + '</div></div>' +
         '<span class="lsc' + (l.score >= 55 ? ' hot' : '') + '" title="Оценка расширения">' + l.score + '</span>' +
         '<select data-lst="' + i + '" aria-label="Статус">' + LST.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === st ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select>' +
         '<button type="button" class="del" data-ldel="' + i + '">Удалить</button></div>';
@@ -1053,13 +1060,15 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   function lvPics(l){
     var src = (l.gallery && l.gallery.length) ? l.gallery : (l.cover ? [l.cover] : []);
     var files = l.photoFiles || [];
-    return src.map(function(u, k){ return { show: files[k] ? rawUrl(files[k]) : u, avito: u }; });
+    var full = l.fullFiles || [], n = Math.max(src.length, files.length), out = [];
+    for (var k = 0; k < n; k++){ var u = src[k] || ''; if (!u && !files[k]) continue; out.push({ show: files[k] ? rawUrl(files[k]) : u, avito: u, full: !!(files[k] && full.indexOf(files[k]) >= 0) }); }
+    return out;
   }
   function lvShow(k){
     if (!lv.pics.length){ $('lvImg').removeAttribute('src'); $('lvN').textContent = 'Нет фото'; return; }
     lv.i = Math.max(0, Math.min(lv.pics.length - 1, k));
     $('lvImg').src = lv.pics[lv.i].show; $('lvImg').alt = lv.l.title + ', фото ' + (lv.i + 1);
-    $('lvN').textContent = (lv.i + 1) + ' / ' + lv.pics.length + (lv.l.photos > lv.pics.length ? ' (всего в объявлении ' + lv.l.photos + ')' : '');
+    $('lvN').innerHTML = (lv.pics[lv.i].full ? '<i class="rdot"></i>Полный размер, готово к генерации · ' : 'Превью с выдачи · ') + (lv.i + 1) + ' / ' + lv.pics.length + (lv.l.photos > lv.pics.length ? ' (всего в объявлении ' + lv.l.photos + ')' : '');
     $('lvPrev').disabled = lv.i === 0; $('lvNext').disabled = lv.i === lv.pics.length - 1;
     [].forEach.call($('lvThumbs').children, function(b, j){ b.setAttribute('aria-current', String(j === lv.i)); });
   }
@@ -1072,7 +1081,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     $('lvStatus').innerHTML = LST.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === (l.status || 'new') ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('');
     $('lvStatus').dataset.lst = i;
     $('lvOpen').href = l.url; $('lvDesc').textContent = l.desc || '';
-    $('lvThumbs').innerHTML = lv.pics.map(function(p, k){ return '<button type="button" data-lvt="' + k + '" aria-label="Фото ' + (k + 1) + '"><img src="' + esc(p.show) + '" alt="" referrerpolicy="no-referrer"></button>'; }).join('');
+    $('lvThumbs').innerHTML = lv.pics.map(function(p, k){ return '<button type="button" data-lvt="' + k + '" aria-label="Фото ' + (k + 1) + (p.full ? ', полный размер' : '') + '"' + (p.full ? ' title="Полный размер, готово к генерации"' : '') + '>' + (p.full ? '<i class="rdot"></i>' : '') + '<img src="' + esc(p.show) + '" alt="" referrerpolicy="no-referrer"></button>'; }).join('');
     $('lvImg').setAttribute('referrerpolicy', 'no-referrer');
     $('leadView').hidden = false; document.body.style.overflow = 'hidden'; lvShow(0); $('lvClose').focus();
   }

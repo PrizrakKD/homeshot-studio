@@ -36,6 +36,9 @@
     .go[disabled]{opacity:.5;cursor:wait}
     .ln{height:40px;padding:0 14px;border:1px solid #2E2823;border-radius:999px;background:transparent;color:#B0A598;font:600 13px inherit;cursor:pointer}
     .muted{color:#8C8177;font-size:13px}
+    .note{margin:0 20px 4px;padding:10px 14px;border-radius:8px;background:rgba(214,168,112,.12);border:1px solid #8A6A45;color:#F2ECE4;font-size:13px;line-height:1.45}
+    .note b{color:#D6A870}
+    .btns{display:flex;gap:8px;align-items:center}
   </style>
   <button class="fab" type="button" hidden>
     <svg width="26" height="26" viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M8 31 L32 9 L56 31" stroke="#F2ECE4" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 42 V55 H25" stroke="#F2ECE4" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M39 55 H50 V42" stroke="#F2ECE4" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="38" r="6.5" fill="#D6A870"/></svg>
@@ -49,7 +52,8 @@
         <div class="row"><span class="muted" id="hs-count"></span> <button class="ln" type="button" id="hs-all">Выбрать все</button> <button class="ln" type="button" id="hs-none">Снять все</button></div>
         <div class="grid" id="hs-grid"></div>
       </div>
-      <div class="ft"><span class="msg" id="hs-msg" role="status"></span><button class="go" type="button" id="hs-go">Отправить в Homeshot</button></div>
+      <div class="note" id="hs-note" hidden></div>
+      <div class="ft"><span class="msg" id="hs-msg" role="status"></span><span class="btns"><button class="ln" type="button" id="hs-draft" hidden>В черновики</button><button class="go" type="button" id="hs-go">Отправить в Homeshot</button></span></div>
     </div>
   </div>`;
   document.documentElement.appendChild(host);
@@ -81,12 +85,23 @@
   }
   function text(sels) { for (const s of sels) { const el = document.querySelector(s); if (el && el.textContent.trim()) return el.textContent.trim().replace(/\s+/g, ' '); } return ''; }
 
+  const itemId = () => (location.pathname.replace(/\/$/, '').match(/_(\d{7,})$/) || [])[1];
+  let leadMode = null;
+  function setLeadMode(m, full) {
+    leadMode = m;
+    $('#hs-note').hidden = !m; $('#hs-draft').hidden = !m;
+    if (m) $('#hs-note').innerHTML = '<b>Это объявление есть в лидах.</b> Выбранные фото в полном размере заменят превью в лиде, в админке они будут отмечены точкой «готово к генерации».' + (full ? ' Уже загружено полноразмерных: ' + full + '.' : '');
+    go.textContent = m ? 'Заменить в лиде' : 'Отправить в Homeshot';
+  }
   fab.addEventListener('click', async () => {
-    ov.hidden = false; grid.innerHTML = ''; photos = []; count(); go.disabled = true;
+    ov.hidden = false; grid.innerHTML = ''; photos = []; count(); go.disabled = true; setLeadMode(null);
     $('#hs-title').value = text(['h1', '[itemprop="name"]']).slice(0, 120);
     const settings = await chrome.runtime.sendMessage({ type: 'settings' });
     if (!settings.configured) { say('', true, 'Укажите GitHub-токен в <a href="#" id="hs-opt">настройках расширения</a>, потом нажмите кнопку ещё раз.'); $('#hs-opt').onclick = e => { e.preventDefault(); chrome.runtime.sendMessage({ type: 'open-options' }); }; }
-    else say('Ищу фото на странице…');
+    else {
+      say('Ищу фото на странице…');
+      chrome.runtime.sendMessage({ type: 'leadCheck', id: itemId() }, r => { if (r && r.ok && r.lead) setLeadMode(r.lead, r.full); });
+    }
     const urls = collect();
     const r = await chrome.runtime.sendMessage({ type: 'scan', urls });
     if (!r.ok) { say('Не удалось загрузить фото: ' + r.error, true); return; }
@@ -109,9 +124,16 @@
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   root.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
 
+  $('#hs-draft').addEventListener('click', () => { setLeadMode(null); say('Фото уйдут в черновики, а не в лид.'); });
   go.addEventListener('click', async () => {
     const chosen = photos.filter(p => p.on).map(p => p.url);
     go.disabled = true; say(`Отправляю ${chosen.length} фото…`);
+    if (leadMode) {
+      const r = await chrome.runtime.sendMessage({ type: 'sendToLead', id: itemId(), urls: chosen });
+      if (!r.ok) { say(r.error, true); go.disabled = false; return; }
+      say('', false, `Готово: ${r.count} фото в полном размере в лиде. Смотрите в <a href="${r.admin}" target="_blank" rel="noopener">админке</a> через минуту.`);
+      return;
+    }
     const r = await chrome.runtime.sendMessage({
       type: 'send', urls: chosen, title: $('#hs-title').value.trim(),
       address: text(['[itemprop="address"]', '[data-marker="item-view/item-address"]', '[class*="style-item-address"]']),
