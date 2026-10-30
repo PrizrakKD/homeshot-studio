@@ -60,6 +60,10 @@
 
   function sync() { fab.hidden = !isItem(); }
   sync();
+  // Opened from the admin "take this photo" button: #homeshot-pick=<lead photo url>
+  let pickUrl = '';
+  const hm = location.hash.match(/homeshot-pick=([^&]+)/);
+  if (hm && isItem()) { pickUrl = decodeURIComponent(hm[1]); history.replaceState(null, '', location.pathname + location.search); setTimeout(() => fab.click(), 1500); }
   let last = location.href;
   setInterval(() => { if (location.href !== last) { last = location.href; sync(); } }, 1000);
 
@@ -87,8 +91,13 @@
     const r = await chrome.runtime.sendMessage({ type: 'scan', urls });
     if (!r.ok) { say('Не удалось загрузить фото: ' + r.error, true); return; }
     photos = r.photos.map(p => ({ ...p, on: false }));
+    if (pickUrl) {
+      const m = await chrome.runtime.sendMessage({ type: 'match', url: pickUrl, urls: photos.map(p => p.url) });
+      if (m && m.ok && m.index >= 0) photos[m.index].on = true;
+      pickUrl = '';
+    }
     if (!photos.length) { say('Фото не найдены. Пролистайте галерею объявления и попробуйте ещё раз.', true); return; }
-    grid.innerHTML = photos.map((p, i) => `<button type="button" class="ph" data-i="${i}" aria-pressed="false" aria-label="Фото ${i + 1}"><img src="${p.thumb}" alt=""><span class="ck"></span><span class="sz">${p.w}×${p.h}</span></button>`).join('');
+    grid.innerHTML = photos.map((p, i) => `<button type="button" class="ph" data-i="${i}" aria-pressed="${p.on}" aria-label="Фото ${i + 1}"><img src="${p.thumb}" alt=""><span class="ck"></span><span class="sz">${p.w}×${p.h}</span></button>`).join('');
     if (settings.configured) say('Отметьте фото для обработки и нажмите «Отправить».');
     count();
   });

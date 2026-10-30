@@ -6,7 +6,7 @@ chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   if (msg.type === 'open-options') { chrome.runtime.openOptionsPage(); return false; }
-  const run = msg.type === 'scan' ? scan(msg.urls) : msg.type === 'send' ? send(msg) : msg.type === 'settings' ? settings() : msg.type === 'quality' ? quality(msg.url) : msg.type === 'leads' ? saveLeads(msg.leads) : null;
+  const run = msg.type === 'scan' ? scan(msg.urls) : msg.type === 'send' ? send(msg) : msg.type === 'settings' ? settings() : msg.type === 'quality' ? quality(msg.url) : msg.type === 'leads' ? saveLeads(msg.leads) : msg.type === 'match' ? match(msg.url, msg.urls) : null;
   if (!run) return false;
   run.then(r => reply({ ok: true, ...r }), e => reply({ ok: false, error: e.message || String(e) }));
   return true;
@@ -143,9 +143,31 @@ async function commitFiles(s, files, message) {
 async function saveLeads(list) {
   const s = await chrome.storage.local.get(DEFAULTS);
   if (!s.token) throw new Error('Сначала укажите GitHub-токен в настройках расширения.');
-  const files = list.map(l => { const { state, ...rest } = l; return { path: `leads/${l.id}.json`, b64: textB64(JSON.stringify({ ...rest, status: 'new', sent: new Date().toISOString() }, null, 2) + '\n') }; });
+  const files = [];
+  for (const l of list) {
+    const { state, ...rest } = l;
+    const saved = [];
+    for (let i = 0; i < (l.gallery || []).length; i++) {
+      try {
+        const r = await fetch(l.gallery[i], { credentials: 'omit' });
+        if (!r.ok) continue;
+        const path = `leads/${l.id}/${String(i + 1).padStart(2, '0')}.jpg`;
+        files.push({ path, b64: await toJpegB64(await r.blob()) });
+        saved.push(path);
+      } catch (e) { /* skip photo */ }
+    }
+    files.push({ path: `leads/${l.id}.json`, b64: textB64(JSON.stringify({ ...rest, photoFiles: saved, status: 'new', sent: new Date().toISOString() }, null, 2) + '\n') });
+  }
   await commitFiles(s, files, list.length === 1 ? `Лид: ${list[0].title}` : `Лиды: ${list.length} шт.`);
   return {};
+}
+
+// Admin "take this photo": find the gallery photo on the listing page that matches the lead photo.
+async function match(url, urls) {
+  const ref = await load(url);
+  let best = -1, bd = 99;
+  urls.forEach((u, i) => { const it = cache.get(u); if (!it) return; const d = dist(ref.hash, it.hash); if (d < bd) { bd = d; best = i; } });
+  return { index: bd <= 12 ? best : -1 };
 }
 
 async function send({ urls, title, address, pageUrl }) {

@@ -34,8 +34,11 @@
     const done = /Нет завершённых/.test(sTxt) ? 0 : (sTxt.match(/(\d[\d\s]*)\s+завершённ/) ? num(sTxt.match(/(\d[\d\s]*)\s+завершённ/)[1]) : null);
     const company = !!el.querySelector('a[href*="/brands/"]') || /агентств|недвижимост|риелт|риэлт|realty|estate/i.test(seller ? seller.textContent : '');
     const href = tEl ? tEl.href.split('?')[0] : '';
+    const best = img => { const ss = (img.getAttribute('srcset') || '').split(',').map(x => x.trim().split(/\s+/)).filter(x => x[0]); ss.sort((a, b) => parseInt(b[1]) - parseInt(a[1])); return ss[0] ? ss[0][0] : (img.currentSrc || img.src || ''); };
+    const gallery = [...el.querySelectorAll('[data-marker^="slider-image/image-"]')].map(li => { const im = li.querySelector('img'); const u = im ? best(im) : ''; return /^https?:\/\/[^/]*img\.avito\.st\//.test(u) ? u : li.getAttribute('data-marker').replace('slider-image/image-', ''); });
+    const descEl = el.querySelector('meta[itemprop="description"]');
     const addr = (el.querySelector('[data-marker="item-address"]') || {}).textContent || '';
-    return { id, price, rooms: Number(rooms), area, ppm: price / area, title, photos, slides, cover, sellerName: seller ? seller.textContent.trim() : '', done, company, sellerKnown: !!seller, href, addr: addr.replace(/\s+/g, ' ').trim() };
+    return { id, price, rooms: Number(rooms), area, ppm: price / area, title, photos, slides, cover, sellerName: seller ? seller.textContent.trim() : '', done, company, sellerKnown: !!seller, href, addr: addr.replace(/\s+/g, ' ').trim(), gallery, desc: descEl ? descEl.content : '' };
   }
 
   function stats(d) {
