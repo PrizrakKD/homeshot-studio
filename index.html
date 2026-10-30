@@ -703,14 +703,16 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     var fr = f.getBoundingClientRect(), vh = innerHeight;
     var inView = fr.top < vh * .9 && fr.bottom > 0;
     var done = function(){
+      var h = $('ordPkg'); h.style.transformOrigin = 'left center'; if (inView && h.animate) h.animate([{ color: '#D6A870', transform: 'scale(1.05)' }, { transform: 'none' }], { duration: 700, easing: 'ease-out' });
       if (inView){ f.classList.remove('flash'); void f.offsetWidth; f.classList.add('flash'); }
       updPill(); if (!inView){ pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump'); }
     };
     if (reduce || !from.animate) return done();
     var br = from.getBoundingClientRect(), el = document.createElement('div'); el.className = 'fly'; el.textContent = label; document.body.appendChild(el);
     var sx = br.left + br.width / 2 - el.offsetWidth / 2, sy = br.top + br.height / 2 - el.offsetHeight / 2;
-    var tx = inView ? fr.left + fr.width / 2 - el.offsetWidth / 2 : innerWidth / 2 - el.offsetWidth / 2;
-    var ty = inView ? Math.min(fr.top + 30, vh - 60) : vh - 50;
+    var hr = $('ordPkg').getBoundingClientRect();
+    var tx = inView ? hr.left - el.offsetWidth * .15 : innerWidth / 2 - el.offsetWidth / 2;
+    var ty = inView ? Math.min(hr.top + hr.height / 2 - el.offsetHeight / 2, vh - 60) : vh - 50;
     el.style.left = sx + 'px'; el.style.top = sy + 'px';
     var dx = tx - sx, dy = ty - sy;
     el.animate([
