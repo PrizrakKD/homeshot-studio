@@ -11,8 +11,13 @@
     :host{all:initial}
     [hidden]{display:none!important}
     *{box-sizing:border-box;font-family:Manrope,"Segoe UI",system-ui,sans-serif}
-    .fab{position:fixed;right:20px;bottom:20px;display:flex;align-items:center;gap:10px;height:52px;padding:0 20px 0 14px;border:0;border-radius:999px;background:#14110F;color:#F2ECE4;font:600 15px/1 inherit;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+    .fab{position:fixed;display:flex;touch-action:none;user-select:none;transition:left .25s cubic-bezier(.2,.8,.2,1),top .25s cubic-bezier(.2,.8,.2,1),background .15s;align-items:center;gap:10px;height:52px;padding:0 20px 0 14px;border:0;border-radius:999px;background:#14110F;color:#F2ECE4;font:600 15px/1 inherit;cursor:pointer;box-shadow:0 6px 24px rgba(0,0,0,.35)}
     .fab:hover{background:#2a241f}
+    .fab.drag{transition:none;cursor:grabbing;box-shadow:0 12px 36px rgba(0,0,0,.5)}
+    .fab .grip{display:flex;flex-direction:column;gap:3px;margin-left:4px;opacity:.45}
+    .fab .grip i{display:block;width:3px;height:3px;border-radius:50%;background:#F2ECE4;box-shadow:5px 0 0 #F2ECE4}
+    .snap{position:fixed;width:64px;height:64px;border-radius:50%;border:2px dashed rgba(214,168,112,.7);pointer-events:none;display:none}
+    .snap.on{display:block}
     .fab:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #D6A870;outline-offset:2px}
     .ov{position:fixed;inset:0;background:rgba(10,8,7,.72);display:flex;align-items:center;justify-content:center;padding:16px}
     .dlg{width:min(980px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;background:#1C1815;color:#F2ECE4;border:1px solid #2E2823;border-radius:10px;overflow:hidden}
@@ -43,7 +48,9 @@
   <button class="fab" type="button" hidden>
     <svg width="26" height="26" viewBox="0 0 64 64" fill="none" aria-hidden="true"><path d="M8 31 L32 9 L56 31" stroke="#F2ECE4" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 42 V55 H25" stroke="#F2ECE4" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M39 55 H50 V42" stroke="#F2ECE4" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="38" r="6.5" fill="#D6A870"/></svg>
     В Homeshot
+    <span class="grip" title="Перетащите в любой угол" aria-hidden="true"><i></i><i></i><i></i></span>
   </button>
+  <div class="snap" aria-hidden="true"></div><div class="snap" aria-hidden="true"></div><div class="snap" aria-hidden="true"></div><div class="snap" aria-hidden="true"></div>
   <div class="ov" hidden role="dialog" aria-modal="true" aria-label="Homeshot: выбор фото">
     <div class="dlg">
       <div class="hd"><b>Фото из объявления</b><button class="x" type="button" aria-label="Закрыть">×</button></div>
@@ -115,6 +122,43 @@
     if (m) $('#hs-note').innerHTML = '<b>Это объявление есть в лидах.</b> Выбранные фото в полном размере заменят превью в лиде, в админке они будут отмечены точкой «готово к генерации».' + (full ? ' Уже загружено полноразмерных: ' + full + '.' : '');
     go.textContent = m ? 'Заменить в лиде' : 'Отправить в Homeshot';
   }
+  // ---- draggable button: snaps to the nearest page corner, remembered between pages ----
+  const M = 20, CORNERS = ['br', 'bl', 'tr', 'tl'];
+  let corner = 'br', dragged = false;
+  function cornerXY(c) {
+    const w = fab.offsetWidth, h = fab.offsetHeight;
+    return { x: c[1] === 'l' ? M : innerWidth - w - M, y: c[0] === 't' ? M + 60 : innerHeight - h - M };
+  }
+  function place(c) { corner = c; const p = cornerXY(c); fab.style.left = p.x + 'px'; fab.style.top = p.y + 'px'; }
+  chrome.storage.local.get({ hs_fab_corner: 'br' }, r => place(CORNERS.includes(r.hs_fab_corner) ? r.hs_fab_corner : 'br'));
+  addEventListener('resize', () => place(corner));
+  new ResizeObserver(() => place(corner)).observe(fab);
+  const snaps = [...root.querySelectorAll('.snap')];
+  fab.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    const r = fab.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top, sx = e.clientX, sy = e.clientY;
+    dragged = false;
+    const move = ev => {
+      if (!dragged && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
+      if (!dragged) {
+        dragged = true; fab.classList.add('drag'); fab.setPointerCapture(e.pointerId);
+        CORNERS.forEach((c, i) => { const p = cornerXY(c); Object.assign(snaps[i].style, { left: p.x + fab.offsetWidth / 2 - 32 + 'px', top: p.y + fab.offsetHeight / 2 - 32 + 'px' }); snaps[i].classList.add('on'); });
+      }
+      fab.style.left = Math.max(0, Math.min(innerWidth - fab.offsetWidth, ev.clientX - dx)) + 'px';
+      fab.style.top = Math.max(0, Math.min(innerHeight - fab.offsetHeight, ev.clientY - dy)) + 'px';
+    };
+    const up = ev => {
+      removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+      if (!dragged) return;
+      fab.classList.remove('drag'); snaps.forEach(x => x.classList.remove('on'));
+      const cx = ev.clientX, cy = ev.clientY;
+      const c = (cy < innerHeight / 2 ? 't' : 'b') + (cx < innerWidth / 2 ? 'l' : 'r');
+      place(c); chrome.storage.local.set({ hs_fab_corner: c });
+    };
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+  });
+  fab.addEventListener('click', e => { if (dragged) { e.stopImmediatePropagation(); dragged = false; } }, true);
+
   fab.addEventListener('click', async () => {
     ov.hidden = false; grid.innerHTML = ''; photos = []; count(); go.disabled = true; setLeadMode(null);
     $('#hs-title').value = text(['h1', '[itemprop="name"]']).slice(0, 120);
