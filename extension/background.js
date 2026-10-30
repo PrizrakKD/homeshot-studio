@@ -6,7 +6,7 @@ chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   if (msg.type === 'open-options') { chrome.runtime.openOptionsPage(); return false; }
-  const run = msg.type === 'scan' ? scan(msg.urls) : msg.type === 'send' ? send(msg) : msg.type === 'settings' ? settings() : null;
+  const run = msg.type === 'scan' ? scan(msg.urls) : msg.type === 'send' ? send(msg) : msg.type === 'settings' ? settings() : msg.type === 'quality' ? quality(msg.url) : msg.type === 'lead' ? saveLead(msg.lead) : null;
   if (!run) return false;
   run.then(r => reply({ ok: true, ...r }), e => reply({ ok: false, error: e.message || String(e) }));
   return true;
@@ -105,6 +105,47 @@ async function gh(s, path, opts = {}) {
 function slug(s) {
   const TR = { а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'c',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya' };
   return (s || '').toLowerCase().split('').map(c => TR[c] ?? c).join('').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32) || 'avito';
+}
+
+// Cover photo check for the scout. Pixel statistics separate only robust cases (dark, vertical);
+// whether photos are really "good" is judged later by a person or Claude.
+const qcache = new Map();
+async function quality(url) {
+  if (qcache.has(url)) return { q: qcache.get(url) };
+  const r = await fetch(url, { credentials: 'omit' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const bmp = await createImageBitmap(await r.blob());
+  const k = 160 / Math.max(bmp.width, bmp.height), w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k));
+  const c = new OffscreenCanvas(w, h), g = c.getContext('2d'); g.drawImage(bmp, 0, 0, w, h);
+  const vertical = bmp.height > bmp.width * 1.1; bmp.close();
+  const d = g.getImageData(0, 0, w, h).data; let sum = 0; const n = w * h;
+  for (let i = 0; i < d.length; i += 4) sum += d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+  const mean = sum / n;
+  const q = { mean: Math.round(mean), dark: mean < 105, vertical };
+  qcache.set(url, q);
+  return { q };
+}
+
+async function commitFiles(s, files, message) {
+  const ref = await gh(s, `/git/ref/heads/${s.branch}`);
+  const head = ref.object.sha;
+  const commit = await gh(s, `/git/commits/${head}`);
+  const tree = [];
+  for (const f of files) {
+    const b = await gh(s, '/git/blobs', { method: 'POST', body: { content: f.b64, encoding: 'base64' } });
+    tree.push({ path: f.path, mode: '100644', type: 'blob', sha: b.sha });
+  }
+  const t = await gh(s, '/git/trees', { method: 'POST', body: { base_tree: commit.tree.sha, tree } });
+  const c = await gh(s, '/git/commits', { method: 'POST', body: { message, tree: t.sha, parents: [head] } });
+  await gh(s, `/git/refs/heads/${s.branch}`, { method: 'PATCH', body: { sha: c.sha } });
+}
+
+async function saveLead(lead) {
+  const s = await chrome.storage.local.get(DEFAULTS);
+  if (!s.token) throw new Error('Сначала укажите GitHub-токен в настройках расширения.');
+  const data = { ...lead, status: 'new' };
+  await commitFiles(s, [{ path: `leads/${lead.id}.json`, b64: textB64(JSON.stringify(data, null, 2) + '\n') }], `Лид: ${lead.title}`);
+  return {};
 }
 
 async function send({ urls, title, address, pageUrl }) {
