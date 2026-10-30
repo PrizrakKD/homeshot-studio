@@ -12,7 +12,8 @@
     "https://c60.img.avito.st/image/1/1.7RQZNba_Qf0PleP8Tx6cb-2WR_u7kEH73PVL9w-V4_yvlg.eXYLuLmNLu7rFZowoeSEGxlf9wzfXxyHUvMg-1pRQOY",
     "https://c80.img.avito.st/image/1/1.QRFPx7a_7fhZZ0_5QbYwartk6_7tYu3-igfn8llnT_n5ZA.S87IxAhhDbaoQF0Hm_UyzNxcVqg9zeAHQZAt8W3F-cs",
     "https://b50.img.avito.st/image/1/1.RB0o07a_6PQ-c0r1LPJCQLZw7vKKdujy7RPi_j5zSvWecA.mOlFaAglM3w88AyvhkjLoaGVHjk5yMAS1Ab2Wu7Cwcc",
-    "https://b30.img.avito.st/image/1/1.pw4JSLa_C-cf6KnmS2LWdf3rDeGr7QvhzIgB7R_oqea_6w.-Q3btF6qyTx2udLYpFydc-d7C6wzNcQIj_kU0EpGW0w?cqp=2.6_1L9vhKD2uBLt-qyrAoZheVsuS8u7cVFre6r7a9jrN4_pCIDjlm5anolzs-MLkTK_L9899P2epdVNs="
+    "https://b30.img.avito.st/image/1/1.pw4JSLa_C-cf6KnmS2LWdf3rDeGr7QvhzIgB7R_oqea_6w.-Q3btF6qyTx2udLYpFydc-d7C6wzNcQIj_kU0EpGW0w?cqp=2.6_1L9vhKD2uBLt-qyrAoZheVsuS8u7cVFre6r7a9jrN4_pCIDjlm5anolzs-MLkTK_L9899P2epdVNs=",
+    "https://b10.img.avito.st/image/1/1.CIJRrLa5pGtnGyZmTYwO388PomHlj7Lp6A-mb-0Frmk.P5w3trnOljs5JN29gHlFlTzUUcr5E1rgJmscZNFLr0s?cqp=2.YN7dHnrK-mhyvtTBpyubvaFoUVdTM3W7BFy5YaeXzZ_Q2glMrBb_s4irqaJhHlfJPgeDGUqVXQ=="
   ],
   "href": "https://www.avito.ru/kaliningrad/kvartiry/1-k._kvartira_366_m_69_et._1262179365",
   "id": "1262179365",
@@ -44,8 +45,13 @@
     "leads/1262179365/02.jpg",
     "leads/1262179365/03.jpg",
     "leads/1262179365/04.jpg",
-    "leads/1262179365/05.jpg"
+    "leads/1262179365/05.jpg",
+    "leads/1262179365/06-full.jpg"
   ],
   "status": "new",
-  "sent": "2026-10-30T14:37:27.570Z"
+  "sent": "2026-10-30T14:37:27.570Z",
+  "fullFiles": [
+    "leads/1262179365/06-full.jpg"
+  ],
+  "updated": "2026-10-30T14:52:04.488Z"
 }
