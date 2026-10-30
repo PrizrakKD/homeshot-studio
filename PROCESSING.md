@@ -25,7 +25,11 @@
 
 Для каждого такого фото `leads/<id>/NN-full.jpg`:
 1. Импортировать в Higgsfield по ссылке `https://raw.githubusercontent.com/PrizrakKD/homeshot-studio/main/leads/<id>/NN-full.jpg`.
-2. Сгенерировать 1 вариант с теми же настройками и правилами промпта, что для черновиков.
+2. Сгенерировать 1 вариант: `nano_banana_2_1`, `resolution: 2k`, `aspect_ratio: 1:1`. Промпт короткий и нейтральный:
+   «Professional real estate photo of this same <room>, interior design magazine style. Keep <главные предметы> where they are,
+   same shapes and colors. Wide-angle lens at eye level, straight vertical lines. Warm cozy light, even exposure. Tidy, one plant.
+   Photorealistic, empty room.» Не писать про водяной знак (watermark) и не начинать с «Transform the reference photo»:
+   с такими формулировками Higgsfield почти всегда отклоняет задачу как nsfw. Отклонённые задачи кредиты не списывают.
 3. Записать `leads/<id>/remote.json`: `{"items": {"leads/<id>/NN-full.jpg": "url"}}`.
 4. Закоммитить и запушить. Action «Обработать черновики» скачает картинку в `leads/<id>/NN-gen.jpg`,
    впишет её в `gen` лида и удалит `remote.json`.
