@@ -37,7 +37,7 @@ jobs:
         run: |
           git config user.name "homeshot-bot"
           git config user.email "homeshot-bot@users.noreply.github.com"
-          git add -A drafts leads
+          git add -A
           if git diff --cached --quiet; then echo "Нечего сохранять"; exit 0; fi
           git commit -m "Черновики: результаты генерации"
           for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin main && exit 0; sleep 5; done
