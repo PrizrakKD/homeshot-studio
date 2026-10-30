@@ -119,6 +119,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .collapse{width:36px;height:36px;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s}
 .collapse:hover{color:var(--fg);border-color:var(--gold)}
 .draft.coll .collapse{transform:rotate(-90deg)}
+.witem:not(.open) .wtog{transform:rotate(-90deg)}
 .dinfo{flex:1;min-width:180px}
 .dinfo b{display:block;font-weight:600;overflow-wrap:anywhere}
 .dinfo small{display:block;color:var(--dim);font-size:12px}
@@ -395,11 +396,11 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       var heroDir = cfgData.hero && ws.some(function(w){ return w.dir === cfgData.hero; }) ? cfgData.hero : ws[0].dir;
       var testDir = cfgData.test && ws.some(function(w){ return w.dir === cfgData.test; }) ? cfgData.test : ws.slice().sort(function(x, y){ return (y.count || 1) - (x.count || 1); })[0].dir;
       list.innerHTML = ws.map(function(w, i){
-        return '<div class="witem" data-wi="' + i + '"><div class="item"><span class="grip" draggable="true" data-wdrag="' + i + '" title="Перетащите, чтобы поменять порядок на сайте" aria-hidden="true">⋮⋮</span>' + (w.thumb ? '<img src="' + esc(w.thumb) + '" alt="" loading="lazy">' : '<img alt="">') +
+        return '<div class="witem" data-wi="' + i + '"><div class="item"><span class="grip" draggable="true" data-wdrag="' + i + '" title="Перетащите, чтобы поменять порядок на сайте" aria-hidden="true">⋮⋮</span>' +
+          '<button type="button" class="collapse wtog" data-edit="' + i + '" aria-expanded="false" aria-label="Редактировать: ' + esc(w.title) + '" title="Редактировать">' + CHEV + '</button>' + (w.thumb ? '<img src="' + esc(w.thumb) + '" alt="" loading="lazy">' : '<img alt="">') +
           '<div class="t"><b>' + (w.source ? '<a href="' + esc(w.source) + '" target="_blank" rel="noopener" title="Открыть объявление клиента">' + esc(w.title) + ' ↗</a>' : esc(w.title)) + '</b><small>' + esc(w.sub || 'Без подписи') + (w.count > 1 ? ' · ' + w.count + ' пары фото' : '') + '</small></div>' +
           '<div class="feat-btns"><button type="button" class="del feat" data-feat="hero" data-i="' + i + '" aria-pressed="' + (w.dir === heroDir) + '" title="Показывать в шапке сайта">' + (w.dir === heroDir ? '★ ' : '') + 'В шапке</button>' +
           '<button type="button" class="del feat" data-feat="test" data-i="' + i + '" aria-pressed="' + (w.dir === testDir) + '" title="Показывать в блоке «Простой тест»">' + (w.dir === testDir ? '★ ' : '') + 'В тесте</button></div>' +
-          '<button type="button" class="del edit" data-edit="' + i + '">Изменить</button>' +
           '<button type="button" class="del" data-i="' + i + '">Удалить</button></div>' +
           '<form class="wedit" data-i="' + i + '" hidden><div class="fields">' +
             '<div class="field"><label for="e-title-' + i + '">Название</label><input type="text" id="e-title-' + i + '" value="' + esc(w.title) + '" required></div>' +
@@ -463,10 +464,13 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     }
     if (e.target.closest('[data-pzoom],[data-pcrop],[data-pmv],[data-prm],[data-ph]')) return;
     var ed = e.target.closest('[data-edit]'), cn = e.target.closest('[data-cancel]');
+    var closeI = cn ? cn.dataset.cancel : null;
+    if (ed && ed.closest('.witem').classList.contains('open')){ closeI = ed.dataset.edit; cn = ed; ed = null; }
     if (ed){ var ew = works[+ed.dataset.edit]; ew.editPairs = ew.pairs.map(function(p){ return { before: p.before, after: p.after }; }); if (PCTX['w|' + ed.dataset.edit]) PCTX['w|' + ed.dataset.edit].pend = {}; renderPairEditor(+ed.dataset.edit); (function(i){ works[i].editVideos = (works[i].videos || []).slice(); VCTX['w|' + i] = { get: function(){ return works[i].editVideos; }, render: function(){ renderVids('w|' + i); } }; renderVids('w|' + i); })(+ed.dataset.edit); }
     if (ed || cn){
-      var form = $('list').querySelector('.wedit[data-i="' + (ed ? ed.dataset.edit : cn.dataset.cancel) + '"]');
+      var form = $('list').querySelector('.wedit[data-i="' + (ed ? ed.dataset.edit : closeI) + '"]');
       form.hidden = !!cn; if (ed){ form.hidden = false; form.querySelector('input').focus(); }
+      var wi = form.closest('.witem'); wi.classList.toggle('open', !cn); var tg = wi.querySelector('.wtog'); tg.setAttribute('aria-expanded', String(!cn));
       return;
     }
     var b = e.target.closest('.del[data-i]'); if (!b) return;
