@@ -43,10 +43,14 @@
   "photoFiles": [
     "leads/8117311666/01.jpg",
     "leads/8117311666/02.jpg",
-    "leads/8117311666/03.jpg",
+    "leads/8117311666/03-full.jpg",
     "leads/8117311666/04.jpg",
     "leads/8117311666/05.jpg"
   ],
   "status": "new",
-  "sent": "2026-10-30T14:37:28.393Z"
+  "sent": "2026-10-30T14:37:28.393Z",
+  "fullFiles": [
+    "leads/8117311666/03-full.jpg"
+  ],
+  "updated": "2026-10-30T14:45:24.504Z"
 }
