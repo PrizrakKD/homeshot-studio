@@ -29,5 +29,15 @@
   "added": "2026-10-30T07:20:14.473Z",
   "url": "https://www.avito.ru/kaliningrad/kvartiry/3-k._kvartira_75_m_56_et._8410241738",
   "source": "https://www.avito.ru/kaliningrad/kvartiry/sdam/na_dlitelnyy_srok-ASgBAgICAkSSA8gQ8AeQUg?context=H4sIAAAAAAAA_wEmANn_YToxOntzOjE6InkiO3M6MTY6ImxIaVdDTGNDTWRGaVRWQnQiO31rvAVDJgAAAA&s=104&user=1",
-  "status": "new"
+  "status": "new",
+  "gallery": [
+    "https://c60.img.avito.st/image/1/1.RrXqF7a46lzcoGhR6joD2uu36FpUtmhK3LvoXlq-4lZc.BXD_f80wsmAu0_a2ny5sq2G1SP8zgqKIhBo3zgsEBiI"
+  ],
+  "photoFiles": [
+    "leads/8410241738/01-full.jpg"
+  ],
+  "fullFiles": [
+    "leads/8410241738/01-full.jpg"
+  ],
+  "updated": "2026-10-30T10:52:01.813Z"
 }
