@@ -1,0 +1,36 @@
+{
+  "added": "2026-10-30T07:34:48.387Z",
+  "addr": "ул. Николая Карамзина, 34р-н Московский",
+  "area": 42.9,
+  "bad": [],
+  "company": false,
+  "cover": "https://b00.img.avito.st/image/1/1.q5j_Kba-B3HpiaVwpU-ehf-IBXdNngNxTflme0EqBtNKigU.vy9Y0WOdKfepVZMpE098ggpMfNUFm7sel_RfPS9Pg3w?cqp=2.6_1L9vhKD2uBLt-qyrAoZheVsuS8u7cVFre6r7a9jrN4_pCIDjlm5anolzs-MLkTK_L9899P2epdVNs=",
+  "done": 2,
+  "href": "https://www.avito.ru/kaliningrad/kvartiry/1-k._kvartira_429_m_39_et._8332428224",
+  "id": "8332428224",
+  "photos": 7,
+  "ppm": 699.3006993006993,
+  "price": 30000,
+  "quality": {
+    "dark": false,
+    "mean": 139,
+    "vertical": false
+  },
+  "rel": 0.8084401147984963,
+  "rooms": 1,
+  "score": 55,
+  "sellerKnown": true,
+  "sellerName": "сергей",
+  "slides": 5,
+  "source": "https://www.avito.ru/kaliningrad/kvartiry/sdam/na_dlitelnyy_srok-ASgBAgICAkSSA8gQ8AeQUg?context=H4sIAAAAAAAA_wEmANn_YToxOntzOjE6InkiO3M6MTY6IlZLdkJlSDZvVHd6eDlWTGEiO30Q_1BFJgAAAA&p=2&s=104&user=1",
+  "title": "1-к. квартира, 42,9 м², 3/9 эт.",
+  "url": "https://www.avito.ru/kaliningrad/kvartiry/1-k._kvartira_429_m_39_et._8332428224",
+  "why": [
+    "7 фото",
+    "висит давно",
+    "цена в рынке",
+    "собственник"
+  ],
+  "status": "new",
+  "sent": "2026-10-30T07:35:06.391Z"
+}
