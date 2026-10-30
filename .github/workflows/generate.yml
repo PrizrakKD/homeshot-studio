@@ -3,7 +3,7 @@ name: Обработать черновики
 on:
   push:
     branches: [main]
-    paths: ['drafts/**']
+    paths: ['drafts/**', 'leads/*/remote.json']
   workflow_dispatch:
 
 permissions:
@@ -31,11 +31,13 @@ jobs:
           HF_PROMPT: ${{ vars.HF_PROMPT }}
           HF_VARIANTS: ${{ vars.HF_VARIANTS }}
         run: node scripts/generate.mjs
+      - name: Примеры для лидов
+        run: node scripts/leads-gen.mjs
       - name: Сохранить результаты
         run: |
           git config user.name "homeshot-bot"
           git config user.email "homeshot-bot@users.noreply.github.com"
-          git add -A drafts
+          git add -A drafts leads
           if git diff --cached --quiet; then echo "Нечего сохранять"; exit 0; fi
           git commit -m "Черновики: результаты генерации"
           for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin main && exit 0; sleep 5; done

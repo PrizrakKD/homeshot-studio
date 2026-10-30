@@ -64,6 +64,17 @@
 
   function sync() { fab.hidden = !isItem(); }
   sync();
+  // Opened from the admin "Написать сообщение" button: open the Avito chat with the seller.
+  if (/homeshot-write/.test(location.hash) && isItem()) {
+    history.replaceState(null, '', location.pathname + location.search);
+    let tries = 0;
+    const t = setInterval(() => {
+      const btn = document.querySelector('[data-marker="messenger-button/button"], [data-marker*="messenger"] button, a[data-marker*="messenger"]')
+        || [...document.querySelectorAll('button, a')].find(x => /^\s*Написать( сообщение)?\s*$/i.test(x.textContent || ''));
+      if (btn) { clearInterval(t); btn.click(); }
+      else if (++tries > 40) clearInterval(t);
+    }, 250);
+  }
   // Opened from the admin "take this photo" button: #homeshot-pick=<lead photo url>
   let pickUrl = '';
   const hm = location.hash.match(/homeshot-pick=([^&]+)/);

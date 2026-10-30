@@ -152,12 +152,38 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .lead-it .t button.lt{all:unset;cursor:pointer;color:var(--fg);font-weight:600}
 .lead-it .t button.lt:hover{color:var(--gold);text-decoration:underline}
 .lead-it .t a.ext{color:var(--dim);font-size:13px;margin-left:6px}
+.dd{position:relative;flex-shrink:0}
+.dd-b{height:36px;display:inline-flex;align-items:center;gap:8px;padding:0 12px 0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 13px var(--f);cursor:pointer;white-space:nowrap}
+.dd-b:hover,.dd.open .dd-b{border-color:var(--gold)}
+.dd-b svg{transition:transform .2s;color:var(--muted)}
+.dd.open .dd-b svg{transform:rotate(180deg)}
+.dd-m{position:absolute;right:0;top:calc(100% + 6px);z-index:30;min-width:180px;padding:6px;border-radius:10px;border:1px solid var(--line);background:var(--surface);box-shadow:0 12px 32px rgba(0,0,0,.5);display:grid;gap:2px}
+.dd-m button{display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;border:0;border-radius:6px;background:transparent;color:var(--fg);font:600 14px var(--f);text-align:left;cursor:pointer}
+.dd-m button:hover,.dd-m button:focus-visible{background:var(--bg);outline:none}
+.dd-m button[aria-selected=true]{color:var(--gold)}
+.dd-m button[aria-selected=true]::after{content:"✓";margin-left:auto}
+.sdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block}
+.s-new{background:#8C8177}.s-written{background:#6FA8DC}.s-replied{background:#7FD18B}.s-deal{background:#D6A870}.s-no{background:#E8907A}
+.lv-side .dd,.lv-side .dd-b{width:100%}.lv-side .dd-b{height:42px;justify-content:flex-start}.lv-side .dd-b svg{margin-left:auto}.lv-side .dd-m{left:0;right:0}
+.rdot.gen{background:#A78BFA}
+.lacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.lacts .mini{height:32px}
+.lacts .mini.pr{border-color:#A78BFA;color:#C9B8FF}
+.lv-mode{display:flex;justify-content:center;gap:6px;padding:0 16px 10px}
+.lv-mode button{height:32px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer}
+.lv-mode button[aria-pressed=true]{background:#A78BFA;border-color:#A78BFA;color:#14110F}
+.tpl{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--bg)}
+.tpl summary{cursor:pointer;font-weight:600;font-size:14px}
+.tpl textarea{width:100%;min-height:140px;margin-top:10px;padding:10px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:500 14px/1.5 var(--f);resize:vertical}
+.tpl .actions{margin-top:8px}
 .lfil{display:flex;flex-wrap:wrap;gap:6px}
 .lfil button{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer}
 .lfil button[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:var(--ink)}
-.lead-it{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);min-width:0}
+.lead-it{display:flex;flex-wrap:wrap;gap:14px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);min-width:0}
 .lead-it img{width:72px;height:72px;object-fit:cover;border-radius:6px;background:var(--surface);flex-shrink:0}
 .lead-it .t{flex:1;min-width:0;display:grid;gap:4px}
+.lead-it .lacts{padding-left:86px;margin-top:-4px}
+@media (max-width:640px){.lead-it .lacts{padding-left:0}}
 .lead-it .t a{color:var(--fg);font-weight:600;text-decoration:none}
 .lead-it .t a:hover{color:var(--gold);text-decoration:underline}
 .lead-it small{color:var(--dim)}
@@ -167,12 +193,12 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .lchips span.ok{color:var(--fg)}
 .lsc{min-width:38px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:800;background:var(--surface);color:var(--muted);flex-shrink:0}
 .lsc.hot{background:var(--gold);color:var(--ink)}
-.lead-it select{height:36px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 13px var(--f);padding:0 10px;flex-shrink:0}
+
 @media (max-width:640px){
   .lead-it{flex-wrap:wrap;gap:10px 12px}
   .lead-it .lead-th img{width:64px;height:64px}
   .lead-it .t{flex:1 1 calc(100% - 80px)}
-  .lead-it select{flex:1;min-width:0}
+  .lead-it .dd{flex:1;min-width:0}.lead-it .dd-b{width:100%}.lead-it .dd-b svg{margin-left:auto}
 }
 .card h2.sch{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
 .card h2.sch:hover .collapse{color:var(--fg);border-color:var(--gold)}
@@ -298,6 +324,11 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   <div id="app" hidden>
     <div class="card" id="leadsCard">
       <div class="dhead" style="align-items:flex-start"><div><h2>Лиды</h2><p class="hint">Объявления, отобранные расширением на выдаче Авито. Отмечайте, кому написали и кто ответил. Чтобы взять фото в работу, откройте объявление и нажмите «В Homeshot» в расширении.</p></div><button type="button" class="mini" id="leadsReload">Обновить</button></div>
+      <details class="tpl"><summary>Шаблон сообщения владельцу</summary>
+        <textarea id="leadTpl" aria-label="Шаблон сообщения"></textarea>
+        <p class="hint">Подстановки: {приветствие} (Здравствуйте, Имя! или просто Здравствуйте!), {адрес}, {квартира}, {цена}.</p>
+        <div class="actions"><button type="button" class="mini" id="leadTplSave">Сохранить шаблон</button><button type="button" class="mini" id="leadTplReset">Вернуть стандартный</button></div>
+      </details>
       <div class="lfil" role="group" aria-label="Фильтр по статусу" id="leadsFilter"></div>
       <div class="list" id="leadsList"><p class="hint">Загружаю…</p></div>
       <span class="status" id="leadsStatus" role="status"></span>
@@ -368,6 +399,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
 <div class="lv" id="leadView" hidden role="dialog" aria-modal="true" aria-labelledby="lvTitle">
   <div class="lv-stage">
     <div class="lv-img"><button type="button" class="lv-nav prev" id="lvPrev" aria-label="Предыдущее фото">‹</button><img id="lvImg" alt=""><button type="button" class="lv-nav next" id="lvNext" aria-label="Следующее фото">›</button><span class="lv-n" id="lvN"></span></div>
+    <div class="lv-mode" id="lvMode" hidden><button type="button" data-mode="src" aria-pressed="false">До</button><button type="button" data-mode="gen" aria-pressed="true">Пример после</button></div>
     <div class="lv-thumbs" id="lvThumbs"></div>
   </div>
   <aside class="lv-side">
@@ -376,9 +408,13 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     <div class="lv-price" id="lvPrice"></div>
     <div class="lv-meta" id="lvMeta"></div>
     <div class="lchips" id="lvChips"></div>
-    <div class="field"><label for="lvStatus">Статус</label><select id="lvStatus"></select></div>
+    <div class="field"><label>Статус</label><div id="lvStatus"></div></div>
+    <div class="lv-acts" id="lvGenActs" hidden>
+      <button type="button" class="btn btn-primary" id="lvDl">Скачать пример</button>
+      <button type="button" class="btn btn-ghost" id="lvWrite">Написать сообщение</button>
+    </div>
     <div class="lv-acts">
-      <button type="button" class="btn btn-primary" id="lvTake">Загрузить в полном размере</button>
+      <button type="button" class="btn btn-ghost" id="lvTake">Загрузить в полном размере</button>
       <a class="btn btn-ghost" id="lvOpen" target="_blank" rel="noopener">Открыть на Авито ↗</a>
     </div>
     <p class="hint" id="lvHint">Откроется объявление, расширение само отметит это фото. Нажмите «Заменить в лиде», и сюда загрузится полный размер, слот получит зелёную точку «готово к генерации».</p>
@@ -875,7 +911,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       if (!f) return;
       cfgSha = f.sha;
       var bytes = Uint8Array.from(atob(f.content.replace(/\n/g, '')), function(c){ return c.charCodeAt(0); });
-      var c = JSON.parse(new TextDecoder().decode(bytes)); cfgData = c; if (works.length) renderWorks();
+      var c = JSON.parse(new TextDecoder().decode(bytes)); cfgData = c; if (works.length) renderWorks(); fillTpl();
       $('c-phone').value = c.phone || ''; $('c-tg').value = c.telegram || ''; $('c-wa').value = c.whatsapp || ''; $('c-max').value = c.max || ''; $('c-email').value = c.email || '';
     }).catch(function(){});
   }
@@ -1078,14 +1114,15 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     $('leadsList').innerHTML = arr.map(function(l){
       var i = leadsData.indexOf(l), st = l.status || 'new';
       var th = (l.photoFiles && l.photoFiles[0]) ? rawUrl(l.photoFiles[0]) : l.cover;
-      var nFull = (l.fullFiles || []).length;
-      return '<div class="lead-it"><span class="lead-th">' + (th ? '<img class="open" data-lview="' + i + '" src="' + esc(th) + '" alt="Открыть объявление крупно" loading="lazy" referrerpolicy="no-referrer">' : '<img alt="">') + (nFull ? '<i class="rdot" title="Есть фото в полном размере"></i>' : '') + '</span>' +
+      var nFull = (l.fullFiles || []).length, nGen = genList(l).length;
+      return '<div class="lead-it"><span class="lead-th">' + (th ? '<img class="open" data-lview="' + i + '" src="' + esc(th) + '" alt="Открыть объявление крупно" loading="lazy" referrerpolicy="no-referrer">' : '<img alt="">') + (nGen ? '<i class="rdot gen" title="Пример готов"></i>' : nFull ? '<i class="rdot" title="Есть фото в полном размере"></i>' : '') + '</span>' +
         '<div class="t"><div><button type="button" class="lt" data-lview="' + i + '">' + esc(l.title) + '</button><a class="ext" href="' + esc(l.url) + '" target="_blank" rel="noopener" title="Открыть на Авито">Авито ↗</a></div>' +
         '<small>' + Number(l.price || 0).toLocaleString('ru-RU') + ' ₽/мес · ' + esc(l.addr || '') + (l.sellerName ? ' · ' + esc(l.sellerName) : '') + (l.photos != null ? ' · ' + l.photos + ' фото' : '') + '</small>' +
-        '<div class="lchips">' + (nFull ? '<span class="ok"><i class="rdot"></i>готово к генерации: ' + nFull + '</span>' : '') + (l.why || []).map(function(w){ return '<span>' + esc(w) + '</span>'; }).join('') + (l.bad || []).map(function(w){ return '<span class="x">' + esc(w) + '</span>'; }).join('') + '</div></div>' +
+        '<div class="lchips">' + (nGen ? '<span class="ok"><i class="rdot gen"></i>пример готов: ' + nGen + '</span>' : '') + (nFull > nGen ? '<span class="ok"><i class="rdot"></i>готово к генерации: ' + (nFull - nGen) + '</span>' : '') + (l.why || []).map(function(w){ return '<span>' + esc(w) + '</span>'; }).join('') + (l.bad || []).map(function(w){ return '<span class="x">' + esc(w) + '</span>'; }).join('') + '</div></div>' +
         '<span class="lsc' + (l.score >= 55 ? ' hot' : '') + '" title="Оценка расширения">' + l.score + '</span>' +
-        '<select data-lst="' + i + '" aria-label="Статус">' + LST.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === st ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select>' +
-        '<button type="button" class="del" data-ldel="' + i + '">Удалить</button></div>';
+        ddHtml(i, st) +
+        '<button type="button" class="del" data-ldel="' + i + '">Удалить</button>' +
+        (nGen ? '<div class="lacts" style="width:100%"><button type="button" class="mini pr" data-ldl="' + i + '">Скачать пример</button><button type="button" class="mini pr" data-lwrite="' + i + '">Написать сообщение</button></div>' : '') + '</div>';
     }).join('');
   }
   function rawUrl(path){ return 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/' + BRANCH + '/' + path; }
@@ -1094,14 +1131,17 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     var src = (l.gallery && l.gallery.length) ? l.gallery : (l.cover ? [l.cover] : []);
     var files = l.photoFiles || [];
     var full = l.fullFiles || [], n = Math.max(src.length, files.length), out = [];
-    for (var k = 0; k < n; k++){ var u = src[k] || ''; if (!u && !files[k]) continue; out.push({ show: files[k] ? rawUrl(files[k]) : u, avito: u, full: !!(files[k] && full.indexOf(files[k]) >= 0) }); }
+    for (var k = 0; k < n; k++){ var u = src[k] || ''; if (!u && !files[k]) continue; var g = files[k] && l.gen && l.gen[files[k]]; out.push({ show: files[k] ? rawUrl(files[k]) : u, avito: u, full: !!(files[k] && full.indexOf(files[k]) >= 0), gen: g ? rawUrl(g) : '', genPath: g || '', n: k + 1 }); }
     return out;
   }
   function lvShow(k){
     if (!lv.pics.length){ $('lvImg').removeAttribute('src'); $('lvN').textContent = 'Нет фото'; return; }
     lv.i = Math.max(0, Math.min(lv.pics.length - 1, k));
-    $('lvImg').src = lv.pics[lv.i].show; $('lvImg').alt = lv.l.title + ', фото ' + (lv.i + 1);
-    $('lvN').innerHTML = (lv.pics[lv.i].full ? '<i class="rdot"></i>Полный размер, готово к генерации · ' : 'Превью с выдачи · ') + (lv.i + 1) + ' / ' + lv.pics.length + (lv.l.photos > lv.pics.length ? ' (всего в объявлении ' + lv.l.photos + ')' : '');
+    var pc = lv.pics[lv.i], showGen = pc.gen && lv.mode === 'gen';
+    $('lvImg').src = showGen ? pc.gen : pc.show; $('lvImg').alt = lv.l.title + ', фото ' + (lv.i + 1) + (showGen ? ', пример после обработки' : '');
+    $('lvMode').hidden = !pc.gen;
+    [].forEach.call($('lvMode').children, function(b){ b.setAttribute('aria-pressed', String(b.dataset.mode === (showGen ? 'gen' : 'src'))); });
+    $('lvN').innerHTML = (pc.gen ? '<i class="rdot gen"></i>' + (showGen ? 'Пример после обработки · ' : 'Исходник · ') : pc.full ? '<i class="rdot"></i>Полный размер, готово к генерации · ' : 'Превью с выдачи · ') + (lv.i + 1) + ' / ' + lv.pics.length + (lv.l.photos > lv.pics.length ? ' (всего в объявлении ' + lv.l.photos + ')' : '');
     $('lvPrev').disabled = lv.i === 0; $('lvNext').disabled = lv.i === lv.pics.length - 1;
     [].forEach.call($('lvThumbs').children, function(b, j){ b.setAttribute('aria-current', String(j === lv.i)); });
   }
@@ -1111,10 +1151,10 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     $('lvScore').textContent = l.score; $('lvScore').className = 'lsc' + (l.score >= 55 ? ' hot' : '');
     $('lvMeta').innerHTML = [l.addr, l.sellerName ? 'Продавец: ' + l.sellerName + (l.done != null ? ' (' + l.done + ' заверш. объявл.)' : '') : '', l.photos != null ? 'Фото в объявлении: ' + l.photos : '', l.rel ? 'Цена к рынку: ' + (l.rel >= 1 ? '+' : '') + Math.round((l.rel - 1) * 100) + '%' : '', l.added ? 'Добавлен: ' + new Date(l.added).toLocaleDateString('ru-RU') : ''].filter(Boolean).map(function(x){ return '<span>' + esc(x) + '</span>'; }).join('');
     $('lvChips').innerHTML = (l.why || []).map(function(w){ return '<span>' + esc(w) + '</span>'; }).join('') + (l.bad || []).map(function(w){ return '<span class="x">' + esc(w) + '</span>'; }).join('');
-    $('lvStatus').innerHTML = LST.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === (l.status || 'new') ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('');
-    $('lvStatus').dataset.lst = i;
+    $('lvStatus').innerHTML = ddHtml(i, l.status || 'new');
+    $('lvGenActs').hidden = !genList(l).length; lv.mode = 'gen';
     $('lvOpen').href = l.url; $('lvDesc').textContent = l.desc || '';
-    $('lvThumbs').innerHTML = lv.pics.map(function(p, k){ return '<button type="button" data-lvt="' + k + '" aria-label="Фото ' + (k + 1) + (p.full ? ', полный размер' : '') + '"' + (p.full ? ' title="Полный размер, готово к генерации"' : '') + '>' + (p.full ? '<i class="rdot"></i>' : '') + '<img src="' + esc(p.show) + '" alt="" referrerpolicy="no-referrer"></button>'; }).join('');
+    $('lvThumbs').innerHTML = lv.pics.map(function(p, k){ return '<button type="button" data-lvt="' + k + '" aria-label="Фото ' + (k + 1) + (p.gen ? ', пример готов' : p.full ? ', полный размер' : '') + '"' + (p.gen ? ' title="Пример готов"' : p.full ? ' title="Полный размер, готово к генерации"' : '') + '>' + (p.gen ? '<i class="rdot gen"></i>' : p.full ? '<i class="rdot"></i>' : '') + '<img src="' + esc(p.show) + '" alt="" referrerpolicy="no-referrer"></button>'; }).join('');
     $('lvImg').setAttribute('referrerpolicy', 'no-referrer');
     $('leadView').hidden = false; document.body.style.overflow = 'hidden'; lvShow(0); $('lvClose').focus();
   }
@@ -1132,16 +1172,14 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     var p = lv.pics[lv.i]; if (!p) return;
     window.open(lv.l.url + '#homeshot-pick=' + encodeURIComponent(p.avito), '_blank', 'noopener');
   });
-  $('lvStatus').addEventListener('change', function(){
-    setLeadStatus(leadsData[+this.dataset.lst], this.value);
-  });
+  $('lvMode').addEventListener('click', function(e){ var b = e.target.closest('[data-mode]'); if (!b) return; lv.mode = b.dataset.mode; lvShow(lv.i); });
+  $('lvDl').addEventListener('click', function(){ var pc = lv.pics[lv.i]; downloadGen(lv.l, pc && pc.genPath ? pc.genPath : genList(lv.l)[0], this); });
+  $('lvWrite').addEventListener('click', function(){ writeLead(lv.l); });
   $('leadsList').addEventListener('click', function(e){ var o = e.target.closest('[data-lview]'); if (o) openLead(+o.dataset.lview, o); });
 
   $('leadsReload').addEventListener('click', function(){ status('leadsStatus', ''); loadLeads(); });
   $('leadsFilter').addEventListener('click', function(e){ var b = e.target.closest('[data-lf]'); if (!b) return; leadsFilter = b.dataset.lf; renderLeads(); });
   $('leadsList').addEventListener('change', function(e){
-    var sel = e.target.closest('[data-lst]'); if (!sel) return;
-    setLeadStatus(leadsData[+sel.dataset.lst], sel.value);
   });
   function setLeadStatus(l, val){
     var prev = l.status; l.status = val; l.updated = new Date().toISOString();
@@ -1149,8 +1187,79 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     var name = (LST.find(function(x){ return x[0] === val; }) || [0, val])[1];
     status('leadsStatus', 'Сохраняю…');
     return b64FromText(JSON.stringify(data, null, 2) + '\n').then(function(b){ return commit([{ path: l._path, b64: b }], 'Лид: ' + l.title + ' → ' + name); })
-      .then(function(){ status('leadsStatus', 'Статус сохранён.', 'ok'); renderLeads(); }, function(err){ l.status = prev; renderLeads(); status('leadsStatus', errText(err), 'err'); });
+      .then(function(){ status('leadsStatus', 'Статус сохранён.', 'ok'); renderLeads(); lvSyncStatus(l); }, function(err){ l.status = prev; renderLeads(); lvSyncStatus(l); status('leadsStatus', errText(err), 'err'); });
   }
+  function lvSyncStatus(l){ if (!$('leadView').hidden && lv.l === l) $('lvStatus').innerHTML = ddHtml(leadsData.indexOf(l), l.status || 'new'); }
+
+  // ---- styled status dropdown ----
+  var CHEV_S = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  function ddHtml(i, st){
+    var cur = LST.find(function(x){ return x[0] === st; }) || LST[0];
+    return '<div class="dd" data-dd="' + i + '"><button type="button" class="dd-b" aria-haspopup="listbox" aria-expanded="false" aria-label="Статус: ' + cur[1] + '"><i class="sdot s-' + cur[0] + '"></i><span>' + cur[1] + '</span>' + CHEV_S + '</button>' +
+      '<div class="dd-m" role="listbox" hidden>' + LST.map(function(x){ return '<button type="button" role="option" data-v="' + x[0] + '" aria-selected="' + (x[0] === cur[0]) + '"><i class="sdot s-' + x[0] + '"></i>' + x[1] + '</button>'; }).join('') + '</div></div>';
+  }
+  function ddClose(except){ document.querySelectorAll('.dd.open').forEach(function(d){ if (d === except) return; d.classList.remove('open'); d.querySelector('.dd-m').hidden = true; d.querySelector('.dd-b').setAttribute('aria-expanded', 'false'); }); }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('.dd-b'), o = e.target.closest('.dd-m [role=option]');
+    if (o){ var d = o.closest('.dd'), l = leadsData[+d.dataset.dd]; ddClose(); if (l && o.dataset.v !== (l.status || 'new')) setLeadStatus(l, o.dataset.v); return; }
+    if (b){ var dd = b.closest('.dd'), open = !dd.classList.contains('open'); ddClose(dd); dd.classList.toggle('open', open); dd.querySelector('.dd-m').hidden = !open; b.setAttribute('aria-expanded', String(open)); if (open){ var sel = dd.querySelector('[aria-selected=true]'); if (sel) sel.focus(); } return; }
+    ddClose();
+  });
+  document.addEventListener('keydown', function(e){
+    var d = document.querySelector('.dd.open'); if (!d) return;
+    var opts = [].slice.call(d.querySelectorAll('[role=option]')), k = opts.indexOf(document.activeElement);
+    if (e.key === 'Escape'){ e.stopPropagation(); ddClose(); d.querySelector('.dd-b').focus(); }
+    else if (e.key === 'ArrowDown'){ e.preventDefault(); opts[(k + 1) % opts.length].focus(); }
+    else if (e.key === 'ArrowUp'){ e.preventDefault(); opts[(k - 1 + opts.length) % opts.length].focus(); }
+  }, true);
+
+  // ---- generated examples: download, message to owner ----
+  function genList(l){ return l.gen ? Object.keys(l.gen).sort().map(function(k){ return l.gen[k]; }) : []; }
+  function slugify(t){ var TR = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'c',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya'}; return String(t || '').toLowerCase().split('').map(function(c){ return TR[c] != null ? TR[c] : c; }).join('').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40); }
+  function downloadGen(l, path, btn){
+    if (!path) return;
+    var name = 'homeshot-' + (slugify(shortAddr(l)) || l.id) + '-' + (path.match(/(\d+)-gen/) || [0, '01'])[1] + '.jpg';
+    var old = btn && btn.textContent; if (btn){ btn.disabled = true; btn.textContent = 'Скачиваю…'; }
+    fetch(rawUrl(path), { cache: 'no-store' }).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); }).then(function(b){
+      var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+    }).catch(function(){ window.open(rawUrl(path), '_blank', 'noopener'); })
+      .then(function(){ if (btn){ btn.disabled = false; btn.textContent = old; } });
+  }
+  var TPL_DEFAULT = '{приветствие} Увидел ваше объявление о сдаче квартиры по адресу {адрес}.\n\nЯ обрабатываю фото для объявлений об аренде и попробовал улучшить одно из ваших фото, прикрепляю пример. Квартира на таких фото выглядит заметно привлекательнее, и объявление чаще открывают.\n\nЕсли понравится, могу так же обработать остальные: от 990 ₽, готово за день. Этот пример можете забрать себе бесплатно.';
+  function tpl(){ return (cfgData && cfgData.leadMsg) || TPL_DEFAULT; }
+  function shortAddr(l){ return String(l.addr || '').split(/,\s*р-н\s/)[0].replace(/\s+/g, ' ').trim(); }
+  function greet(l){
+    var n = String(l.sellerName || '').trim();
+    var ok = n && /^[A-Za-zА-Яа-яЁё\-]+(\s[A-Za-zА-Яа-яЁё\-]+)?$/.test(n) && !/^(пользователь|услуги|юрист|агентство|риелтор|собственник)/i.test(n);
+    return ok ? 'Здравствуйте, ' + n.split(' ')[0] + '!' : 'Здравствуйте!';
+  }
+  function leadMsg(l){
+    var flat = String(l.title || '').replace(/,\s*\d+\/\d+\s*эт\.?/, '').trim();
+    return tpl().replace(/\{приветствие\}/g, greet(l)).replace(/\{адрес\}/g, shortAddr(l) || 'из объявления').replace(/\{квартира\}/g, flat).replace(/\{цена\}/g, Number(l.price || 0).toLocaleString('ru-RU') + ' ₽');
+  }
+  function copyText(t){
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t);
+    return new Promise(function(res, rej){ var ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy') ? res() : rej(); } catch(e){ rej(e); } ta.remove(); });
+  }
+  function writeLead(l){
+    var w = window.open(l.url + '#homeshot-write', '_blank');
+    copyText(leadMsg(l)).then(function(){ status('leadsStatus', 'Сообщение скопировано. В чате Авито вставьте его (Ctrl+V) и прикрепите скачанный пример.', 'ok'); },
+      function(){ status('leadsStatus', 'Не удалось скопировать автоматически. Откройте «Шаблон сообщения» и скопируйте вручную.', 'err'); });
+    if ((l.status || 'new') === 'new') setLeadStatus(l, 'written');
+    return w;
+  }
+  $('leadsList').addEventListener('click', function(e){
+    var d = e.target.closest('[data-ldl]'); if (d){ var l = leadsData[+d.dataset.ldl]; downloadGen(l, genList(l)[0], d); return; }
+    var w = e.target.closest('[data-lwrite]'); if (w){ writeLead(leadsData[+w.dataset.lwrite]); }
+  });
+  $('leadTplSave').addEventListener('click', function(){
+    var v = $('leadTpl').value.trim(); cfgData.leadMsg = v && v !== TPL_DEFAULT ? v : undefined;
+    status('leadsStatus', 'Сохраняю шаблон…');
+    saveConfig('Шаблон сообщения для лидов').then(function(){ status('leadsStatus', 'Шаблон сохранён.', 'ok'); }, function(err){ status('leadsStatus', errText(err), 'err'); });
+  });
+  $('leadTplReset').addEventListener('click', function(){ $('leadTpl').value = TPL_DEFAULT; });
+  function fillTpl(){ if (document.activeElement !== $('leadTpl')) $('leadTpl').value = tpl(); }
   $('leadsList').addEventListener('click', function(e){
     var b = e.target.closest('[data-ldel]'); if (!b) return;
     if (b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = 'Точно?'; setTimeout(function(){ if (b.isConnected){ b.dataset.confirm = ''; b.textContent = 'Удалить'; } }, 3000); return; }
@@ -1362,7 +1471,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   // ---- login ----
   function enter(){
     $('login').hidden = true; $('app').hidden = false; $('logout').hidden = false;
-    loadDrafts(); loadList(); loadContacts(); loadLeads();
+    loadDrafts(); loadList(); loadContacts(); loadLeads(); fillTpl();
   }
   $('login').addEventListener('submit', function(e){
     e.preventDefault();
