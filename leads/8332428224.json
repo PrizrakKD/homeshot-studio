@@ -31,7 +31,7 @@
     "цена в рынке",
     "собственник"
   ],
-  "status": "new",
+  "status": "deal",
   "sent": "2026-10-30T07:35:06.391Z",
   "gallery": [
     "https://40.img.avito.st/image/1/1.L-ciCra4gw4UvQEDcHZ6iyKqgQicqwEYFKaBDJKjiwSU.vqWW2FUuinprBeLpNh1AiXwayFp3I7Sm42UKf3q2zSs"
@@ -42,5 +42,5 @@
   "fullFiles": [
     "leads/8332428224/01-full.jpg"
   ],
-  "updated": "2026-10-30T09:34:54.747Z"
+  "updated": "2026-10-30T09:39:05.232Z"
 }
