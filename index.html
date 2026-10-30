@@ -93,13 +93,12 @@ section{padding-block:72px}
 .sec-head p{color:var(--muted);max-width:46ch}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
 .wcar{position:relative}
-.wtrack{--peek:72px;position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 28px - var(--peek) * 2) / 2);column-gap:28px;padding-inline:var(--peek);scroll-padding-inline:var(--peek);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.wtrack{--peek:110px;--fade:var(--peek);position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 28px) / 2);-webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--fade),#000 calc(100% - var(--fade)),transparent);mask-image:linear-gradient(90deg,transparent,#000 var(--fade),#000 calc(100% - var(--fade)),transparent);column-gap:28px;padding-inline:var(--peek);scroll-padding-inline:var(--peek);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
 .wtrack::-webkit-scrollbar{display:none}
 .wtrack .card{scroll-snap-align:start;transition:opacity .35s ease,transform .35s ease}
-.wtrack .card.peek{opacity:.35;transform:scale(.97);cursor:pointer}
-.wtrack .card.peek:hover{opacity:.6}
+.wtrack .card.peek{cursor:pointer}
 .wtrack .card.peek *{pointer-events:none}
-@media (max-width:760px){.wtrack{--peek:0px;grid-auto-columns:84%;column-gap:14px}}
+@media (max-width:760px){.wtrack{--peek:0px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent);grid-auto-columns:84%;column-gap:14px}}
 .wnav{position:absolute;top:calc(50% - 60px);z-index:3;width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:rgba(20,17,15,.88);color:var(--fg);font:500 30px/1 var(--f);padding-bottom:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.4);transition:background .2s,color .2s,opacity .2s}
 .wnav:hover{background:var(--gold);color:var(--ink);border-color:var(--gold)}
 .wnav:disabled{opacity:0;pointer-events:none}
