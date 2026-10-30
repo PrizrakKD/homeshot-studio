@@ -20,6 +20,7 @@ for (const id of fs.readdirSync(ROOT)) {
     const out = `leads/${id}/${nn}-gen.jpg`;
     fs.writeFileSync(path.join(process.cwd(), out), Buffer.from(await r.arrayBuffer()));
     lead.gen[full] = out; done++;
+    if (Array.isArray(lead.genQueue)) lead.genQueue = lead.genQueue.filter(f => f !== full);
   }
   lead.genAt = new Date().toISOString();
   fs.writeFileSync(meta, JSON.stringify(lead, null, 2) + '\n');

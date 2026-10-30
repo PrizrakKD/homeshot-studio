@@ -197,6 +197,7 @@ async function sendToLead({ id, urls }) {
   if (!lead && local) { const { state, ...rest } = local; lead = { ...rest, status: 'new', sent: new Date().toISOString() }; }
   if (!lead) throw new Error('Это объявление не в лидах.');
   const gallery = (lead.gallery || []).slice(), files = (lead.photoFiles || []).slice(), full = (lead.fullFiles || []).slice();
+  const queue = Array.isArray(lead.genQueue) ? lead.genQueue.slice() : full.filter(f => !(lead.gen && lead.gen[f]));
   const refs = await pool(gallery, 4, load);
   const out = [];
   for (const url of urls) {
@@ -209,10 +210,12 @@ async function sendToLead({ id, urls }) {
     const old = files[k]; files[k] = path;
     if (old && old !== path && /-full\.jpg$/.test(old)) out.push({ path: old, del: true });
     const fi = full.indexOf(old); if (fi >= 0) full.splice(fi, 1);
+    const qi = queue.indexOf(old); if (qi >= 0) queue.splice(qi, 1);
+    if (!queue.includes(path)) queue.push(path);
     if (!full.includes(path)) full.push(path);
   }
   for (let i = 0; i < gallery.length; i++) if (gallery[i] == null) gallery[i] = '';
-  const data = { ...lead, gallery, photoFiles: files, fullFiles: full, updated: new Date().toISOString() };
+  const data = { ...lead, gallery, photoFiles: files, fullFiles: full, genQueue: queue, updated: new Date().toISOString() };
   out.push({ path: `leads/${id}.json`, b64: textB64(JSON.stringify(data, null, 2) + '\n') });
   await commitFiles(s, out, `Лид: полноразмерные фото (${urls.length}): ${lead.title}`);
   if (local) { s.hs_leads[id] = { ...local, state: 'sent' }; await chrome.storage.local.set({ hs_leads: s.hs_leads }); }

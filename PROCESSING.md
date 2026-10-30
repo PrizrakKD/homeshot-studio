@@ -20,10 +20,12 @@
 
 ## Примеры для лидов
 
-Очередь: лиды `leads/<id>.json`, у которых в `fullFiles` есть фото без пары в `gen`
-(в админке зелёная точка; после генерации точка становится фиолетовой).
+Очередь: в `leads/<id>.json` поле `genQueue` (фото, отмеченные галочкой в админке). Обрабатывать все фото
+из `genQueue`; если пара в `gen` уже есть, это перегенерация (сделать заново, старый пример заменится). Если `genQueue` нет (старые лиды), очередь = `fullFiles` без пары в `gen`.
+Источником может быть и превью `NN.jpg` (636 px), если его отметили без загрузки полного размера.
+После генерации отмеченное фото убрать из `genQueue` (его покажет фиолетовая точка).
 
-Для каждого такого фото `leads/<id>/NN-full.jpg`:
+Для каждого такого фото `leads/<id>/NN-full.jpg` (или `NN.jpg`):
 1. Импортировать в Higgsfield по ссылке `https://raw.githubusercontent.com/PrizrakKD/homeshot-studio/main/leads/<id>/NN-full.jpg`.
 2. Сгенерировать 1 вариант: `nano_banana_2_1`, `resolution: 2k`, `aspect_ratio: 1:1`. Промпт короткий и нейтральный:
    «Professional real estate photo of this same <room>, interior design magazine style. Keep <главные предметы> where they are,
@@ -32,4 +34,4 @@
    с такими формулировками Higgsfield почти всегда отклоняет задачу как nsfw. Отклонённые задачи кредиты не списывают.
 3. Записать `leads/<id>/remote.json`: `{"items": {"leads/<id>/NN-full.jpg": "url"}}`.
 4. Закоммитить и запушить. Action «Обработать черновики» скачает картинку в `leads/<id>/NN-gen.jpg`,
-   впишет её в `gen` лида и удалит `remote.json`.
+   впишет её в `gen` лида, уберёт фото из `genQueue` и удалит `remote.json`.

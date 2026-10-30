@@ -133,6 +133,7 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .rdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7FD18B;box-shadow:0 0 0 2px rgba(20,17,15,.85);margin-right:6px;vertical-align:1px}
 .lv-thumbs button{position:relative;}
 .lv-thumbs button .rdot{position:absolute;top:5px;right:5px;margin:0;z-index:1}
+.lv-thumbs .lvt button{display:block}
 .lead-th{position:relative;flex-shrink:0;line-height:0}
 .lead-th .rdot{position:absolute;top:6px;right:6px;margin:0}
 .lv-thumbs button{flex-shrink:0;width:74px;height:56px;border-radius:6px;overflow:hidden;border:2px solid transparent;padding:0;background:var(--surface);cursor:pointer;opacity:.6}
@@ -179,6 +180,15 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .lv-cmp .ct.l{left:12px;clip-path:none}.lv-cmp .ct.r{right:12px;background:#A78BFA;color:#14110F}
 @media (max-width:640px){.lv-cmp{top:calc(50% - 16px)}}
 .lv-nav{z-index:3}
+.lv-q{text-transform:none;letter-spacing:normal;color:var(--fg);font-weight:500;display:flex;align-items:center;gap:10px;margin:0 auto 10px;padding:8px 16px 8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);cursor:pointer;width:max-content;max-width:calc(100% - 32px)}
+.lv-q.on{border-color:#7FD18B;background:rgba(127,209,139,.1)}
+.lv-q input,.qchk input{width:20px;height:20px;accent-color:#7FD18B;cursor:pointer;flex-shrink:0}
+.lv-q span{display:grid;line-height:1.25}.lv-q b{font-size:14px}.lv-q small{font-size:11px;color:var(--dim)}
+.lv-q:has(input:disabled){opacity:.6;cursor:default}
+.lvt{position:relative;flex-shrink:0}
+.qchk{position:absolute;left:4px;bottom:4px;line-height:0;background:rgba(20,17,15,.8);border-radius:5px;padding:3px;cursor:pointer}
+.qchk input{width:16px;height:16px}
+.qchk:has(input:disabled){display:none}
 .lv-mode{display:flex;justify-content:center;gap:6px;padding:0 16px 10px}
 .lv-mode button{height:32px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer}
 .lv-mode button[aria-pressed=true]{background:#A78BFA;border-color:#A78BFA;color:#14110F}
@@ -409,6 +419,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
 <div class="lv" id="leadView" hidden role="dialog" aria-modal="true" aria-labelledby="lvTitle">
   <div class="lv-stage">
     <div class="lv-img"><button type="button" class="lv-nav prev" id="lvPrev" aria-label="Предыдущее фото">‹</button><img id="lvImg" alt=""><div class="lv-cmp" id="lvCmp" hidden><img class="a" id="lvCmpA" alt=""><img class="b" id="lvCmpB" alt=""><span class="ct l">ДО</span><span class="ct r">ПОСЛЕ</span><div class="hd"></div><input type="range" min="0" max="100" value="50" id="lvCmpR" aria-label="Сравнить до и после"></div><button type="button" class="lv-nav next" id="lvNext" aria-label="Следующее фото">›</button><span class="lv-n" id="lvN"></span></div>
+    <label class="lv-q"><input type="checkbox" id="lvQ"><span><b id="lvQText">Отправить это фото в генерацию</b><small id="lvQSize"></small></span></label>
     <div class="lv-mode" id="lvMode" hidden><button type="button" data-mode="cmp" aria-pressed="true">Сравнить</button><button type="button" data-mode="src" aria-pressed="false">До</button><button type="button" data-mode="gen" aria-pressed="false">После</button></div>
     <div class="lv-thumbs" id="lvThumbs"></div>
   </div>
@@ -427,7 +438,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       <button type="button" class="btn btn-ghost" id="lvTake">Загрузить в полном размере</button>
       <a class="btn btn-ghost" id="lvOpen" target="_blank" rel="noopener">Открыть на Авито ↗</a>
     </div>
-    <p class="hint" id="lvHint">Откроется объявление, расширение само отметит это фото. Нажмите «Заменить в лиде», и сюда загрузится полный размер, слот получит зелёную точку «готово к генерации».</p>
+    <p class="hint" id="lvHint">Откроется объявление, расширение само отметит это фото. Нажмите «Заменить в лиде», и сюда загрузится полный размер, фото само отметится галочкой для генерации.</p>
     <div class="lv-desc" id="lvDesc"></div>
   </aside>
 </div>
@@ -1130,11 +1141,11 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     $('leadsList').innerHTML = arr.map(function(l){
       var i = leadsData.indexOf(l), st = l.status || 'new';
       var th = (l.photoFiles && l.photoFiles[0]) ? rawUrl(l.photoFiles[0]) : l.cover;
-      var nFull = (l.fullFiles || []).length, nGen = genList(l).length;
-      return '<div class="lead-it"><span class="lead-th">' + (th ? '<img class="open" data-lview="' + i + '" src="' + esc(th) + '" alt="Открыть объявление крупно" loading="lazy" referrerpolicy="no-referrer">' : '<img alt="">') + (nGen ? '<i class="rdot gen" title="Пример готов"></i>' : nFull ? '<i class="rdot" title="Есть фото в полном размере"></i>' : '') + '</span>' +
+      var nGen = genList(l).length, nQ = pendingOf(l).length, nFull = nQ + nGen;
+      return '<div class="lead-it"><span class="lead-th">' + (th ? '<img class="open" data-lview="' + i + '" src="' + esc(th) + '" alt="Открыть объявление крупно" loading="lazy" referrerpolicy="no-referrer">' : '<img alt="">') + (nGen ? '<i class="rdot gen" title="Пример готов"></i>' : nQ ? '<i class="rdot" title="Есть фото в очереди на генерацию"></i>' : '') + '</span>' +
         '<div class="t"><div><button type="button" class="lt" data-lview="' + i + '">' + esc(l.title) + '</button><a class="ext" href="' + esc(l.url) + '" target="_blank" rel="noopener" title="Открыть на Авито">Авито ↗</a></div>' +
         '<small>' + Number(l.price || 0).toLocaleString('ru-RU') + ' ₽/мес · ' + esc(l.addr || '') + (l.sellerName ? ' · ' + esc(l.sellerName) : '') + (l.photos != null ? ' · ' + l.photos + ' фото' : '') + '</small>' +
-        '<div class="lchips">' + (nGen ? '<span class="ok"><i class="rdot gen"></i>пример готов: ' + nGen + '</span>' : '') + (nFull > nGen ? '<span class="ok"><i class="rdot"></i>готово к генерации: ' + (nFull - nGen) + '</span>' : '') + (l.why || []).map(function(w){ return '<span>' + esc(w) + '</span>'; }).join('') + (l.bad || []).map(function(w){ return '<span class="x">' + esc(w) + '</span>'; }).join('') + '</div></div>' +
+        '<div class="lchips">' + (nGen ? '<span class="ok"><i class="rdot gen"></i>пример готов: ' + nGen + '</span>' : '') + (nQ ? '<span class="ok"><i class="rdot"></i>в генерацию: ' + nQ + '</span>' : '') + (l.why || []).map(function(w){ return '<span>' + esc(w) + '</span>'; }).join('') + (l.bad || []).map(function(w){ return '<span class="x">' + esc(w) + '</span>'; }).join('') + '</div></div>' +
         '<span class="lsc' + (l.score >= 55 ? ' hot' : '') + '" title="Оценка расширения">' + l.score + '</span>' +
         ddHtml(i, st) +
         '<button type="button" class="del" data-ldel="' + i + '">Удалить</button>' +
@@ -1147,8 +1158,33 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     var src = (l.gallery && l.gallery.length) ? l.gallery : (l.cover ? [l.cover] : []);
     var files = l.photoFiles || [];
     var full = l.fullFiles || [], n = Math.max(src.length, files.length), out = [];
-    for (var k = 0; k < n; k++){ var u = src[k] || ''; if (!u && !files[k]) continue; var g = files[k] && l.gen && l.gen[files[k]]; out.push({ show: files[k] ? rawUrl(files[k]) : u, avito: u, full: !!(files[k] && full.indexOf(files[k]) >= 0), gen: g ? rawUrl(g) : '', genPath: g || '', n: k + 1 }); }
+    var q = queueOf(l);
+    for (var k = 0; k < n; k++){ var u = src[k] || ''; if (!u && !files[k]) continue; var g = files[k] && l.gen && l.gen[files[k]]; out.push({ path: files[k] || '', q: !!(files[k] && q.indexOf(files[k]) >= 0), show: files[k] ? rawUrl(files[k]) : u, avito: u, full: !!(files[k] && full.indexOf(files[k]) >= 0), gen: g ? rawUrl(g) : '', genPath: g || '', n: k + 1 }); }
     return out;
+  }
+  // Photos chosen for generation: explicit genQueue, or (older leads) full-size photos without an example yet.
+  function queueOf(l){ return Array.isArray(l.genQueue) ? l.genQueue : (l.fullFiles || []).filter(function(f){ return !(l.gen && l.gen[f]); }); }
+  function pendingOf(l){ return queueOf(l); }
+  var qSaveT = null;
+  function toggleQueue(k, on){
+    var l = lv.l, pc = lv.pics[k]; if (!pc || !pc.path) return;
+    var q = queueOf(l).slice(), at = q.indexOf(pc.path);
+    if (on && at < 0) q.push(pc.path); if (!on && at >= 0) q.splice(at, 1);
+    l.genQueue = q; pc.q = on;
+    lvThumbsRender(); lvShow(lv.i); renderLeads();
+    clearTimeout(qSaveT); status('leadsStatus', 'Сохраняю выбор…');
+    qSaveT = setTimeout(function(){
+      var data = Object.assign({}, l); delete data._path;
+      b64FromText(JSON.stringify(data, null, 2) + '\n').then(function(b){ return commit([{ path: l._path, b64: b }], 'Лид: фото для генерации (' + pendingOf(l).length + '): ' + l.title); })
+        .then(function(){ status('leadsStatus', 'Выбор сохранён: в очереди на генерацию ' + pendingOf(l).length + ' фото. Напишите «обработай очередь».', 'ok'); }, function(err){ status('leadsStatus', errText(err), 'err'); });
+    }, 700);
+  }
+  function lvThumbsRender(){
+    $('lvThumbs').innerHTML = lv.pics.map(function(p, k){
+      var dot = p.gen ? '<i class="rdot gen"></i>' : p.q ? '<i class="rdot"></i>' : '';
+      return '<span class="lvt"><button type="button" data-lvt="' + k + '" aria-label="Фото ' + (k + 1) + (p.gen ? ', пример готов' : p.q ? ', в очереди на генерацию' : '') + '"' + (k === lv.i ? ' aria-current="true"' : '') + '>' + dot + '<img src="' + esc(p.show) + '" alt="" referrerpolicy="no-referrer"></button>' +
+        '<label class="qchk" title="' + (p.path ? 'Отправить в генерацию' : 'Сначала загрузите фото в полном размере') + '"><input type="checkbox" data-q="' + k + '"' + (p.q ? ' checked' : '') + (p.path ? '' : ' disabled') + ' aria-label="Фото ' + (k + 1) + ' в генерацию"></label></span>';
+    }).join('');
   }
   function lvShow(k){
     if (!lv.pics.length){ $('lvImg').removeAttribute('src'); $('lvN').textContent = 'Нет фото'; return; }
@@ -1160,9 +1196,13 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     if (mode === 'cmp'){ lvCmpSize(); $('lvCmpA').src = pc.gen; $('lvCmpB').src = pc.show; $('lvCmpR').value = 50; $('lvCmp').style.setProperty('--pos', '50%'); }
     $('lvMode').hidden = !pc.gen;
     [].forEach.call($('lvMode').children, function(b){ b.setAttribute('aria-pressed', String(b.dataset.mode === mode)); });
-    $('lvN').innerHTML = (pc.gen ? '<i class="rdot gen"></i>' + (mode === 'cmp' ? 'Сравнение до и после · ' : showGen ? 'Пример после обработки · ' : 'Исходник · ') : pc.full ? '<i class="rdot"></i>Полный размер, готово к генерации · ' : 'Превью с выдачи · ') + (lv.i + 1) + ' / ' + lv.pics.length + (lv.l.photos > lv.pics.length ? ' (всего в объявлении ' + lv.l.photos + ')' : '');
+    $('lvQ').checked = pc.q; $('lvQ').disabled = !pc.path;
+    $('lvQText').textContent = !pc.path ? 'В генерацию: сначала загрузите фото в полном размере' : pc.gen ? 'Перегенерировать это фото' : 'Отправить это фото в генерацию';
+    $('lvQ').closest('.lv-q').classList.toggle('on', pc.q);
+    $('lvQSize').textContent = pc.path ? (pc.full ? 'полный размер' : 'превью с выдачи, 636 px: результат будет хуже') : '';
+    $('lvN').innerHTML = (pc.gen ? '<i class="rdot gen"></i>' + (mode === 'cmp' ? 'Сравнение до и после · ' : showGen ? 'Пример после обработки · ' : 'Исходник · ') : pc.q ? '<i class="rdot"></i>В очереди на генерацию · ' : pc.full ? 'Полный размер · ' : 'Превью с выдачи · ') + (lv.i + 1) + ' / ' + lv.pics.length + (lv.l.photos > lv.pics.length ? ' (всего в объявлении ' + lv.l.photos + ')' : '');
     $('lvPrev').disabled = lv.i === 0; $('lvNext').disabled = lv.i === lv.pics.length - 1;
-    [].forEach.call($('lvThumbs').children, function(b, j){ b.setAttribute('aria-current', String(j === lv.i)); });
+    [].forEach.call($('lvThumbs').querySelectorAll('[data-lvt]'), function(b, j){ b.setAttribute('aria-current', String(j === lv.i)); });
   }
   function openLead(i, opener){
     var l = leadsData[i]; lv.l = l; lv.pics = lvPics(l); lv.last = opener;
@@ -1173,7 +1213,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     $('lvStatus').innerHTML = ddHtml(i, l.status || 'new');
     $('lvGenActs').hidden = !genList(l).length; lv.mode = 'cmp';
     $('lvOpen').href = l.url; $('lvDesc').textContent = l.desc || '';
-    $('lvThumbs').innerHTML = lv.pics.map(function(p, k){ return '<button type="button" data-lvt="' + k + '" aria-label="Фото ' + (k + 1) + (p.gen ? ', пример готов' : p.full ? ', полный размер' : '') + '"' + (p.gen ? ' title="Пример готов"' : p.full ? ' title="Полный размер, готово к генерации"' : '') + '>' + (p.gen ? '<i class="rdot gen"></i>' : p.full ? '<i class="rdot"></i>' : '') + '<img src="' + esc(p.show) + '" alt="" referrerpolicy="no-referrer"></button>'; }).join('');
+    lv.i = 0; lvThumbsRender();
     $('lvImg').setAttribute('referrerpolicy', 'no-referrer');
     $('leadView').hidden = false; document.body.style.overflow = 'hidden'; lvShow(0); $('lvClose').focus();
   }
@@ -1182,6 +1222,8 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   $('lvPrev').addEventListener('click', function(){ lvShow(lv.i - 1); });
   $('lvNext').addEventListener('click', function(){ lvShow(lv.i + 1); });
   $('lvThumbs').addEventListener('click', function(e){ var b = e.target.closest('[data-lvt]'); if (b) lvShow(+b.dataset.lvt); });
+  $('lvThumbs').addEventListener('change', function(e){ var c = e.target.closest('[data-q]'); if (c) toggleQueue(+c.dataset.q, c.checked); });
+  $('lvQ').addEventListener('change', function(){ toggleQueue(lv.i, this.checked); });
   $('lvImg').addEventListener('click', function(){ openLb(null, '', $('lvImg'), lv.pics.map(function(p, k){ return { src: p.show, label: lv.l.title + ', фото ' + (k + 1) }; }), lv.i); });
   document.addEventListener('keydown', function(e){
     if ($('leadView').hidden || !$('lightbox').hidden) return;
