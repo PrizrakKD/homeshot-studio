@@ -47,12 +47,12 @@
     "leads/8117311666/04.jpg",
     "leads/8117311666/05.jpg"
   ],
-  "status": "new",
+  "status": "written",
   "sent": "2026-10-30T14:37:28.393Z",
   "fullFiles": [
     "leads/8117311666/03-full.jpg"
   ],
-  "updated": "2026-10-30T14:45:24.504Z",
+  "updated": "2026-10-30T14:57:20.720Z",
   "genQueue": [],
   "gen": {
     "leads/8117311666/03-full.jpg": "leads/8117311666/03-gen.jpg"
