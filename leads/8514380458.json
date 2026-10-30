@@ -42,5 +42,10 @@
     "leads/8514380458/01-full.jpg",
     "leads/8514380458/02-full.jpg"
   ],
-  "updated": "2026-10-30T09:36:22.807Z"
+  "updated": "2026-10-30T09:36:22.807Z",
+  "gen": {
+    "leads/8514380458/01-full.jpg": "leads/8514380458/01-gen.jpg",
+    "leads/8514380458/02-full.jpg": "leads/8514380458/02-gen.jpg"
+  },
+  "genAt": "2026-10-30T11:45:17.553Z"
 }
