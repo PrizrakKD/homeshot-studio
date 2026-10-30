@@ -105,6 +105,15 @@ section{padding-block:72px}
 .wnav:disabled{opacity:0;pointer-events:none}
 .wnav.prev{left:-26px}.wnav.next{right:-26px}
 @media (max-width:1240px){.wnav.prev{left:8px}.wnav.next{right:8px}}
+@media (max-width:760px){.wnav{width:40px;height:40px;font-size:24px;top:calc(50% - 70px)}.wnav.prev{left:2px}.wnav.next{right:2px}}
+@media (max-width:520px){
+  .card .meta{flex-direction:column;align-items:stretch;gap:10px}
+  .card .meta .pager{align-self:flex-start}
+  .cline strong{font-size:17px}
+  .cline strong.mail{font-size:16px;overflow-wrap:normal}
+  .cline .copy{padding-inline:12px}
+}
+.touch-only{display:none}@media (hover:none){.touch-only{display:inline}.mouse-only{display:none}}
 @media (max-width:760px){.grid{grid-template-columns:1fr}}
 .card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;min-width:0}
 .card .meta{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px}
@@ -132,7 +141,7 @@ section{padding-block:72px}
 .groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 @media (max-width:900px){.groups{grid-template-columns:1fr}}
 .group{border:1px solid var(--line);border-radius:8px;padding:26px 24px;display:flex;flex-direction:column;gap:18px;min-width:0;background:var(--bg);transition:transform .2s ease,border-color .2s,box-shadow .2s}
-.group:hover{transform:scale(1.025);border-color:var(--gold-dim);box-shadow:0 12px 36px rgba(0,0,0,.35);position:relative;z-index:1}
+@media (hover:hover){.group:hover{transform:scale(1.025);border-color:var(--gold-dim);box-shadow:0 12px 36px rgba(0,0,0,.35);position:relative;z-index:1}}
 @media (prefers-reduced-motion:reduce){.group:hover{transform:none}}
 .group.feat{border-color:var(--gold-dim);background:var(--surface)}
 .group h3{font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:600}
@@ -330,7 +339,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
 
   <section id="test" class="test">
     <div class="wrap">
-      <div class="sec-head"><div><div class="eyebrow">Простой тест</div><h2 style="margin-top:12px">Какое объявление вы бы открыли?</h2></div><p>Одна и та же квартира по одной цене. Проведите мышкой по фото, чтобы полистать, как в выдаче.</p></div>
+      <div class="sec-head"><div><div class="eyebrow">Простой тест</div><h2 style="margin-top:12px">Какое объявление вы бы открыли?</h2></div><p>Одна и та же квартира по одной цене. <span class="mouse-only">Проведите мышкой по фото</span><span class="touch-only">Проведите пальцем по фото</span>, чтобы полистать, как в выдаче.</p></div>
       <div class="ab">
         <div class="abcol">
           <div class="lst" data-ab="a">
@@ -369,7 +378,7 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
             <b id="lsV">−7 469 ₽</b>
             <span class="ls-c" id="lsC">за неделю простоя</span>
             <span class="ls-p" id="lsP">Пакет «Комплект» окупится уже на 3-й день. Любой наш пакет окупается за 1–4 дня.</span>
-            <span class="ls-h">Наведите на столбец, чтобы посчитать для другого срока</span>
+            <span class="ls-h"><span class="mouse-only">Наведите на столбец</span><span class="touch-only">Нажмите на столбец</span>, чтобы посчитать для другого срока</span>
           </div>
         </div>
         <p class="ab-note" id="lossNote">Расчёт: аренда 32 000 ₽ в месяц, это около 1 067 ₽ за каждый день простоя. Цена пакета платится один раз.</p>
@@ -544,12 +553,13 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
     if (cfg.phone) items.push(['ТЕЛЕФОН', cfg.phone, 'tel:' + cfg.phone.replace(/[^\d+]/g, '')]);
     if (cfg.telegram){ var t = cfg.telegram.replace(/^@/, ''); items.push(['TELEGRAM', '@' + t, 'https://t.me/' + t]); }
     if (cfg.whatsapp) items.push(['WHATSAPP', cfg.whatsapp, 'https://wa.me/' + cfg.whatsapp.replace(/\D/g, '')]);
-    if (cfg.email) items.push(['ПОЧТА', cfg.email, 'mailto:' + cfg.email]);
+    if (cfg.email) items.push(['ПОЧТА', cfg.email, 'mailto:' + cfg.email, true]);
     if (cfg.max && /^https:\/\/(www\.)?max\.ru\//i.test(cfg.max)) items.push(['MAX', 'Написать в MAX', cfg.max]);
     var el = $('contacts');
     if (!items.length){ el.innerHTML = '<div class="cline"><div><small>КОНТАКТЫ</small><strong>Скоро появятся</strong></div></div>'; return; }
     el.innerHTML = items.map(function(it){
-      return '<div class="cline"><div><small>' + it[0] + '</small><strong><a href="' + esc(it[2]) + '" target="_blank" rel="noopener">' + esc(it[1]) + '</a></strong></div><button type="button" class="copy" data-copy="' + esc(it[1]) + '">Копировать</button></div>';
+      var label = it[3] ? esc(it[1]).replace('@', '@<wbr>') : esc(it[1]);
+      return '<div class="cline"><div><small>' + it[0] + '</small><strong' + (it[3] ? ' class="mail"' : '') + '><a href="' + esc(it[2]) + '" target="_blank" rel="noopener">' + label + '</a></strong></div><button type="button" class="copy" data-copy="' + esc(it[1]) + '">Копировать</button></div>';
     }).join('');
   }
 
@@ -629,7 +639,11 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
       var svg = plot.querySelector('svg');
       svg.addEventListener('mousemove', function(e){ var r = e.target.closest('[data-day]'); if (r) setHover(+r.dataset.day); });
       svg.addEventListener('mouseleave', function(){ setHover(0); });
-      svg.addEventListener('touchstart', function(e){ var t = e.touches[0], el = t && document.elementFromPoint(t.clientX, t.clientY); if (el && el.dataset.day) setHover(+el.dataset.day); }, { passive: true });
+      var dayAt = function(x, y){ var hit = document.elementsFromPoint(x, y).find(function(el){ return el.dataset && el.dataset.day; }); return hit ? +hit.dataset.day : 0; };
+      var onTouch = function(e){ var t = e.touches[0]; if (!t) return; var d = dayAt(t.clientX, t.clientY); if (d) setHover(d); };
+      svg.addEventListener('touchstart', onTouch, { passive: true });
+      svg.addEventListener('touchmove', onTouch, { passive: true });
+      svg.addEventListener('click', function(e){ var d = dayAt(e.clientX, e.clientY); if (d) setHover(d); });
       setHover(hover);
     }
     function setHover(d){
