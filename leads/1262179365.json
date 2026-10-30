@@ -1,0 +1,51 @@
+{
+  "added": "2026-10-30T14:34:45.969Z",
+  "addr": "ул. Ульяны Громовой, 125р-н Московский",
+  "area": 36.6,
+  "bad": [],
+  "company": false,
+  "cover": "https://b10.img.avito.st/image/1/1.CIJRrLa_pGtHDAZqTYwO388Pom3zCaRtlGyuYUcMBmrnDw.3LOESRK4jjSctXyrh_72yNcYbvFLLBOCfpbllOEHDC8?cqp=2.6_1L9vhKD2uBLt-qyrAoZheVsuS8u7cVFre6r7a9jrN4_pCIDjlm5anolzs-MLkTK_L9899P2epdVNs=",
+  "desc": "",
+  "done": 8,
+  "gallery": [
+    "https://b10.img.avito.st/image/1/1.CIJRrLa_pGtHDAZqTYwO388Pom3zCaRtlGyuYUcMBmrnDw.3LOESRK4jjSctXyrh_72yNcYbvFLLBOCfpbllOEHDC8?cqp=2.6_1L9vhKD2uBLt-qyrAoZheVsuS8u7cVFre6r7a9jrN4_pCIDjlm5anolzs-MLkTK_L9899P2epdVNs=",
+    "https://c60.img.avito.st/image/1/1.7RQZNba_Qf0PleP8Tx6cb-2WR_u7kEH73PVL9w-V4_yvlg.eXYLuLmNLu7rFZowoeSEGxlf9wzfXxyHUvMg-1pRQOY",
+    "https://c80.img.avito.st/image/1/1.QRFPx7a_7fhZZ0_5QbYwartk6_7tYu3-igfn8llnT_n5ZA.S87IxAhhDbaoQF0Hm_UyzNxcVqg9zeAHQZAt8W3F-cs",
+    "https://b50.img.avito.st/image/1/1.RB0o07a_6PQ-c0r1LPJCQLZw7vKKdujy7RPi_j5zSvWecA.mOlFaAglM3w88AyvhkjLoaGVHjk5yMAS1Ab2Wu7Cwcc",
+    "https://b30.img.avito.st/image/1/1.pw4JSLa_C-cf6KnmS2LWdf3rDeGr7QvhzIgB7R_oqea_6w.-Q3btF6qyTx2udLYpFydc-d7C6wzNcQIj_kU0EpGW0w?cqp=2.6_1L9vhKD2uBLt-qyrAoZheVsuS8u7cVFre6r7a9jrN4_pCIDjlm5anolzs-MLkTK_L9899P2epdVNs="
+  ],
+  "href": "https://www.avito.ru/kaliningrad/kvartiry/1-k._kvartira_366_m_69_et._1262179365",
+  "id": "1262179365",
+  "photos": 11,
+  "ppm": 683.0601092896175,
+  "price": 25000,
+  "quality": {
+    "dark": true,
+    "mean": 97,
+    "vertical": false
+  },
+  "rel": 0.78064012490242,
+  "rooms": 1,
+  "score": 60,
+  "sellerKnown": true,
+  "sellerName": "Юлия",
+  "slides": 5,
+  "source": "https://www.avito.ru/kaliningrad/kvartiry/sdam-ASgBAgICAUSSA8gQ?context=H4sIAAAAAAAA_wFMALP_YToyOntzOjg6ImZyb21QYWdlIjtzOjE1OiJzaG9ydGN1dHNXaWRnZXQiO3M6MToieSI7czoxNjoic3dQNkRzazB0bTBCNGhqNiI7fS6jB2NMAAAA&user=1",
+  "title": "1-к. квартира, 36,6 м², 6/9 эт.",
+  "url": "https://www.avito.ru/kaliningrad/kvartiry/1-k._kvartira_366_m_69_et._1262179365",
+  "why": [
+    "висит давно",
+    "цена в рынке",
+    "собственник",
+    "тёмная обложка"
+  ],
+  "photoFiles": [
+    "leads/1262179365/01.jpg",
+    "leads/1262179365/02.jpg",
+    "leads/1262179365/03.jpg",
+    "leads/1262179365/04.jpg",
+    "leads/1262179365/05.jpg"
+  ],
+  "status": "new",
+  "sent": "2026-10-30T14:37:27.570Z"
+}
