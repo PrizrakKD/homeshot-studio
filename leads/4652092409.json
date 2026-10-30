@@ -48,12 +48,12 @@
     "leads/4652092409/05.jpg",
     "leads/4652092409/06-full.jpg"
   ],
-  "status": "new",
+  "status": "written",
   "sent": "2026-10-30T14:37:29.071Z",
   "fullFiles": [
     "leads/4652092409/06-full.jpg"
   ],
-  "updated": "2026-10-30T14:51:25.277Z",
+  "updated": "2026-10-30T14:59:17.159Z",
   "gen": {
     "leads/4652092409/06-full.jpg": "leads/4652092409/06-gen.jpg"
   },
