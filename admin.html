@@ -1337,7 +1337,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   }
   var TPL_DEFAULT = '{приветствие} Увидел ваше объявление о сдаче квартиры по адресу {адрес}.\n\nЯ обрабатываю фото для объявлений об аренде и попробовал улучшить одно из ваших фото, прикрепляю как было и как стало. Квартира на таких фото выглядит заметно привлекательнее, и объявление чаще открывают.\n\nЕсли понравится, могу так же обработать остальные: от 990 ₽, готово за день. Этот пример можете забрать себе бесплатно.';
   function tpl(){ return (cfgData && cfgData.leadMsg) || TPL_DEFAULT; }
-  function shortAddr(l){ return String(l.addr || '').split(/,\s*р-н\s/)[0].replace(/\s+/g, ' ').trim(); }
+  function shortAddr(l){ return String(l.addr || '').replace(/,?\s*р-н\s.*$/, '').replace(/\s+/g, ' ').replace(/[,\s]+$/, '').trim(); }
   function greet(l){
     var n = String(l.sellerName || '').trim();
     var ok = n && /^[A-Za-zА-Яа-яЁё\-]+(\s[A-Za-zА-Яа-яЁё\-]+)?$/.test(n) && !/^(пользователь|услуги|юрист|агентство|риелтор|собственник)/i.test(n);
