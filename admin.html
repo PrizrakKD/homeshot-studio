@@ -169,6 +169,16 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .lacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .lacts .mini{height:32px}
 .lacts .mini.pr{border-color:#A78BFA;color:#C9B8FF}
+.lv-cmp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:var(--sz,300px);height:var(--sz,300px);overflow:hidden;border-radius:6px;--pos:50%;user-select:none;touch-action:pan-y}
+.lv-cmp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.lv-cmp .b{clip-path:inset(0 calc(100% - var(--pos)) 0 0)}
+.lv-cmp .hd{position:absolute;top:0;bottom:0;left:var(--pos);width:2px;margin-left:-1px;background:#F2ECE4;pointer-events:none}
+.lv-cmp .hd::after{content:"";position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#F2ECE4 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314110F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l-6 6 6 6M15 6l6 6-6 6'/%3E%3C/svg%3E") center/22px no-repeat;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+.lv-cmp input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.lv-cmp .ct{position:absolute;top:12px;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.2em;pointer-events:none;background:rgba(20,17,15,.75);color:#F2ECE4}
+.lv-cmp .ct.l{left:12px;clip-path:none}.lv-cmp .ct.r{right:12px;background:#A78BFA;color:#14110F}
+@media (max-width:640px){.lv-cmp{top:calc(50% - 16px)}}
+.lv-nav{z-index:3}
 .lv-mode{display:flex;justify-content:center;gap:6px;padding:0 16px 10px}
 .lv-mode button{height:32px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer}
 .lv-mode button[aria-pressed=true]{background:#A78BFA;border-color:#A78BFA;color:#14110F}
@@ -398,8 +408,8 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
 </div>
 <div class="lv" id="leadView" hidden role="dialog" aria-modal="true" aria-labelledby="lvTitle">
   <div class="lv-stage">
-    <div class="lv-img"><button type="button" class="lv-nav prev" id="lvPrev" aria-label="Предыдущее фото">‹</button><img id="lvImg" alt=""><button type="button" class="lv-nav next" id="lvNext" aria-label="Следующее фото">›</button><span class="lv-n" id="lvN"></span></div>
-    <div class="lv-mode" id="lvMode" hidden><button type="button" data-mode="src" aria-pressed="false">До</button><button type="button" data-mode="gen" aria-pressed="true">Пример после</button></div>
+    <div class="lv-img"><button type="button" class="lv-nav prev" id="lvPrev" aria-label="Предыдущее фото">‹</button><img id="lvImg" alt=""><div class="lv-cmp" id="lvCmp" hidden><img class="a" id="lvCmpA" alt=""><img class="b" id="lvCmpB" alt=""><span class="ct l">ДО</span><span class="ct r">ПОСЛЕ</span><div class="hd"></div><input type="range" min="0" max="100" value="50" id="lvCmpR" aria-label="Сравнить до и после"></div><button type="button" class="lv-nav next" id="lvNext" aria-label="Следующее фото">›</button><span class="lv-n" id="lvN"></span></div>
+    <div class="lv-mode" id="lvMode" hidden><button type="button" data-mode="cmp" aria-pressed="true">Сравнить</button><button type="button" data-mode="src" aria-pressed="false">До</button><button type="button" data-mode="gen" aria-pressed="false">После</button></div>
     <div class="lv-thumbs" id="lvThumbs"></div>
   </div>
   <aside class="lv-side">
@@ -410,7 +420,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     <div class="lchips" id="lvChips"></div>
     <div class="field"><label>Статус</label><div id="lvStatus"></div></div>
     <div class="lv-acts" id="lvGenActs" hidden>
-      <button type="button" class="btn btn-primary" id="lvDl">Скачать пример</button>
+      <button type="button" class="btn btn-primary" id="lvDl">Скачать до и после</button>
       <button type="button" class="btn btn-ghost" id="lvWrite">Написать сообщение</button>
     </div>
     <div class="lv-acts">
@@ -1128,7 +1138,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
         '<span class="lsc' + (l.score >= 55 ? ' hot' : '') + '" title="Оценка расширения">' + l.score + '</span>' +
         ddHtml(i, st) +
         '<button type="button" class="del" data-ldel="' + i + '">Удалить</button>' +
-        (nGen ? '<div class="lacts" style="width:100%"><button type="button" class="mini pr" data-ldl="' + i + '">Скачать пример</button><button type="button" class="mini pr" data-lwrite="' + i + '">Написать сообщение</button></div>' : '') + '</div>';
+        (nGen ? '<div class="lacts" style="width:100%"><button type="button" class="mini pr" data-ldl="' + i + '">Скачать до и после</button><button type="button" class="mini pr" data-lwrite="' + i + '">Написать сообщение</button></div>' : '') + '</div>';
     }).join('');
   }
   function rawUrl(path){ return 'https://raw.githubusercontent.com/' + OWNER + '/' + REPO + '/' + BRANCH + '/' + path; }
@@ -1143,11 +1153,14 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   function lvShow(k){
     if (!lv.pics.length){ $('lvImg').removeAttribute('src'); $('lvN').textContent = 'Нет фото'; return; }
     lv.i = Math.max(0, Math.min(lv.pics.length - 1, k));
-    var pc = lv.pics[lv.i], showGen = pc.gen && lv.mode === 'gen';
+    var pc = lv.pics[lv.i], mode = pc.gen ? lv.mode : 'src', showGen = mode === 'gen';
     $('lvImg').src = showGen ? pc.gen : pc.show; $('lvImg').alt = lv.l.title + ', фото ' + (lv.i + 1) + (showGen ? ', пример после обработки' : '');
+    $('lvImg').hidden = mode === 'cmp'; $('lvCmp').hidden = mode !== 'cmp';
+    $('lvHint').hidden = !!pc.gen;
+    if (mode === 'cmp'){ lvCmpSize(); $('lvCmpA').src = pc.gen; $('lvCmpB').src = pc.show; $('lvCmpR').value = 50; $('lvCmp').style.setProperty('--pos', '50%'); }
     $('lvMode').hidden = !pc.gen;
-    [].forEach.call($('lvMode').children, function(b){ b.setAttribute('aria-pressed', String(b.dataset.mode === (showGen ? 'gen' : 'src'))); });
-    $('lvN').innerHTML = (pc.gen ? '<i class="rdot gen"></i>' + (showGen ? 'Пример после обработки · ' : 'Исходник · ') : pc.full ? '<i class="rdot"></i>Полный размер, готово к генерации · ' : 'Превью с выдачи · ') + (lv.i + 1) + ' / ' + lv.pics.length + (lv.l.photos > lv.pics.length ? ' (всего в объявлении ' + lv.l.photos + ')' : '');
+    [].forEach.call($('lvMode').children, function(b){ b.setAttribute('aria-pressed', String(b.dataset.mode === mode)); });
+    $('lvN').innerHTML = (pc.gen ? '<i class="rdot gen"></i>' + (mode === 'cmp' ? 'Сравнение до и после · ' : showGen ? 'Пример после обработки · ' : 'Исходник · ') : pc.full ? '<i class="rdot"></i>Полный размер, готово к генерации · ' : 'Превью с выдачи · ') + (lv.i + 1) + ' / ' + lv.pics.length + (lv.l.photos > lv.pics.length ? ' (всего в объявлении ' + lv.l.photos + ')' : '');
     $('lvPrev').disabled = lv.i === 0; $('lvNext').disabled = lv.i === lv.pics.length - 1;
     [].forEach.call($('lvThumbs').children, function(b, j){ b.setAttribute('aria-current', String(j === lv.i)); });
   }
@@ -1158,7 +1171,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     $('lvMeta').innerHTML = [l.addr, l.sellerName ? 'Продавец: ' + l.sellerName + (l.done != null ? ' (' + l.done + ' заверш. объявл.)' : '') : '', l.photos != null ? 'Фото в объявлении: ' + l.photos : '', l.rel ? 'Цена к рынку: ' + (l.rel >= 1 ? '+' : '') + Math.round((l.rel - 1) * 100) + '%' : '', l.added ? 'Добавлен: ' + new Date(l.added).toLocaleDateString('ru-RU') : ''].filter(Boolean).map(function(x){ return '<span>' + esc(x) + '</span>'; }).join('');
     $('lvChips').innerHTML = (l.why || []).map(function(w){ return '<span>' + esc(w) + '</span>'; }).join('') + (l.bad || []).map(function(w){ return '<span class="x">' + esc(w) + '</span>'; }).join('');
     $('lvStatus').innerHTML = ddHtml(i, l.status || 'new');
-    $('lvGenActs').hidden = !genList(l).length; lv.mode = 'gen';
+    $('lvGenActs').hidden = !genList(l).length; lv.mode = 'cmp';
     $('lvOpen').href = l.url; $('lvDesc').textContent = l.desc || '';
     $('lvThumbs').innerHTML = lv.pics.map(function(p, k){ return '<button type="button" data-lvt="' + k + '" aria-label="Фото ' + (k + 1) + (p.gen ? ', пример готов' : p.full ? ', полный размер' : '') + '"' + (p.gen ? ' title="Пример готов"' : p.full ? ' title="Полный размер, готово к генерации"' : '') + '>' + (p.gen ? '<i class="rdot gen"></i>' : p.full ? '<i class="rdot"></i>' : '') + '<img src="' + esc(p.show) + '" alt="" referrerpolicy="no-referrer"></button>'; }).join('');
     $('lvImg').setAttribute('referrerpolicy', 'no-referrer');
@@ -1179,7 +1192,10 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     window.open(lv.l.url + '#homeshot-pick=' + encodeURIComponent(p.avito), '_blank', 'noopener');
   });
   $('lvMode').addEventListener('click', function(e){ var b = e.target.closest('[data-mode]'); if (!b) return; lv.mode = b.dataset.mode; lvShow(lv.i); });
-  $('lvDl').addEventListener('click', function(){ var pc = lv.pics[lv.i]; downloadGen(lv.l, pc && pc.genPath ? pc.genPath : genList(lv.l)[0], this); });
+  function lvCmpSize(){ var a = $('lvCmp').parentElement, mob = innerWidth <= 640; var sz = Math.max(160, Math.min(a.clientWidth - (mob ? 16 : 32), a.clientHeight - (mob ? 48 : 32))); $('lvCmp').style.setProperty('--sz', sz + 'px'); }
+  window.addEventListener('resize', function(){ if (!$('leadView').hidden) lvCmpSize(); });
+  $('lvCmpR').addEventListener('input', function(){ $('lvCmp').style.setProperty('--pos', this.value + '%'); });
+  $('lvDl').addEventListener('click', function(){ var pc = lv.pics[lv.i], g = pc && pc.genPath ? pc.genPath : genList(lv.l)[0]; downloadPair(lv.l, g, this); });
   $('lvWrite').addEventListener('click', function(){ writeLead(lv.l); });
   $('leadsList').addEventListener('click', function(e){ var o = e.target.closest('[data-lview]'); if (o) openLead(+o.dataset.lview, o); });
 
@@ -1222,17 +1238,23 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   // ---- generated examples: download, message to owner ----
   function genList(l){ return l.gen ? Object.keys(l.gen).sort().map(function(k){ return l.gen[k]; }) : []; }
   function slugify(t){ var TR = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'c',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya'}; return String(t || '').toLowerCase().split('').map(function(c){ return TR[c] != null ? TR[c] : c; }).join('').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40); }
-  function downloadGen(l, path, btn){
-    if (!path) return;
-    var name = 'homeshot-' + (slugify(shortAddr(l)) || l.id) + '-' + (path.match(/(\d+)-gen/) || [0, '01'])[1] + '.jpg';
+  function saveBlob(b, name){ var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000); }
+  function getBlob(path){ return fetch(rawUrl(path), { cache: 'no-store' }).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); }); }
+  // Downloads the original (full size) and the generated example: "...-02-1-do.jpg" and "...-02-2-posle.jpg",
+  // so they sort in the right order when attached to the Avito chat.
+  function downloadPair(l, genPath, btn){
+    if (!genPath) return;
+    var src = Object.keys(l.gen || {}).find(function(k){ return l.gen[k] === genPath; });
+    var base = 'homeshot-' + (slugify(shortAddr(l)) || l.id) + '-' + (genPath.match(/(\d+)-gen/) || [0, '01'])[1];
     var old = btn && btn.textContent; if (btn){ btn.disabled = true; btn.textContent = 'Скачиваю…'; }
-    fetch(rawUrl(path), { cache: 'no-store' }).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); }).then(function(b){
-      var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
-    }).catch(function(){ window.open(rawUrl(path), '_blank', 'noopener'); })
-      .then(function(){ if (btn){ btn.disabled = false; btn.textContent = old; } });
+    Promise.all([src ? getBlob(src) : null, getBlob(genPath)]).then(function(b){
+      if (b[0]) saveBlob(b[0], base + '-1-do.jpg');
+      setTimeout(function(){ saveBlob(b[1], base + '-2-posle.jpg'); }, 400);
+      status('leadsStatus', 'Скачаны «до» и «после». Если браузер спросит, разрешите скачивание нескольких файлов.', 'ok');
+    }).catch(function(){ window.open(rawUrl(genPath), '_blank', 'noopener'); })
+      .then(function(){ setTimeout(function(){ if (btn){ btn.disabled = false; btn.textContent = old; } }, 500); });
   }
-  var TPL_DEFAULT = '{приветствие} Увидел ваше объявление о сдаче квартиры по адресу {адрес}.\n\nЯ обрабатываю фото для объявлений об аренде и попробовал улучшить одно из ваших фото, прикрепляю пример. Квартира на таких фото выглядит заметно привлекательнее, и объявление чаще открывают.\n\nЕсли понравится, могу так же обработать остальные: от 990 ₽, готово за день. Этот пример можете забрать себе бесплатно.';
+  var TPL_DEFAULT = '{приветствие} Увидел ваше объявление о сдаче квартиры по адресу {адрес}.\n\nЯ обрабатываю фото для объявлений об аренде и попробовал улучшить одно из ваших фото, прикрепляю как было и как стало. Квартира на таких фото выглядит заметно привлекательнее, и объявление чаще открывают.\n\nЕсли понравится, могу так же обработать остальные: от 990 ₽, готово за день. Этот пример можете забрать себе бесплатно.';
   function tpl(){ return (cfgData && cfgData.leadMsg) || TPL_DEFAULT; }
   function shortAddr(l){ return String(l.addr || '').split(/,\s*р-н\s/)[0].replace(/\s+/g, ' ').trim(); }
   function greet(l){
@@ -1250,13 +1272,13 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   }
   function writeLead(l){
     var w = window.open(l.url + '#homeshot-write', '_blank');
-    copyText(leadMsg(l)).then(function(){ status('leadsStatus', 'Сообщение скопировано. В чате Авито вставьте его (Ctrl+V) и прикрепите скачанный пример.', 'ok'); },
+    copyText(leadMsg(l)).then(function(){ status('leadsStatus', 'Сообщение скопировано. В чате Авито вставьте его (Ctrl+V) и прикрепите скачанные фото «до» и «после».', 'ok'); },
       function(){ status('leadsStatus', 'Не удалось скопировать автоматически. Откройте «Шаблон сообщения» и скопируйте вручную.', 'err'); });
     if ((l.status || 'new') === 'new') setLeadStatus(l, 'written');
     return w;
   }
   $('leadsList').addEventListener('click', function(e){
-    var d = e.target.closest('[data-ldl]'); if (d){ var l = leadsData[+d.dataset.ldl]; downloadGen(l, genList(l)[0], d); return; }
+    var d = e.target.closest('[data-ldl]'); if (d){ var l = leadsData[+d.dataset.ldl]; downloadPair(l, genList(l)[0], d); return; }
     var w = e.target.closest('[data-lwrite]'); if (w){ writeLead(leadsData[+w.dataset.lwrite]); }
   });
   $('leadTplSave').addEventListener('click', function(){
