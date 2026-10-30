@@ -120,6 +120,22 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .collapse:hover{color:var(--fg);border-color:var(--gold)}
 .draft.coll .collapse{transform:rotate(-90deg)}
 .witem:not(.open) .wtog{transform:rotate(-90deg)}
+.lfil{display:flex;flex-wrap:wrap;gap:6px}
+.lfil button{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer}
+.lfil button[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.lead-it{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);min-width:0}
+.lead-it img{width:72px;height:72px;object-fit:cover;border-radius:6px;background:var(--surface);flex-shrink:0}
+.lead-it .t{flex:1;min-width:0;display:grid;gap:4px}
+.lead-it .t a{color:var(--fg);font-weight:600;text-decoration:none}
+.lead-it .t a:hover{color:var(--gold);text-decoration:underline}
+.lead-it small{color:var(--dim)}
+.lchips{display:flex;flex-wrap:wrap;gap:4px}
+.lchips span{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--surface);color:var(--muted)}
+.lchips span.x{color:var(--err)}
+.lsc{min-width:38px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:800;background:var(--surface);color:var(--muted);flex-shrink:0}
+.lsc.hot{background:var(--gold);color:var(--ink)}
+.lead-it select{height:36px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 13px var(--f);padding:0 10px;flex-shrink:0}
+@media (max-width:640px){.lead-it{flex-wrap:wrap}}
 .card h2.sch{display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
 .card h2.sch:hover .collapse{color:var(--fg);border-color:var(--gold)}
 .card.sc-coll .collapse.scb{transform:rotate(-90deg)}
@@ -212,6 +228,12 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   </form>
 
   <div id="app" hidden>
+    <div class="card" id="leadsCard">
+      <div class="dhead" style="align-items:flex-start"><div><h2>Лиды</h2><p class="hint">Объявления, отобранные расширением на выдаче Авито. Отмечайте, кому написали и кто ответил. Чтобы взять фото в работу, откройте объявление и нажмите «В Homeshot» в расширении.</p></div><button type="button" class="mini" id="leadsReload">Обновить</button></div>
+      <div class="lfil" role="group" aria-label="Фильтр по статусу" id="leadsFilter"></div>
+      <div class="list" id="leadsList"><p class="hint">Загружаю…</p></div>
+      <span class="status" id="leadsStatus" role="status"></span>
+    </div>
     <div class="card">
       <div class="dhead" style="align-items:flex-start"><div><h2>Подготовка к публикации</h2><p class="hint">Сюда попадают объекты из расширения и пакетной загрузки. Отметьте пары галочками, выберите вариант «после», при необходимости кадрируйте и нажмите «Опубликовать». Если фото перепутались, перетащите их мышкой между парами. После публикации объект уходит в «Работы на сайте».</p></div><button type="button" class="mini" id="draftsReload">Обновить</button></div>
       <div class="drafts" id="drafts"><p class="hint">Загружаю…</p></div>
@@ -944,6 +966,54 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
     else PCTX[a.split('|').slice(0, 2).join('|')].render();
   });
 
+  // ---- leads from the extension scout ----
+  var leadsData = [], leadsFilter = 'all';
+  var LST = [['new', 'Новый'], ['written', 'Написал'], ['replied', 'Ответил'], ['deal', 'Заказ'], ['no', 'Отказ']];
+  function utf8Json(b64){ var bytes = Uint8Array.from(atob(b64.replace(/\n/g, '')), function(c){ return c.charCodeAt(0); }); return JSON.parse(new TextDecoder().decode(bytes)); }
+  function loadLeads(){
+    $('leadsList').innerHTML = '<p class="hint">Загружаю…</p>';
+    return gh('/contents/leads?ref=' + BRANCH, { allow404: true }).then(function(ls){
+      var files = (ls || []).filter(function(f){ return f.type === 'file' && /\.json$/.test(f.name); });
+      return Promise.all(files.map(function(f){ return gh('/contents/' + f.path + '?ref=' + BRANCH).then(function(r){ var d = utf8Json(r.content); d._path = f.path; return d; }, function(){ return null; }); }));
+    }).then(function(arr){ leadsData = arr.filter(Boolean); renderLeads(); })
+      .catch(function(e){ $('leadsList').innerHTML = ''; status('leadsStatus', errText(e), 'err'); });
+  }
+  function renderLeads(){
+    var cnt = { all: leadsData.length }; LST.forEach(function(x){ cnt[x[0]] = 0; }); leadsData.forEach(function(l){ cnt[l.status || 'new'] = (cnt[l.status || 'new'] || 0) + 1; });
+    $('leadsFilter').innerHTML = [['all', 'Все']].concat(LST).map(function(x){ return '<button type="button" data-lf="' + x[0] + '" aria-pressed="' + (leadsFilter === x[0]) + '">' + x[1] + ' ' + (cnt[x[0]] || 0) + '</button>'; }).join('');
+    var ord = {}; LST.forEach(function(x, k){ ord[x[0]] = k; });
+    var arr = leadsData.filter(function(l){ return leadsFilter === 'all' || (l.status || 'new') === leadsFilter; })
+      .sort(function(a, b){ return (ord[a.status || 'new'] - ord[b.status || 'new']) || (b.score - a.score); });
+    if (!leadsData.length){ $('leadsList').innerHTML = '<p class="hint">Пока нет лидов. На выдаче Авито нажимайте «+ В лиды» и отправляйте список из панели расширения.</p>'; return; }
+    if (!arr.length){ $('leadsList').innerHTML = '<p class="hint">В этом статусе пусто.</p>'; return; }
+    $('leadsList').innerHTML = arr.map(function(l){
+      var i = leadsData.indexOf(l), st = l.status || 'new';
+      return '<div class="lead-it">' + (l.cover ? '<img src="' + esc(l.cover) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<img alt="">') +
+        '<div class="t"><a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.title) + ' ↗</a>' +
+        '<small>' + Number(l.price || 0).toLocaleString('ru-RU') + ' ₽/мес · ' + esc(l.addr || '') + (l.sellerName ? ' · ' + esc(l.sellerName) : '') + (l.photos != null ? ' · ' + l.photos + ' фото' : '') + '</small>' +
+        '<div class="lchips">' + (l.why || []).map(function(w){ return '<span>' + esc(w) + '</span>'; }).join('') + (l.bad || []).map(function(w){ return '<span class="x">' + esc(w) + '</span>'; }).join('') + '</div></div>' +
+        '<span class="lsc' + (l.score >= 55 ? ' hot' : '') + '" title="Оценка расширения">' + l.score + '</span>' +
+        '<select data-lst="' + i + '" aria-label="Статус">' + LST.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === st ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select>' +
+        '<button type="button" class="del" data-ldel="' + i + '">Удалить</button></div>';
+    }).join('');
+  }
+  $('leadsReload').addEventListener('click', function(){ status('leadsStatus', ''); loadLeads(); });
+  $('leadsFilter').addEventListener('click', function(e){ var b = e.target.closest('[data-lf]'); if (!b) return; leadsFilter = b.dataset.lf; renderLeads(); });
+  $('leadsList').addEventListener('change', function(e){
+    var sel = e.target.closest('[data-lst]'); if (!sel) return;
+    var l = leadsData[+sel.dataset.lst], prev = l.status; l.status = sel.value; l.updated = new Date().toISOString();
+    var data = Object.assign({}, l); delete data._path;
+    status('leadsStatus', 'Сохраняю…');
+    b64FromText(JSON.stringify(data, null, 2) + '\n').then(function(b){ return commit([{ path: l._path, b64: b }], 'Лид: ' + l.title + ' → ' + sel.options[sel.selectedIndex].text); })
+      .then(function(){ status('leadsStatus', 'Статус сохранён.', 'ok'); renderLeads(); }, function(err){ l.status = prev; renderLeads(); status('leadsStatus', errText(err), 'err'); });
+  });
+  $('leadsList').addEventListener('click', function(e){
+    var b = e.target.closest('[data-ldel]'); if (!b) return;
+    if (b.dataset.confirm !== '1'){ b.dataset.confirm = '1'; b.textContent = 'Точно?'; setTimeout(function(){ if (b.isConnected){ b.dataset.confirm = ''; b.textContent = 'Удалить'; } }, 3000); return; }
+    var l = leadsData[+b.dataset.ldel]; b.disabled = true; status('leadsStatus', 'Удаляю…');
+    commit([{ path: l._path, del: true }], 'Удалить лид: ' + l.title).then(function(){ leadsData.splice(leadsData.indexOf(l), 1); renderLeads(); status('leadsStatus', 'Лид удалён.', 'ok'); }, function(err){ b.disabled = false; status('leadsStatus', errText(err), 'err'); });
+  });
+
   // ---- collapsible sections ----
   (function(){
     var KEY = 'homeshot_sections', st = {};
@@ -1125,7 +1195,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   // ---- login ----
   function enter(){
     $('login').hidden = true; $('app').hidden = false; $('logout').hidden = false;
-    loadDrafts(); loadList(); loadContacts();
+    loadDrafts(); loadList(); loadContacts(); loadLeads();
   }
   $('login').addEventListener('submit', function(e){
     e.preventDefault();

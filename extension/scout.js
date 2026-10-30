@@ -94,12 +94,82 @@
   panelHost.style.cssText = 'all:initial;position:fixed;left:16px;bottom:16px;z-index:2147483646';
   const pr = panelHost.attachShadow({ mode: 'open' });
   pr.innerHTML = `<style>${css}
-    .p{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 14px;border-radius:12px;background:#14110F;color:#F2ECE4;box-shadow:0 8px 28px rgba(0,0,0,.35);font-size:13px}
+    .p{width:430px;max-width:calc(100vw - 32px);border-radius:12px;background:#14110F;color:#F2ECE4;box-shadow:0 8px 28px rgba(0,0,0,.4);font-size:13px;overflow:hidden}
+    .ph{display:flex;align-items:center;gap:8px;padding:10px 10px 10px 14px}
+    .ph .st{flex:1;min-width:0;line-height:1.35}
     .p b{color:#D6A870}
-    .p button{height:30px;padding:0 12px;border-radius:999px;border:1px solid #3A322B;background:transparent;color:#F2ECE4;font:600 12px inherit;cursor:pointer}
+    .p small{color:#8C8177;font-size:11px}
+    .p button{height:30px;padding:0 12px;border-radius:999px;border:1px solid #3A322B;background:transparent;color:#F2ECE4;font:600 12px inherit;cursor:pointer;white-space:nowrap}
+    .p button:hover{border-color:#D6A870}
     .p button[aria-pressed=true]{background:#D6A870;border-color:#D6A870;color:#14110F}
-    .p small{color:#8C8177}</style>
-    <div class="p" role="status"><span>Homeshot: <b id="hot">0</b> кандидатов из <span id="all">0</span> <small id="mk"></small></span><button type="button" id="dim" aria-pressed="false">Приглушить остальные</button></div>`;
+    .p .tg{display:flex;align-items:center;gap:6px}
+    .p .tg i{font-style:normal;display:inline-block;transition:transform .2s}
+    .p.open .tg i{transform:rotate(180deg)}
+    .ls{display:none;border-top:1px solid #2E2823;max-height:min(420px,55vh);overflow:auto}
+    .p.open .ls{display:block}
+    .it{display:flex;gap:10px;align-items:center;padding:8px 10px 8px 14px;border-bottom:1px solid #221D19}
+    .it img{width:52px;height:52px;object-fit:cover;border-radius:6px;background:#2E2823;flex-shrink:0}
+    .it .tx{flex:1;min-width:0}
+    .it .tx a{color:#F2ECE4;text-decoration:none;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3}
+    .it .tx a:hover{color:#D6A870}
+    .it .tx span{color:#8C8177;font-size:12px}
+    .it .sc{height:22px;min-width:28px;font-size:12px}
+    .it.sent{opacity:.55}
+    .it .ok{color:#7FBF8E;font-size:12px;white-space:nowrap}
+    .it button{height:28px;padding:0 10px}
+    .it .rm{width:28px;padding:0;font-size:15px;color:#B0A598}
+    .it .rm:hover{border-color:#E8907A;color:#E8907A}
+    .ft{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border-top:1px solid #2E2823}
+    .ft .go{background:#D6A870;border-color:#D6A870;color:#14110F}
+    .ft .go[disabled]{opacity:.45;cursor:default}
+    .emp{padding:14px;color:#8C8177}
+    .msg{color:#D6A870;font-size:12px}.msg.err{color:#E8907A}</style>
+    <div class="p" id="p">
+      <div class="ph"><div class="st"><b id="hot">0</b> кандидатов · <span id="warm">0</span> возможных<br><small id="mk"></small></div>
+        <button type="button" id="dim" aria-pressed="false" title="Приглушить карточки с низкой оценкой">Приглушить</button>
+        <button type="button" class="tg" id="tg" aria-expanded="false">Лиды <b id="lc">0</b> <i>▴</i></button></div>
+      <div class="ls" id="ls"></div>
+    </div>`;
+  const P = pr.getElementById('p');
+
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const fmt = n => Math.round(n).toLocaleString('ru-RU');
+
+  function renderList() {
+    const arr = Object.values(leads).sort((a, b) => (b.added || '').localeCompare(a.added || ''));
+    const local = arr.filter(l => l.state !== 'sent');
+    pr.getElementById('lc').textContent = arr.length;
+    const box = pr.getElementById('ls');
+    if (!arr.length) { box.innerHTML = '<div class="emp">Пока пусто. Нажимайте «+ В лиды» на карточках.</div>'; return; }
+    box.innerHTML = arr.map(l => `<div class="it${l.state === 'sent' ? ' sent' : ''}" data-id="${esc(l.id)}">
+        <img src="${esc(l.cover)}" alt="" loading="lazy">
+        <div class="tx"><a href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.title)}">${esc(l.title)}</a><span>${fmt(l.price)} ₽ · ${esc(l.sellerName || 'продавец ?')}</span></div>
+        <span class="sc">${l.score}</span>
+        ${l.state === 'sent' ? '<span class="ok">✓ в админке</span>' : '<button type="button" data-send>В админку</button>'}
+        <button type="button" class="rm" data-rm aria-label="Убрать из списка" title="Убрать из списка">×</button></div>`).join('') +
+      `<div class="ft"><span class="msg" id="msg" role="status"></span><button type="button" class="go" id="all"${local.length ? '' : ' disabled'}>Отправить все (${local.length})</button></div>`;
+  }
+
+  function saveLeads() { chrome.storage.local.set({ [LEADS_KEY]: leads }); }
+
+  function sendLeads(ids, btn) {
+    const list = ids.map(id => leads[id]).filter(Boolean);
+    if (!list.length) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Отправляю…'; }
+    chrome.runtime.sendMessage({ type: 'leads', leads: list }, res => {
+      if (res && res.ok) { list.forEach(l => { l.state = 'sent'; l.sent = new Date().toISOString(); }); saveLeads(); renderList(); refreshAll(); }
+      else { renderList(); const m = pr.getElementById('msg'); if (m) { m.textContent = (res && res.error) || 'Не получилось отправить'; m.className = 'msg err'; } }
+    });
+  }
+
+  pr.addEventListener('click', e => {
+    const it = e.target.closest('.it'), id = it && it.dataset.id;
+    if (e.target.closest('#tg')) { P.classList.toggle('open'); pr.getElementById('tg').setAttribute('aria-expanded', String(P.classList.contains('open'))); return; }
+    if (e.target.closest('#dim')) { dim = !dim; pr.getElementById('dim').setAttribute('aria-pressed', String(dim)); chrome.storage.local.set({ [DIM_KEY]: dim }); refreshAll(); return; }
+    if (e.target.closest('[data-rm]')) { delete leads[id]; saveLeads(); renderList(); refresh(id); return; }
+    if (e.target.closest('[data-send]')) { sendLeads([id], e.target.closest('[data-send]')); return; }
+    if (e.target.closest('#all')) { sendLeads(Object.keys(leads).filter(k => leads[k].state !== 'sent'), e.target.closest('#all')); }
+  });
 
   function badge(el, d, r) {
     let host = el.querySelector(':scope [data-hs-badge]');
@@ -110,30 +180,31 @@
       const anchor = t ? (t.closest('h2, h3') || t) : null;
       if (anchor && anchor.parentElement) anchor.parentElement.insertBefore(host, anchor.nextSibling); else el.prepend(host);
       host.shadowRoot.addEventListener('click', e => {
-        const b = e.target.closest('.lead'); if (!b || b.getAttribute('aria-pressed') === 'true') return;
-        e.preventDefault(); e.stopPropagation(); addLead(d.id, b);
+        const b = e.target.closest('.lead'); if (!b) return;
+        e.preventDefault(); e.stopPropagation(); toggleLead(host.dataset.id);
       });
     }
+    host.dataset.id = d.id;
     const cls = r.s >= 55 ? 'hot' : r.s >= 35 ? 'warm' : '';
     const inLeads = !!leads[d.id];
-    host.shadowRoot.innerHTML = `<style>${css}</style><div class="b ${cls}" title="Оценка Homeshot: чем выше, тем вероятнее, что владельцу нужна обработка фото">
+    const html = `<style>${css}</style><div class="b ${cls}" title="Оценка Homeshot: чем выше, тем вероятнее, что владельцу нужна обработка фото">
       <span class="sc">${r.s}</span>${r.why.map(w => `<span class="t">${w}</span>`).join('')}${r.bad.map(w => `<span class="t x">${w}</span>`).join('')}
-      ${r.s >= 35 || inLeads ? `<button type="button" class="lead" aria-pressed="${inLeads}">${inLeads ? '✓ В лидах' : '+ В лиды'}</button>` : ''}
+      <button type="button" class="lead" aria-pressed="${inLeads}" title="${inLeads ? 'Убрать из лидов' : 'Добавить в список лидов'}">${inLeads ? '✓ В лидах' : '+ В лиды'}</button>
       ${r.st.n < 8 ? '<span class="lg">мало данных о рынке</span>' : ''}</div>`;
-    el.style.transition = 'opacity .2s';
-    el.style.opacity = dim && r.s < 35 && !inLeads ? '0.35' : '';
+    if (host.__html !== html) { host.shadowRoot.innerHTML = html; host.__html = html; }
+    const op = dim && r.s < 35 && !inLeads ? '0.35' : '';
+    if (el.style.opacity !== op) { el.style.transition = 'opacity .2s'; el.style.opacity = op; }
     el.dataset.hsScore = r.s;
   }
 
-  function addLead(id, btn) {
-    const c = cards.get(id); if (!c) return;
-    btn.textContent = 'Сохраняю…';
-    const r = score(c.d, c.q);
-    const lead = { ...c.d, score: r.s, why: r.why, quality: c.q || null, rel: r.rel, added: new Date().toISOString(), url: c.d.href, source: location.href };
-    chrome.runtime.sendMessage({ type: 'lead', lead }, res => {
-      if (res && res.ok) { leads[id] = { added: lead.added }; chrome.storage.local.set({ [LEADS_KEY]: leads }); refresh(id); }
-      else { btn.textContent = 'Ошибка'; btn.title = (res && res.error) || ''; setTimeout(() => refresh(id), 2500); }
-    });
+  function toggleLead(id) {
+    if (leads[id]) { if (leads[id].state === 'sent') return; delete leads[id]; }
+    else {
+      const c = cards.get(id); if (!c) return;
+      const r = score(c.d, c.q);
+      leads[id] = { ...c.d, score: r.s, why: r.why, bad: r.bad, quality: c.q || null, rel: r.rel, added: new Date().toISOString(), url: c.d.href, source: location.href, state: 'local' };
+    }
+    saveLeads(); renderList(); refresh(id);
   }
 
   function refresh(id) {
@@ -141,10 +212,10 @@
     badge(c.el, c.d, score(c.d, c.q));
   }
   function refreshAll() {
-    let hot = 0;
-    cards.forEach((c, id) => { refresh(id); if (Number(c.el.dataset.hsScore) >= 55) hot++; });
-    pr.getElementById('hot').textContent = hot; pr.getElementById('all').textContent = cards.size;
-    pr.getElementById('mk').textContent = '· база рынка: ' + Object.keys(market).length;
+    let hot = 0, warm = 0;
+    cards.forEach((c, id) => { refresh(id); const v = Number(c.el.dataset.hsScore); if (v >= 55) hot++; else if (v >= 35) warm++; });
+    pr.getElementById('hot').textContent = hot; pr.getElementById('warm').textContent = warm;
+    pr.getElementById('mk').textContent = 'Homeshot · оценено ' + cards.size + ' · база рынка ' + Object.keys(market).length;
   }
 
   let saveT = 0;
@@ -164,34 +235,40 @@
   function pump() {
     while (busy < 3 && queue.length) {
       const id = queue.shift(), c = cards.get(id); busy++;
-      chrome.runtime.sendMessage({ type: 'quality', url: c.d.cover }, res => { busy--; if (res && res.ok) { c.q = res.q; refreshAll(); } pump(); });
+      chrome.runtime.sendMessage({ type: 'quality', url: c.d.cover }, res => { busy--; if (res && res.ok) { c.q = res.q; refresh(id); refreshAll(); } pump(); });
     }
   }
 
-  let scanT = 0;
+  // Throttled scan: Avito changes the DOM constantly while scrolling, so a debounce would never fire.
+  let lastScan = 0, scanT = 0;
   function scan() {
-    clearTimeout(scanT); scanT = setTimeout(() => {
-      if (!ready) return;
-      document.querySelectorAll('[data-marker="item"][data-item-id]').forEach(el => {
-        const d = parse(el); if (!d) return;
-        const prev = cards.get(d.id);
-        if (prev && prev.el === el && prev.d.sellerKnown === d.sellerKnown && prev.d.photos === d.photos) return;
-        cards.set(d.id, { el, d, q: prev && prev.q, qAsked: prev && prev.qAsked });
-        remember(d); quality(d.id);
-      });
-      if (cards.size && !panelHost.isConnected) document.documentElement.appendChild(panelHost);
-      refreshAll();
-    }, 250);
+    if (scanT) return;
+    scanT = setTimeout(doScan, Math.max(0, 400 - (Date.now() - lastScan)));
   }
-
-  pr.getElementById('dim').addEventListener('click', e => {
-    dim = !dim; e.currentTarget.setAttribute('aria-pressed', String(dim)); chrome.storage.local.set({ [DIM_KEY]: dim }); refreshAll();
-  });
+  function doScan() {
+    scanT = 0; lastScan = Date.now();
+    if (!ready) return;
+    document.querySelectorAll('[data-marker="item"][data-item-id]').forEach(el => {
+      const d = parse(el); if (!d) return;
+      const prev = cards.get(d.id);
+      if (prev && prev.el === el && prev.d.sellerKnown === d.sellerKnown && prev.d.photos === d.photos && prev.d.cover === d.cover) return;
+      cards.set(d.id, { el, d, q: prev && prev.d.cover === d.cover ? prev.q : undefined, qAsked: prev && prev.d.cover === d.cover ? prev.qAsked : false });
+      remember(d); quality(d.id);
+    });
+    if (cards.size && !panelHost.isConnected) document.documentElement.appendChild(panelHost);
+    refreshAll();
+  }
 
   chrome.storage.local.get({ [MARKET_KEY]: {}, [LEADS_KEY]: {}, [DIM_KEY]: false }, s => {
     market = s[MARKET_KEY] || {}; leads = s[LEADS_KEY] || {}; dim = !!s[DIM_KEY];
+    Object.keys(leads).forEach(k => { if (!leads[k] || !leads[k].id) delete leads[k]; });
     pr.getElementById('dim').setAttribute('aria-pressed', String(dim));
-    ready = true; scan();
+    ready = true; renderList(); scan();
   });
-  new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
+  chrome.storage.onChanged.addListener((ch, area) => {
+    if (area === 'local' && ch[LEADS_KEY]) { leads = ch[LEADS_KEY].newValue || {}; renderList(); refreshAll(); }
+  });
+  new MutationObserver(scan).observe(document.body, { childList: true, subtree: true, characterData: true });
+  window.addEventListener('scroll', scan, { passive: true });
+  setInterval(scan, 2000);
 })();

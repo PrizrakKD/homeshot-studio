@@ -6,7 +6,7 @@ chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   if (msg.type === 'open-options') { chrome.runtime.openOptionsPage(); return false; }
-  const run = msg.type === 'scan' ? scan(msg.urls) : msg.type === 'send' ? send(msg) : msg.type === 'settings' ? settings() : msg.type === 'quality' ? quality(msg.url) : msg.type === 'lead' ? saveLead(msg.lead) : null;
+  const run = msg.type === 'scan' ? scan(msg.urls) : msg.type === 'send' ? send(msg) : msg.type === 'settings' ? settings() : msg.type === 'quality' ? quality(msg.url) : msg.type === 'leads' ? saveLeads(msg.leads) : null;
   if (!run) return false;
   run.then(r => reply({ ok: true, ...r }), e => reply({ ok: false, error: e.message || String(e) }));
   return true;
@@ -140,11 +140,11 @@ async function commitFiles(s, files, message) {
   await gh(s, `/git/refs/heads/${s.branch}`, { method: 'PATCH', body: { sha: c.sha } });
 }
 
-async function saveLead(lead) {
+async function saveLeads(list) {
   const s = await chrome.storage.local.get(DEFAULTS);
   if (!s.token) throw new Error('Сначала укажите GitHub-токен в настройках расширения.');
-  const data = { ...lead, status: 'new' };
-  await commitFiles(s, [{ path: `leads/${lead.id}.json`, b64: textB64(JSON.stringify(data, null, 2) + '\n') }], `Лид: ${lead.title}`);
+  const files = list.map(l => { const { state, ...rest } = l; return { path: `leads/${l.id}.json`, b64: textB64(JSON.stringify({ ...rest, status: 'new', sent: new Date().toISOString() }, null, 2) + '\n') }; });
+  await commitFiles(s, files, list.length === 1 ? `Лид: ${list[0].title}` : `Лиды: ${list.length} шт.`);
   return {};
 }
 
