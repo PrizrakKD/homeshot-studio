@@ -48,12 +48,12 @@
     "leads/1262179365/05.jpg",
     "leads/1262179365/06-full.jpg"
   ],
-  "status": "new",
+  "status": "written",
   "sent": "2026-10-30T14:37:27.570Z",
   "fullFiles": [
     "leads/1262179365/06-full.jpg"
   ],
-  "updated": "2026-10-30T14:52:04.488Z",
+  "updated": "2026-10-30T15:01:20.073Z",
   "gen": {
     "leads/1262179365/06-full.jpg": "leads/1262179365/06-gen.jpg"
   },
