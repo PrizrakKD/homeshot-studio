@@ -196,6 +196,8 @@ input[type=file]{font:13px var(--f);color:var(--muted);max-width:100%}
 .tpl summary{cursor:pointer;font-weight:600;font-size:14px}
 .tpl textarea{width:100%;min-height:140px;margin-top:10px;padding:10px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:500 14px/1.5 var(--f);resize:vertical}
 .tpl .actions{margin-top:8px}
+.lhead-acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+#leadsZip{border-color:#A78BFA;color:#C9B8FF}
 .lfil{display:flex;flex-wrap:wrap;gap:6px}
 .lfil button{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:600 13px var(--f);cursor:pointer}
 .lfil button[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:var(--ink)}
@@ -343,7 +345,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
 
   <div id="app" hidden>
     <div class="card" id="leadsCard">
-      <div class="dhead" style="align-items:flex-start"><div><h2>Лиды</h2><p class="hint">Объявления, отобранные расширением на выдаче Авито. Отмечайте, кому написали и кто ответил. Чтобы взять фото в работу, откройте объявление и нажмите «В Homeshot» в расширении.</p></div><button type="button" class="mini" id="leadsReload">Обновить</button></div>
+      <div class="dhead" style="align-items:flex-start"><div><h2>Лиды</h2><p class="hint">Объявления, отобранные расширением на выдаче Авито. Отмечайте, кому написали и кто ответил. Чтобы взять фото в работу, откройте объявление и нажмите «В Homeshot» в расширении.</p></div><div class="lhead-acts"><button type="button" class="mini pr" id="leadsZip" title="Все лиды с готовыми примерами: папка на каждый адрес, внутри «до» и «после»">Скачать все до/после (.zip)</button><button type="button" class="mini" id="leadsReload">Обновить</button></div></div>
       <details class="tpl"><summary>Шаблон сообщения владельцу</summary>
         <textarea id="leadTpl" aria-label="Шаблон сообщения"></textarea>
         <p class="hint">Подстановки: {приветствие} (Здравствуйте, Имя! или просто Здравствуйте!), {адрес}, {квартира}, {цена}.</p>
@@ -1240,6 +1242,43 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
   $('lvDl').addEventListener('click', function(){ var pc = lv.pics[lv.i], g = pc && pc.genPath ? pc.genPath : genList(lv.l)[0]; downloadPair(lv.l, g, this); });
   $('lvWrite').addEventListener('click', function(){ writeLead(lv.l); });
   $('leadsList').addEventListener('click', function(e){ var o = e.target.closest('[data-lview]'); if (o) openLead(+o.dataset.lview, o); });
+
+  // ---- one archive with before/after of every lead that has examples, a folder per address ----
+  function loadScript(src){ return new Promise(function(res, rej){ var sc = document.createElement('script'); sc.src = src; sc.onload = res; sc.onerror = function(){ rej(new Error('Не загрузилась библиотека архива')); }; document.head.appendChild(sc); }); }
+  function folderName(l){
+    var n = (shortAddr(l) || l.title || l.id).replace(/[<>:"\/\\|?*\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').replace(/[. ]+$/, '').trim();
+    return n.slice(0, 80) || String(l.id);
+  }
+  $('leadsZip').addEventListener('click', function(){
+    var btn = this, list = leadsData.filter(function(l){ return genList(l).length; });
+    if (!list.length){ status('leadsStatus', 'Пока нет лидов с готовыми примерами.', 'err'); return; }
+    var jobs = [], used = {};
+    list.forEach(function(l){
+      var name = folderName(l), k = 2; while (used[name]) name = folderName(l) + ' (' + (k++) + ')'; used[name] = true;
+      Object.keys(l.gen).sort().forEach(function(src){
+        var nn = (l.gen[src].match(/(\d+)-gen/) || [0, '01'])[1];
+        jobs.push({ path: name + '/' + nn + '-1-do.jpg', file: src }, { path: name + '/' + nn + '-2-posle.jpg', file: l.gen[src] });
+      });
+    });
+    btn.disabled = true; var old = btn.textContent, done = 0, failed = 0;
+    status('leadsStatus', 'Собираю архив: 0 из ' + jobs.length + ' фото…');
+    (window.JSZip ? Promise.resolve() : loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js')).then(function(){
+      var zip = new JSZip(), i = 0;
+      function worker(){
+        if (i >= jobs.length) return Promise.resolve();
+        var j = jobs[i++];
+        return getBlob(j.file).then(function(b){ zip.file(j.path, b); }, function(){ failed++; })
+          .then(function(){ done++; status('leadsStatus', 'Собираю архив: ' + done + ' из ' + jobs.length + ' фото…'); return worker(); });
+      }
+      return Promise.all([worker(), worker(), worker(), worker()]).then(function(){
+        return zip.generateAsync({ type: 'blob', compression: 'STORE' });
+      }).then(function(blob){
+        saveBlob(blob, 'homeshot-do-posle-' + new Date().toISOString().slice(0, 10) + '.zip');
+        status('leadsStatus', 'Архив готов: ' + list.length + ' адресов, ' + (done - failed) + ' фото' + (failed ? ', не скачалось: ' + failed : '') + '.', failed ? 'err' : 'ok');
+      });
+    }).catch(function(err){ status('leadsStatus', err.message || String(err), 'err'); })
+      .then(function(){ btn.disabled = false; btn.textContent = old; });
+  });
 
   $('leadsReload').addEventListener('click', function(){ status('leadsStatus', ''); loadLeads(); });
   $('leadsFilter').addEventListener('click', function(e){ var b = e.target.closest('[data-lf]'); if (!b) return; leadsFilter = b.dataset.lf; renderLeads(); });
