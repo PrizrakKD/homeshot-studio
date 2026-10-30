@@ -253,6 +253,7 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
         <div class="field"><label for="c-phone">Телефон</label><input type="text" id="c-phone" placeholder="8 900 000-00-00"></div>
         <div class="field"><label for="c-tg">Telegram (ник)</label><input type="text" id="c-tg" placeholder="homeshot_studio"></div>
         <div class="field"><label for="c-wa">WhatsApp</label><input type="text" id="c-wa" placeholder="79000000000"></div>
+        <div class="field"><label for="c-email">Почта</label><input type="email" id="c-email" placeholder="hello@homeshot.ru"></div>
         <div class="field"><label for="c-max">MAX (ссылка на профиль)</label><input type="text" id="c-max" placeholder="https://max.ru/u/…"><span class="hint">В MAX: профиль → «Поделиться» → скопировать ссылку</span></div>
       </div>
       <div class="actions"><button class="btn btn-ghost" type="submit" id="cBtn">Сохранить контакты</button><span class="status" id="cStatus" role="status"></span></div>
@@ -755,13 +756,14 @@ a.mini.client{color:var(--gold);border-color:var(--gold-dim)}
       cfgSha = f.sha;
       var bytes = Uint8Array.from(atob(f.content.replace(/\n/g, '')), function(c){ return c.charCodeAt(0); });
       var c = JSON.parse(new TextDecoder().decode(bytes)); cfgData = c; if (works.length) renderWorks();
-      $('c-phone').value = c.phone || ''; $('c-tg').value = c.telegram || ''; $('c-wa').value = c.whatsapp || ''; $('c-max').value = c.max || '';
+      $('c-phone').value = c.phone || ''; $('c-tg').value = c.telegram || ''; $('c-wa').value = c.whatsapp || ''; $('c-max').value = c.max || ''; $('c-email').value = c.email || '';
     }).catch(function(){});
   }
   $('contactForm').addEventListener('submit', function(e){
     e.preventDefault();
-    var c = { phone: $('c-phone').value.trim(), telegram: $('c-tg').value.trim().replace(/^@/, ''), whatsapp: $('c-wa').value.trim(), max: $('c-max').value.trim() };
+    var c = { phone: $('c-phone').value.trim(), telegram: $('c-tg').value.trim().replace(/^@/, ''), whatsapp: $('c-wa').value.trim(), max: $('c-max').value.trim(), email: $('c-email').value.trim() };
     if (c.max && !/^https:\/\/(www\.)?max\.ru\//i.test(c.max)){ status('cStatus', 'Ссылка MAX должна начинаться с https://max.ru/', 'err'); return; }
+    if (c.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)){ status('cStatus', 'Проверьте адрес почты', 'err'); return; }
     var btn = $('cBtn'); btn.disabled = true; status('cStatus', 'Сохраняю…');
     Object.assign(cfgData, c);
     saveConfig('Обновить контакты').then(function(){ status('cStatus', 'Сохранено. На сайте через 1–2 минуты.', 'ok'); })

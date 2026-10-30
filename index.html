@@ -73,6 +73,17 @@ p{margin:0}
 .cmp .handle::after{content:"";position:absolute;top:50%;left:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:var(--fg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314110F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l-6 6 6 6M15 6l6 6-6 6'/%3E%3C/svg%3E") center/22px no-repeat;box-shadow:0 2px 12px rgba(0,0,0,.4)}
 .cmp input[type=range]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
 .chip{position:absolute;top:14px;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.2em;pointer-events:none;background:rgba(20,17,15,.75);color:var(--fg)}
+.vplayer video{cursor:pointer}
+.vbtn{position:absolute;top:50%;left:50%;width:68px;height:68px;margin:-34px 0 0 -34px;border:0;border-radius:50%;cursor:pointer;background:var(--fg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M8 5.5v13l10.5-6.5z' fill='%2314110F'/%3E%3C/svg%3E") 55% 50%/30px no-repeat;box-shadow:0 4px 20px rgba(0,0,0,.45);transition:opacity .2s,transform .2s}
+.vbtn:hover{transform:scale(1.06)}
+.vplayer.playing .vbtn{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='6.5' y='5.5' width='4' height='13' rx='1' fill='%2314110F'/%3E%3Crect x='13.5' y='5.5' width='4' height='13' rx='1' fill='%2314110F'/%3E%3C/svg%3E");background-position:50% 50%;opacity:0;pointer-events:none}
+@media (hover:hover){.vplayer.playing:hover .vbtn{opacity:1;pointer-events:auto}}
+.vbar{position:absolute;left:0;right:0;bottom:0;height:22px;display:flex;align-items:flex-end;opacity:0;transition:opacity .2s}
+.vplayer.started .vbar{opacity:1}
+.vbar::before{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(242,236,226,.25);transition:height .15s}
+.vfill{position:absolute;left:0;bottom:0;height:4px;width:0;background:var(--gold);transition:height .15s}
+.vbar:hover::before,.vbar:hover .vfill{height:7px}
+.vseek{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
 .cmp .clay{position:absolute;inset:0;pointer-events:none}
 .cmp .cl{clip-path:inset(0 calc(100% - var(--pos)) 0 0)}.cmp .cr{clip-path:inset(0 0 0 var(--pos))}
 .chip.l{left:14px}.chip.r{right:14px;background:var(--gold);color:var(--ink)}
@@ -479,7 +490,9 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
   function renderMedia(i){
     var w = works[i], m = $('media-' + i), pg = $('pager-' + i), video = w.mode === 'video';
     m.innerHTML = video
-      ? '<div class="cmp"><video src="' + esc(w.videos[w.vidx]) + '" autoplay muted loop playsinline aria-label="' + esc(w.title) + ', видео ' + (w.vidx + 1) + '"></video></div>'
+      ? '<div class="cmp vplayer"><video src="' + esc(w.videos[w.vidx]) + '#t=0.1" preload="metadata" loop playsinline aria-label="' + esc(w.title) + ', видео ' + (w.vidx + 1) + '"></video>' +
+        '<button type="button" class="vbtn" aria-label="Воспроизвести видео"></button>' +
+        '<div class="vbar"><div class="vfill"></div><input type="range" class="vseek" min="0" max="1000" value="0" step="1" aria-label="Перемотка видео"></div></div>'
       : cmpHTML(pairOf(w), 'w' + i, true);
     if (pg){
       var n = video ? w.videos.length : w.pairs.length;
@@ -491,11 +504,37 @@ footer{padding-block:28px calc(28px + env(safe-area-inset-bottom,0px));color:var
   function pairOf(w){ var p = w.pairs[w.idx] || w.pairs[0]; return { before: p.before, after: p.after, title: w.title + (w.pairs.length > 1 ? ', фото ' + (w.idx + 1) : '') }; }
   function plural(n, a, b, c){ return n % 10 === 1 && n % 100 !== 11 ? a : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? b : c); }
 
+  // ---- video player ----
+  function vOf(el){ var p = el.closest && el.closest('.vplayer'); return p ? { p: p, v: p.querySelector('video') } : null; }
+  function vToggle(o){
+    if (o.v.paused){ document.querySelectorAll('.vplayer video').forEach(function(x){ if (x !== o.v) x.pause(); }); var pr = o.v.play(); if (pr && pr.catch) pr.catch(function(){ o.v.muted = true; o.v.play(); }); }
+    else o.v.pause();
+  }
+  document.addEventListener('click', function(e){
+    var o = vOf(e.target); if (!o || e.target.closest('.vbar')) return;
+    if (e.target.closest('.vbtn') || e.target.tagName === 'VIDEO') vToggle(o);
+  });
+  ['play', 'pause'].forEach(function(t){ document.addEventListener(t, function(e){
+    var o = vOf(e.target); if (!o) return;
+    var on = !o.v.paused; o.p.classList.toggle('playing', on); if (on) o.p.classList.add('started');
+    o.p.querySelector('.vbtn').setAttribute('aria-label', on ? 'Пауза' : 'Воспроизвести видео');
+    if (on) (function tick(){ if (!o.p.isConnected) return; var d = o.v.duration || 0, f = d ? o.v.currentTime / d : 0;
+      o.p.querySelector('.vfill').style.width = (f * 100) + '%'; if (!o.p.dataset.seeking) o.p.querySelector('.vseek').value = Math.round(f * 1000);
+      if (!o.v.paused) requestAnimationFrame(tick); })();
+  }, true); });
+  document.addEventListener('input', function(e){
+    if (!e.target.classList || !e.target.classList.contains('vseek')) return;
+    var o = vOf(e.target), f = e.target.value / 1000; o.p.dataset.seeking = '1';
+    if (o.v.duration) o.v.currentTime = f * o.v.duration; o.p.querySelector('.vfill').style.width = (f * 100) + '%';
+  });
+  document.addEventListener('change', function(e){ if (e.target.classList && e.target.classList.contains('vseek')){ var o = vOf(e.target); delete o.p.dataset.seeking; } });
+
   function renderContacts(){
     var items = [];
     if (cfg.phone) items.push(['ТЕЛЕФОН', cfg.phone, 'tel:' + cfg.phone.replace(/[^\d+]/g, '')]);
     if (cfg.telegram){ var t = cfg.telegram.replace(/^@/, ''); items.push(['TELEGRAM', '@' + t, 'https://t.me/' + t]); }
     if (cfg.whatsapp) items.push(['WHATSAPP', cfg.whatsapp, 'https://wa.me/' + cfg.whatsapp.replace(/\D/g, '')]);
+    if (cfg.email) items.push(['ПОЧТА', cfg.email, 'mailto:' + cfg.email]);
     if (cfg.max && /^https:\/\/(www\.)?max\.ru\//i.test(cfg.max)) items.push(['MAX', 'Написать в MAX', cfg.max]);
     var el = $('contacts');
     if (!items.length){ el.innerHTML = '<div class="cline"><div><small>КОНТАКТЫ</small><strong>Скоро появятся</strong></div></div>'; return; }
